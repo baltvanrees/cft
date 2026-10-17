@@ -4,23 +4,24 @@
 
 The goal is to formalize four-point correlation functions expanded in conformal blocks in a way that:
 1. Starts from **OPE data & Euclidean axioms** (`Corr.lean`, using `Blocks.lean` and `Gegenbauers.lean`), which are natural to justify from OS/Wightman or radial quantization axioms.
-2. Analytically continues the conformal blocks and four-point correlator from the Euclidean $\rho$-disk ($\|\rho\| < 1$) to the **$(\rho_l, \rho_r)$ polydisk** (`Blocks_pdisk.lean` and `Corr_pdisk.lean`) and, via `CutPlane.lean`, to independent complex/lightcone coordinates $(z_l, z_r) \in \text{CutPlane} \times \text{CutPlane}$, preparing the ground for the **lightcone bootstrap**.
+2. Analytically continues the conformal blocks and four-point correlator from the Euclidean $\rho$-disk ($\|\rho\| < 1$) to the **$(\rho_l, \rho_r)$ polydisk** (`Blocks_pdisk.lean` and `Corr_pdisk.lean`) and, via `CutPlane.lean`, to independent complex/lightcone coordinates $(z_l, z_r) \in \text{CutPlane} \times \text{CutPlane}$.
+3. Decomposes the polydisk conformal blocks at each left-moving twist level $\rho_l^{(\Delta - l)/2 + m}$ into finite positive sums of **1D (collinear) conformal blocks** $k_{\bar{h}}(\rho_r)$ (`Blocks_1d.lean` and `Blocks_pdisk.lean`), providing the foundation for the **lightcone bootstrap**.
 
 ---
 
 ## 2. Module Dependency Graph
 
 ```text
-CutPlane.lean                  Gegenbauers.lean
-      │                               │
-      │                               ▼
-      │                          Blocks.lean
-      │                         ╱           ╲
-      ▼                        ▼             ▼
-      ├────────────────► Corr.lean     Blocks_pdisk.lean
-      │                        ╲             ╱
-      │                         ▼           ▼
-      └──────────────────────► Corr_pdisk.lean
+CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean
+      │                       │                        │
+      │                       ▼                        │
+      │                  Blocks.lean                   │
+      │                 ╱           ╲                  │
+      ▼                ▼             ▼                 ▼
+      ├────────► Corr.lean          Blocks_pdisk.lean ◄┘
+      │                ╲             ╱
+      │                 ▼           ▼
+      └──────────────► Corr_pdisk.lean
 ```
 
 ---
@@ -44,15 +45,21 @@ CutPlane.lean                  Gegenbauers.lean
 - [x] Defines `ConformalBlockLevel l n` (finite sum $\sum_{j \in \text{descendantSpins}(l, n)} A_{n, j} C_j^\nu(\cos\theta)$ with $A_{n, j} \ge 0$, absorbing the $1/C_j^\nu(1)$ normalization into $A_{n, j}$) and `ConformalBlock ν Δ l` (infinite sum over $n \in \mathbb{N}$ in $\rho \in \mathbb{C}$ with primary normalization $A_{0, l} = 1$ and radial summability at $\theta = 0$ for $r \in (0, 1)$).
 - [ ] *(Later)*: Formalize the quadratic Casimir recursion relation for $A_{n, j}$ and deduce `summable_radial`.
 
-### Step 3: `CFT/Blocks_pdisk.lean` — **Structures Done; Bridge Theorems To Do**
-- [x] Defines `blockExp Δ l k = (Δ - l) / 2 + k` and `AmputatedConformalBlock Δ l`:
-  - Coefficients $B_{k_l, k_r} \ge 0$ supported on $k_l + k_r \ge l$,
-  - Real summability on $(r_l, r_r) \in (0, 1)^2$,
-  - Evaluation by double sum (`evalPdisk`), by descendant level (`evalLevelSum`), and via the **lightcone conformal block decomposition** (`evalLightcone` / `evalLightconeLevel`) grouped by fixed left twist level $k_l \in \mathbb{N}$.
-- [x] Defines the explicit bridge from `ConformalBlockLevel` and `ConformalBlock`:
-  - `pdiskCoeff` and non-negativity (`pdiskCoeff_nonneg`) for $\nu \ge 0$,
-  - `evalTermPdisk`, `ConformalBlock.evalPdisk`, `ConformalBlock.evalLightconeLevel`, and `ConformalBlock.evalLightcone`.
-- [ ] Prove that `ConformalBlock.pdiskCoeff` satisfies `summable_real` from `summable_radial` (yielding `ConformalBlock.toAmputatedConformalBlock`).
+### Step 3A: `CFT/Blocks_1d.lean` — **Done**
+- [x] Defines the 1D (collinear / $SL(2, \mathbb{R})$) conformal block $k_h(\rho)$ of conformal weight $h$ in the $\rho$ coordinate (`block1dCoeff`, `block1d`):
+  $$k_h(\rho) = \rho^h \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; \rho^2\right) = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} \rho^{h + 2n}.$$
+- [x] Proves non-negativity (`block1dCoeff_nonneg`), positivity (`block1dCoeff_pos`), upper bound (`block1dCoeff_le_one`), and summability on the punctured open unit disk $0 < \|\rho\| < 1$ (`summable_block1d`).
+- [ ] *(Later)*: Add $z$-coordinate hypergeometric form $z^h \, {}_2F_1(h, h; 2h; z)$ and Euler integral representation when needed for the lightcone bootstrap.
+
+### Step 3B: `CFT/Blocks_pdisk.lean` — **Structures Done; Bridge Theorems To Do**
+- [x] Defines `blockExp Δ l k = (Δ - l) / 2 + k` and `ConformalBlockPdisk Δ l` (the double power series $\sum_{k_l, k_r} B_{k_l, k_r} \rho_l^{h_l(k_l)} \rho_r^{h_r(k_r)}$ with $B_{k_l, k_r} \ge 0$).
+- [x] Defines the explicit bridge from `ConformalBlockLevel` and `ConformalBlock` (`pdiskCoeff`, `pdiskCoeff_nonneg`, `evalTermPdisk`, `ConformalBlock.evalPdisk`).
+- [x] Defines `ConformalBlockLightconeLevel` and `ConformalBlockLightcone Δ l`:
+  - Expands the block as $\sum_{m=0}^{\infty} \rho_l^{(\Delta - l)/2 + m} g_m(\rho_r)$,
+  - Leading twist ($m = 0$): $g_0(\rho_r)$ is proportional to a single 1D conformal block $k_{(\Delta + l)/2}(\rho_r)$ from `Blocks_1d.lean` (`evalLevel_zero`),
+  - Subleading twists ($m > 0$): $g_m(\rho_r)$ is a finite linear combination of 1D conformal blocks $k_{\bar{h}}(\rho_r)$ with non-negative coefficients.
+- [x] States (with `sorry` for now) `ConformalBlock.exists_conformalBlockLightcone` decomposing any `ConformalBlock` into a `ConformalBlockLightcone`.
+- [ ] Prove that `ConformalBlock.pdiskCoeff` satisfies `summable_real` from `summable_radial` (yielding `ConformalBlock.toConformalBlockPdisk`).
 - [ ] Prove agreement of `evalPdisk` with `ConformalBlock.eval` on the Euclidean section $\rho_r = \bar{\rho}_l$ via `geg_two_var_conj`.
 - [ ] Prove polydisk summability, radial bounds, and joint holomorphy (`HasFDerivAt` / `DifferentiableOn ℂ`) on $(\text{slitPlane} \cap B(0, 1))^2$.
 
