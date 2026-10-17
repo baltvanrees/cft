@@ -1,13 +1,17 @@
-# cft
+# A roadmap for formalizing CFTs
 
-## GitHub configuration
+This is a repository to formalize the structures appearing in reflection positive conformal field theories (CFTs) in $d > 2$ dimensions.
 
-To set up your new GitHub repository, follow these steps:
+The plan (see [PLAN.md](PLAN.md)) is to first build all the necessary tools to analyze *four-point functions of identical scalar primary operators*. We will assume a conformal block decomposition and use it to prove results like Tauberian theorems for the asymptotics and light-cone bootstrap theorems. This approach will allow us to jump directly to mathematical physics questions of present-day interest.
 
-* Under your repository name, click **Settings**.
-* In the **Actions** section of the sidebar, click "General".
-* Check the box **Allow GitHub Actions to create and approve pull requests**.
-* Click the **Pages** section of the settings sidebar.
-* In the **Source** dropdown menu, select "GitHub Actions".
+In the longer run the idea is to introduce more fundamental axioms from which all these results will ultimately follow. This needs to be done carefully, and it will be beneficial to have concrete theorems to aim for.
 
-After following the steps above, you can remove this section from the README file.
+Roughly speaking the idea will be to introduce as axioms conformal covariance and a Hilbert space in radial quantization. Postulating further the existence of a resolution of the identity will allow us to derive the state-operator correspondence, and thereby a convergent series expansion for $n$-point correlation functions of arbitrary local operators. 
+
+Natural extensions will include the generalization to curved spaces and non-local operators like defects and interfaces.
+
+We will always start the derivations in Euclidean signature. In the long run it might be possible to prove that the CFT axioms we postulate are fulfilled by a properly constructed QFT, for example the continuum limit of a lattice theory, and this will be most naturally done in Euclidean signature.
+
+Our axioms will therefore mimic the OS axioms, although we have much more control in CFTs than in general QFTs. Lorentzian CFTs, and the associated Wightman functions, will be defined by analytic continuation.
+
+Automatically generated documentation is available at https://baltvanrees.github.io/cft/docs/
