@@ -19,3 +19,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
       - uses: leanprover-community/docgen-action@v1
+
+      - name: Hide external libraries in doc-gen4 sidebar and expand CFT
+        if: github.event_name == 'push'
+        run: |
+          cat << 'EOF' >> docs/docs/style.css
+
+          /* Hide external dependency libraries in the sidebar and keep only CFT */
+          .module_list > details.nav_sect:not([data-path="./CFT.html"]) {
+            display: none !important;
+          }
+          EOF
+          sed -i 's|<details class="nav_sect" data-path="./CFT.html">|<details class="nav_sect" data-path="./CFT.html" open>|g' docs/docs/navbar.html
+
+      - name: Upload cleaned website artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: docs/
+
+      - name: Deploy cleaned website to GitHub Pages
+        if: github.event_name == 'push'
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
