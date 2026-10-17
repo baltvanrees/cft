@@ -1,11 +1,16 @@
-import Mathlib
+/-
+Copyright (c) 2026 Balt van Rees. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Balt van Rees
+-/
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import CFT.Gegenbauers
-import CFT.Blocks_eucl
+import CFT.Blocks
 
 /-!
 # Polydisk & Amputated Conformal Blocks
 
-This file extends Euclidean conformal blocks from `Blocks_eucl.lean` to two independent complex
+This file extends conformal blocks from `Blocks.lean` to two independent complex
 variables $(\rho_l, \rho_r)$ in the polydisk.
 
 Using `geg_two_var_conj` from `Gegenbauers.lean`:
@@ -110,7 +115,7 @@ noncomputable def evalLightcone (ρl ρr : ℂ) : ℂ :=
 end AmputatedConformalBlock
 
 /-!
-## Constructing Polydisk Blocks from Euclidean Conformal Blocks
+## Constructing Polydisk Blocks from `ConformalBlock`
 -/
 
 namespace ConformalBlockLevel
@@ -118,7 +123,7 @@ namespace ConformalBlockLevel
 variable {l n : ℕ} (lvl : ConformalBlockLevel l n)
 
 /-- Coefficient of $\rho_l^{k_l} \rho_r^{k_r}$ (with $k_l + k_r = l + n$) arising from level $n$
-of a Euclidean conformal block:
+of a conformal block:
 $$B^{(n)}_{k_l, k_r} = \sum_j A_{n, j} \, c_{j, k_l - (l + n - j)/2}^\nu.$$ -/
 noncomputable def pdiskCoeff (ν : ℝ) (kl kr : ℕ) : ℝ :=
   if kl + kr = l + n then
@@ -149,11 +154,11 @@ noncomputable def evalTermPdisk (ν Δ : ℝ) (ρl ρr : ℂ) : ℂ :=
 
 end ConformalBlockLevel
 
-namespace EuclideanConformalBlock
+namespace ConformalBlock
 
-variable {ν Δ : ℝ} {l : ℕ} (B : EuclideanConformalBlock ν Δ l)
+variable {ν Δ : ℝ} {l : ℕ} (B : ConformalBlock ν Δ l)
 
-/-- Two-variable polydisk coefficient $B_{k_l, k_r}$ associated to a `EuclideanConformalBlock`.
+/-- Two-variable polydisk coefficient $B_{k_l, k_r}$ associated to a `ConformalBlock`.
 Since $k_l + k_r = l + n$, only level $n = k_l + k_r - l$ contributes when $k_l + k_r \ge l$. -/
 noncomputable def pdiskCoeff (kl kr : ℕ) : ℝ :=
   if kl + kr < l then 0
@@ -168,9 +173,18 @@ lemma pdiskCoeff_nonneg (hν : 0 ≤ ν) (kl kr : ℕ) : 0 ≤ B.pdiskCoeff kl k
 lemma pdiskCoeff_support (kl kr : ℕ) (h : kl + kr < l) : B.pdiskCoeff kl kr = 0 := by
   simp [pdiskCoeff, h]
 
-/-- Direct polydisk evaluation of a `EuclideanConformalBlock` summed over levels $n \in \mathbb{N}$.
--/
+/-- Direct polydisk evaluation of a `ConformalBlock` summed over levels $n \in \mathbb{N}$. -/
 noncomputable def evalPdisk (ρl ρr : ℂ) : ℂ :=
   ∑' n : ℕ, (B.level n).evalTermPdisk ν Δ ρl ρr
 
-end EuclideanConformalBlock
+/-- Collinear / lightcone block at twist level $k_l \in \mathbb{N}$ associated to a
+`ConformalBlock`. -/
+noncomputable def evalLightconeLevel (kl : ℕ) (ρr : ℂ) : ℂ :=
+  ∑' kr : ℕ, (B.pdiskCoeff kl kr : ℂ) * ρr ^ (blockExp Δ l kr : ℂ)
+
+/-- Lightcone conformal block decomposition of a `ConformalBlock`: outer sum over left
+twist levels $k_l \in \mathbb{N}$ of $\rho_l^{(\Delta - l)/2 + k_l} g_{k_l}(\rho_r)$. -/
+noncomputable def evalLightcone (ρl ρr : ℂ) : ℂ :=
+  ∑' kl : ℕ, ρl ^ (blockExp Δ l kl : ℂ) * B.evalLightconeLevel kl ρr
+
+end ConformalBlock

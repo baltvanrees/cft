@@ -1,16 +1,21 @@
-import Mathlib
-/-!
+/-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-open Real
-open Complex
-open Complex Topology
+import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
+import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.Analysis.Analytic.IsolatedZeros
+import Mathlib.Analysis.Convex.Star
+import Mathlib.Topology.Connected.PathConnected
+import Mathlib.Tactic.LinearCombination
+
+/-!
+# The Twice-Cut Plane and Radial Coordinate `rho`
+-/
+
+open Real Complex Topology Set Metric
 open scoped ComplexConjugate
-open MeasureTheory
-open MeasureTheory Set
-open MeasureTheory Set Metric
 
 /-- The twice-cut plane: ℂ \ ((-∞, 0] ∪ [1, ∞)) -/
 def CutPlane : Set ℂ :=

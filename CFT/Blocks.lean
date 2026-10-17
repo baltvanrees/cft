@@ -1,10 +1,16 @@
-import Mathlib
+/-
+Copyright (c) 2026 Balt van Rees. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Balt van Rees
+-/
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import CFT.Gegenbauers
 
 /-!
-# Euclidean Conformal Blocks
+# Conformal Blocks
 
-This file defines data structures capturing the series expansion of a Euclidean conformal block
+This file defines data structures capturing the series expansion of a conformal block
 $G_{\Delta, l}$ associated to a primary operator of scaling dimension $\Delta$ and spin $l$:
 $$
 G_{\Delta, l}(\rho) = \sum_{n=0}^{\infty} \|\rho\|^{\Delta + n}
@@ -64,10 +70,10 @@ noncomputable def evalTerm (ν Δ : ℝ) (ρ : ℂ) : ℝ :=
 
 end ConformalBlockLevel
 
-/-- Data for a Euclidean conformal block $G_{\Delta, l}$ of scaling dimension $\Delta$ and spin $l$
+/-- Data for a conformal block $G_{\Delta, l}$ of scaling dimension $\Delta$ and spin $l$
 (with spacetime parameter $\nu = (d - 2) / 2$).
 Captures the infinite sum over descendant levels $n \in \mathbb{N}$ of the finite spin sums. -/
-structure EuclideanConformalBlock (ν Δ : ℝ) (l : ℕ) where
+structure ConformalBlock (ν Δ : ℝ) (l : ℕ) where
   /-- The descendant data at each level $n \in \mathbb{N}$. -/
   level : ∀ n : ℕ, ConformalBlockLevel l n
   /-- Normalization of the primary operator contribution at $n = 0, j = l$. -/
@@ -77,9 +83,9 @@ structure EuclideanConformalBlock (ν Δ : ℝ) (l : ℕ) where
   summable_radial : ∀ r ∈ Ioo (0 : ℝ) 1,
     Summable (fun n : ℕ => r ^ (Δ + (n : ℝ)) * (level n).evalAngular ν 1)
 
-namespace EuclideanConformalBlock
+namespace ConformalBlock
 
-variable {ν Δ : ℝ} {l : ℕ} (B : EuclideanConformalBlock ν Δ l)
+variable {ν Δ : ℝ} {l : ℕ} (B : ConformalBlock ν Δ l)
 
 /-- Convenience accessor for the coefficient $A_{n, j}$. -/
 def A (n j : ℕ) : ℝ :=
@@ -92,4 +98,4 @@ $$G_{\Delta, l}(\rho) = \sum_{n=0}^{\infty} \|\rho\|^{\Delta + n}
 noncomputable def eval (ρ : ℂ) : ℝ :=
   ∑' n : ℕ, (B.level n).evalTerm ν Δ ρ
 
-end EuclideanConformalBlock
+end ConformalBlock

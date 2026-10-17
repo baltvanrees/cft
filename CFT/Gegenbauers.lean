@@ -4,9 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
 -- set_option profiler true
-import Mathlib
 import Mathlib.RingTheory.Polynomial.Pochhammer
 import Mathlib.Algebra.Polynomial.Bivariate
+import Mathlib.Analysis.SpecialFunctions.Complex.Arg
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.FieldSimp
 
 /-!
 Gegenbauer polynomials C_n^{(ν)}(x).
