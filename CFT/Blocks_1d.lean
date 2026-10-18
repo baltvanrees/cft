@@ -4,8 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
 import Mathlib.RingTheory.Polynomial.Pochhammer
-import Mathlib.Analysis.SpecialFunctions.Pow.Complex
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Normed
@@ -14,14 +13,14 @@ import Mathlib.Tactic.Positivity
 /-!
 # One-Dimensional ($SL(2, \mathbb{R})$ / Collinear) Conformal Blocks
 
-This file defines the one-dimensional (collinear) conformal blocks $k_h(\rho)$ of conformal weight
-$h$ in the radial coordinate $\rho$:
+This file defines the one-dimensional (collinear) conformal blocks $k_h(e^w)$ of conformal weight
+$h$ in the universal-cover coordinate $w$ (where $\rho = e^w$ and $\operatorname{Re}(w) < 0$):
 $$
-k_h(\rho) = \rho^h \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; \rho^2\right)
-  = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} \rho^{h + 2n}.
+k_h(e^w) = e^{h w} \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; e^{2w}\right)
+  = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} e^{(h + 2n) w}.
 $$
 For $h \ge 0$, all series coefficients are non-negative and bounded above by $1$, ensuring absolute
-convergence on the open unit disk $\|\rho\| < 1$.
+convergence on the left half-plane $\operatorname{Re}(w) < 0$.
 -/
 
 open Real Complex Topology Set Metric Polynomial
@@ -72,8 +71,8 @@ lemma realPochhammer_one (n : ℕ) :
     push_cast
     ring
 
-/-- Expansion coefficient of $\rho^{h + 2n}$ in the 1D conformal block
-$k_h(\rho) = \rho^h \, {}_2F_1(h, 1/2; h + 1/2; \rho^2)$:
+/-- Expansion coefficient of $e^{(h + 2n) w}$ in the 1D conformal block
+$k_h(e^w) = e^{h w} \, {}_2F_1(h, 1/2; h + 1/2; e^{2w})$:
 $$c_n(h) = \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!}.$$ -/
 noncomputable def block1dCoeff (h : ℝ) (n : ℕ) : ℝ :=
   realPochhammer h n * realPochhammer (1 / 2) n /
@@ -116,21 +115,26 @@ lemma block1dCoeff_le_one {h : ℝ} (hh : 0 ≤ h) (n : ℕ) :
     (realPochhammer_nonneg (by norm_num) n) (le_of_lt h3)
 
 /-- The one-dimensional ($SL(2, \mathbb{R})$ / collinear) conformal block of weight $h$ in the
-$\rho$ coordinate:
-$$k_h(\rho) = \rho^h \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; \rho^2\right)
-  = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} \rho^{h + 2n}.$$ -/
-noncomputable def block1d (h : ℝ) (ρ : ℂ) : ℂ :=
-  ∑' n : ℕ, (block1dCoeff h n : ℂ) * ρ ^ ((h + 2 * (n : ℝ) : ℝ) : ℂ)
+coordinate $w$ (where $\rho = e^w$ and $\operatorname{Re}(w) < 0$):
+$$k_h(e^w) = e^{h w} \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; e^{2w}\right)
+  = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} e^{(h + 2n) w}.$$ -/
+noncomputable def block1d (h : ℝ) (w : ℂ) : ℂ :=
+  ∑' n : ℕ, (block1dCoeff h n : ℂ) * Complex.exp (((h + 2 * (n : ℝ) : ℝ) : ℂ) * w)
 
-lemma summable_block1d {h : ℝ} (hh : 0 ≤ h) {ρ : ℂ} (hρ0 : ρ ≠ 0) (hρ : ‖ρ‖ < 1) :
-    Summable (fun n : ℕ => (block1dCoeff h n : ℂ) * ρ ^ ((h + 2 * (n : ℝ) : ℝ) : ℂ)) := by
-  have h_geom : Summable (fun n : ℕ => ‖ρ‖ ^ h * (‖ρ‖ ^ 2) ^ n) := by
+lemma summable_block1d {h : ℝ} (hh : 0 ≤ h) {w : ℂ} (hw : w.re < 0) :
+    Summable (fun n : ℕ =>
+      (block1dCoeff h n : ℂ) * Complex.exp (((h + 2 * (n : ℝ) : ℝ) : ℂ) * w)) := by
+  have h_geom : Summable (fun n : ℕ => Real.exp (h * w.re) * (Real.exp (2 * w.re)) ^ n) := by
     apply Summable.mul_left
-    apply summable_geometric_of_lt_one (sq_nonneg ‖ρ‖)
-    nlinarith [norm_nonneg ρ]
+    apply summable_geometric_of_lt_one (Real.exp_nonneg _)
+    rw [Real.exp_lt_one_iff]
+    linarith
   refine Summable.of_norm_bounded h_geom (fun n => ?_)
-  have h_pos : 0 < ‖ρ‖ := norm_pos_iff.mpr hρ0
   rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg (block1dCoeff_nonneg hh n),
-    Complex.norm_cpow_real, Real.rpow_add h_pos, Real.rpow_mul (le_of_lt h_pos),
-    Real.rpow_two, Real.rpow_natCast]
+    Complex.norm_exp, mul_re, ofReal_re, ofReal_im, zero_mul, sub_zero,
+    add_mul, Real.exp_add]
+  have h_pow : Real.exp (2 * (n : ℝ) * w.re) = (Real.exp (2 * w.re)) ^ n := by
+    rw [← Real.exp_nat_mul]
+    ring_nf
+  rw [h_pow]
   exact mul_le_of_le_one_left (by positivity) (block1dCoeff_le_one hh n)

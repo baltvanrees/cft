@@ -286,89 +286,88 @@ lemma norm_term_eq_re (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j a : ℕ) :
     rw [h1]
     exact abs_of_nonneg hc
   rw [hc_abs]
-  have H : (↑c * (↑‖ρl‖ : ℂ) ^ a * (↑‖ρr‖ : ℂ) ^ (j - a)) = ((c * ‖ρl‖ ^ a * ‖ρr‖ ^ (j - a) : ℝ) : ℂ) := by push_cast; rfl
+  have H : (↑c * (↑‖ρl‖ : ℂ) ^ a * (↑‖ρr‖ : ℂ) ^ (j - a)) =
+      ((c * ‖ρl‖ ^ a * ‖ρr‖ ^ (j - a) : ℝ) : ℂ) := by push_cast; rfl
   rw [H, Complex.ofReal_re]
 
--- inequality for the sum
--- lemma geg_two_var_sum_le_max_R (ν : ℝ) (hν : 0 ≤ ν) (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) (j : ℕ) :
---     (geg_two_var_sum (ν : ℂ) (x : ℂ) (y : ℂ) j).re ≤
---     (max x y) ^ j * (geg_two_var_sum (ν : ℂ) (1 : ℂ) (1 : ℂ) j).re := by
---   dsimp [geg_two_var_sum]
---   rw [re_sum, re_sum, Finset.mul_sum]
---   apply Finset.sum_le_sum
---   intro a ha
---   have h_coeff := geg_two_var_coeff_nonneg ν hν j a
---   have h_coeff_re : 0 ≤ (geg_two_var_coeff (ν : ℂ) j a).re := h_coeff.1
---   have h_coeff_im : (geg_two_var_coeff (ν : ℂ) j a).im = 0 := h_coeff.2
-
---   have h_term_re : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a * (y : ℂ) ^ (j - a)).re =
---       (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a * y ^ (j - a) := by
---     have hx_re : ((x : ℂ) ^ a).re = x ^ a := by rw [←ofReal_pow, ofReal_re]
---     have hx_im : ((x : ℂ) ^ a).im = 0 := by rw [←ofReal_pow, ofReal_im]
---     have hy_re : ((y : ℂ) ^ (j - a)).re = y ^ (j - a) := by rw [←ofReal_pow, ofReal_re]
---     have hy_im : ((y : ℂ) ^ (j - a)).im = 0 := by rw [←ofReal_pow, ofReal_im]
---     have hp1 : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a).re = (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a := by
---       rw [mul_re, hx_re, hx_im, h_coeff_im, mul_zero, sub_zero]
---     have hp2 : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a).im = 0 := by
---       rw [mul_im, hx_im, h_coeff_im, mul_zero, zero_mul, add_zero]
---     rw [mul_re, hy_re, hy_im, hp1, hp2, mul_zero, sub_zero]
-
---   have h_term1_re : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a * (1 : ℂ) ^ (j - a)).re =
---       (geg_two_var_coeff (ν : ℂ) j a).re := by
---     have hx_re : ((1 : ℂ) ^ a).re = 1 := by simp
---     have hx_im : ((1 : ℂ) ^ a).im = 0 := by simp
---     have hy_re : ((1 : ℂ) ^ (j - a)).re = 1 := by simp
---     have hy_im : ((1 : ℂ) ^ (j - a)).im = 0 := by simp
---     have hp1 : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a).re = (geg_two_var_coeff (ν : ℂ) j a).re * 1 := by
---       rw [mul_re, hx_re, hx_im, h_coeff_im, mul_zero, sub_zero]
---     have hp2 : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a).im = 0 := by
---       rw [mul_im, hx_im, h_coeff_im, mul_zero, zero_mul, add_zero]
---     rw [mul_re, hy_re, hy_im, hp1, hp2, mul_zero, sub_zero, mul_one, mul_one]
-
---   rw [h_term_re, h_term1_re]
-
---   have h_pl : x ^ a ≤ (max x y) ^ a := pow_le_pow_left₀ hx (le_max_left x y) a
---   have h_pr : y ^ (j - a) ≤ (max x y) ^ (j - a) := pow_le_pow_left₀ hy (le_max_right x y) (j - a)
-
---   have h_prod : x ^ a * y ^ (j - a) ≤ (max x y) ^ a * (max x y) ^ (j - a) := by
---     exact mul_le_mul h_pl h_pr (pow_nonneg hy _) (pow_nonneg (le_trans hx (le_max_left x y)) _)
-
---   have h_pow_add : (max x y) ^ a * (max x y) ^ (j - a) = (max x y) ^ j := by
---     rw [←pow_add]
---     have ha_lt : a < j + 1 := Finset.mem_range.mp ha
---     have ha_le : a ≤ j := Nat.lt_succ_iff.mp ha_lt
---     rw [Nat.add_sub_of_le ha_le]
-
---   rw [h_pow_add] at h_prod
-
---   have h_bound : (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a * y ^ (j - a) ≤
---       (geg_two_var_coeff (ν : ℂ) j a).re * (max x y) ^ j := by
---     calc
---       (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a * y ^ (j - a) =
---       (geg_two_var_coeff (ν : ℂ) j a).re * (x ^ a * y ^ (j - a)) := by ring
---       _ ≤ (geg_two_var_coeff (ν : ℂ) j a).re * (max x y) ^ j := mul_le_mul_of_nonneg_left h_prod h_coeff_re
-
---   have h_comm : (geg_two_var_coeff (ν : ℂ) j a).re * (max x y) ^ j =
---       (max x y) ^ j * (geg_two_var_coeff (ν : ℂ) j a).re := mul_comm _ _
---   rw [h_comm] at h_bound
---   exact h_bound
+lemma geg_two_var_sum_le_max_R (ν : ℝ) (hν : 0 ≤ ν) (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) (j : ℕ) :
+    (geg_two_var_sum (ν : ℂ) (x : ℂ) (y : ℂ) j).re ≤
+    (max x y) ^ j * (geg_two_var_sum (ν : ℂ) (1 : ℂ) (1 : ℂ) j).re := by
+  dsimp [geg_two_var_sum]
+  rw [re_sum, re_sum, Finset.mul_sum]
+  apply Finset.sum_le_sum
+  intro a ha
+  have h_coeff := geg_two_var_coeff_nonneg ν hν j a
+  have h_coeff_re : 0 ≤ (geg_two_var_coeff (ν : ℂ) j a).re := h_coeff.1
+  have h_coeff_im : (geg_two_var_coeff (ν : ℂ) j a).im = 0 := h_coeff.2
+  have h_term_re : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a * (y : ℂ) ^ (j - a)).re =
+      (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a * y ^ (j - a) := by
+    have hx_re : ((x : ℂ) ^ a).re = x ^ a := by rw [← ofReal_pow, ofReal_re]
+    have hx_im : ((x : ℂ) ^ a).im = 0 := by rw [← ofReal_pow, ofReal_im]
+    have hy_re : ((y : ℂ) ^ (j - a)).re = y ^ (j - a) := by rw [← ofReal_pow, ofReal_re]
+    have hy_im : ((y : ℂ) ^ (j - a)).im = 0 := by rw [← ofReal_pow, ofReal_im]
+    have hp1 : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a).re =
+        (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a := by
+      rw [mul_re, hx_re, hx_im, h_coeff_im, mul_zero, sub_zero]
+    have hp2 : ((geg_two_var_coeff (ν : ℂ) j a) * (x : ℂ) ^ a).im = 0 := by
+      rw [mul_im, hx_im, h_coeff_im, mul_zero, zero_mul, add_zero]
+    rw [mul_re, hy_re, hy_im, hp1, hp2, mul_zero, sub_zero]
+  have h_term1_re : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a * (1 : ℂ) ^ (j - a)).re =
+      (geg_two_var_coeff (ν : ℂ) j a).re := by
+    have hx_re : ((1 : ℂ) ^ a).re = 1 := by simp
+    have hx_im : ((1 : ℂ) ^ a).im = 0 := by simp
+    have hy_re : ((1 : ℂ) ^ (j - a)).re = 1 := by simp
+    have hy_im : ((1 : ℂ) ^ (j - a)).im = 0 := by simp
+    have hp1 : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a).re =
+        (geg_two_var_coeff (ν : ℂ) j a).re * 1 := by
+      rw [mul_re, hx_re, hx_im, h_coeff_im, mul_zero, sub_zero]
+    have hp2 : ((geg_two_var_coeff (ν : ℂ) j a) * (1 : ℂ) ^ a).im = 0 := by
+      rw [mul_im, hx_im, h_coeff_im, mul_zero, zero_mul, add_zero]
+    rw [mul_re, hy_re, hy_im, hp1, hp2, mul_zero, sub_zero, mul_one, mul_one]
+  rw [h_term_re, h_term1_re]
+  have h_pl : x ^ a ≤ (max x y) ^ a := pow_le_pow_left₀ hx (le_max_left x y) a
+  have h_pr : y ^ (j - a) ≤ (max x y) ^ (j - a) :=
+    pow_le_pow_left₀ hy (le_max_right x y) (j - a)
+  have h_prod : x ^ a * y ^ (j - a) ≤ (max x y) ^ a * (max x y) ^ (j - a) :=
+    mul_le_mul h_pl h_pr (pow_nonneg hy _) (pow_nonneg (le_trans hx (le_max_left x y)) _)
+  have h_pow_add : (max x y) ^ a * (max x y) ^ (j - a) = (max x y) ^ j := by
+    rw [← pow_add]
+    have ha_lt : a < j + 1 := Finset.mem_range.mp ha
+    have ha_le : a ≤ j := Nat.lt_succ_iff.mp ha_lt
+    rw [Nat.add_sub_of_le ha_le]
+  rw [h_pow_add] at h_prod
+  calc
+    (geg_two_var_coeff (ν : ℂ) j a).re * x ^ a * y ^ (j - a)
+      = (geg_two_var_coeff (ν : ℂ) j a).re * (x ^ a * y ^ (j - a)) := by ring
+    _ ≤ (geg_two_var_coeff (ν : ℂ) j a).re * (max x y) ^ j :=
+      mul_le_mul_of_nonneg_left h_prod h_coeff_re
+    _ = (max x y) ^ j * (geg_two_var_coeff (ν : ℂ) j a).re := mul_comm _ _
 
 lemma norm_geg_two_var_sum_le (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j : ℕ) :
-    ‖geg_two_var_sum (ν : ℂ) ρl ρr j‖ ≤ (geg_two_var_sum (ν : ℂ) (norm ρl) (norm ρr) j).re := by
+    ‖geg_two_var_sum (ν : ℂ) ρl ρr j‖ ≤
+      (geg_two_var_sum (ν : ℂ) (norm ρl) (norm ρr) j).re := by
   dsimp [geg_two_var_sum]
-  have h1 : ‖∑ a ∈ Finset.range (j + 1), geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖
-      ≤ ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ := norm_sum_le _ _
-  have h2 : ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖
-      = ∑ a ∈ Finset.range (j + 1), (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
+  have h1 :
+      ‖∑ a ∈ Finset.range (j + 1), geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ ≤
+        ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ :=
+    norm_sum_le _ _
+  have h2 :
+      ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ =
+        ∑ a ∈ Finset.range (j + 1),
+          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
     apply Finset.sum_congr rfl
     intro x _
     rw [norm_term_eq_re ν hν ρl ρr j x]
-  have h3 : ∑ a ∈ Finset.range (j + 1), (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re
-      = (∑ a ∈ Finset.range (j + 1), geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
+  have h3 :
+      ∑ a ∈ Finset.range (j + 1),
+          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re =
+        (∑ a ∈ Finset.range (j + 1),
+          geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
     simp
   linarith
 
-/-- Specialization of `geg_two_var_explicit` to the Euclidean section $(\rho_l, \rho_r) = (\rho, \bar{\rho})$. -/
+/-- Specialization of `geg_two_var_explicit` to the Euclidean section
+$(\rho_l, \rho_r) = (\rho, \bar{\rho})$. -/
 theorem geg_two_var_conj (ν ρ : ℂ) (j : ℕ) :
     (‖ρ‖ : ℂ) ^ j * (gegenbauer ν j).eval (Real.cos ρ.arg : ℂ) =
       geg_two_var_sum ν ρ (conj ρ) j := by

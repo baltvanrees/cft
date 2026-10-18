@@ -5,3 +5,9 @@ import CFT.Blocks
 import CFT.Blocks_pdisk
 import CFT.Corr
 import CFT.Corr_pdisk
+import CFT.Vitali
+import CFT.MonomialBootstrap.MonomialDecomp
+import CFT.MonomialBootstrap.FourierProj
+import CFT.MonomialBootstrap.Gap
+import CFT.MonomialBootstrap.IdentityProj
+import CFT.MonomialBootstrap.LargeSpin

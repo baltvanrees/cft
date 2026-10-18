@@ -78,6 +78,10 @@ structure ConformalBlock (ν Δ : ℝ) (l : ℕ) where
   level : ∀ n : ℕ, ConformalBlockLevel l n
   /-- Normalization of the primary operator contribution at $n = 0, j = l$. -/
   norm_primary : (level 0).A l = 1
+  /-- For equal external dimensions ($\Delta_{12} = \Delta_{34} = 0$), the $\rho$-expansion only
+  contains even descendant levels $n$, reflecting
+  $G_{\Delta, l}(-\rho) = (-1)^l G_{\Delta, l}(\rho)$ under $z \mapsto z / (z - 1)$. -/
+  A_odd_level : ∀ n : ℕ, Odd n → ∀ j : ℕ, (level n).A j = 0
   /-- Radial summability of the block expansion on the unit disk $r \in (0, 1)$ at $\theta = 0$
   ($\cos \theta = 1$). -/
   summable_radial : ∀ r ∈ Ioo (0 : ℝ) 1,

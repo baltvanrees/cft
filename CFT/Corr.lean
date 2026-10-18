@@ -42,6 +42,10 @@ structure FourPointData (ν Δ_phi : ℝ) where
   $\tau = \Delta - l \ge 0$. -/
   support_unitary : mu_measure { p : ℝ × ℕ | p.1 < (p.2 : ℝ) } = 0
 
+  /-- Bose symmetry of identical external scalars: the OPE measure is supported on even spins
+  $l$. -/
+  support_even_spin : mu_measure { p : ℝ × ℕ | Odd p.2 } = 0
+
   /-- Euclidean OPE convergence on the punctured open unit $\rho$-disk $0 < \|\rho\| < 1$. -/
   converges_correlator_eucl : ∀ ρ ∈ ball (0 : ℂ) 1 \ {0},
     Integrable (fun p : ℝ × ℕ => (blocks p.1 p.2).eval ρ) mu_measure

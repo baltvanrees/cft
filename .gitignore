@@ -1,4 +1,11 @@
 /.lake
 /docbuild
-/docbuild
-
+.DS_Store
+/CFT/Scratch.lean
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz

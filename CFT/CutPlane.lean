@@ -460,3 +460,63 @@ lemma ofReal_mem_CutPlane {x : ℝ} (hx : x ∈ Ioo (0 : ℝ) 1) : (x : ℂ) ∈
   rw [mem_CutPlane_iff]
   right
   simp [hx.1, hx.2]
+
+/-!
+## Universal Cover of the Punctured Unit Disk and Polydisk (`UcDisk` and `UcPdisk`)
+
+Under $\rho = e^w$, the left half-plane $\operatorname{UcDisk} = \{w \in \mathbb{C} \mid
+\operatorname{Re}(w) < 0\}$ is the universal cover of the punctured unit disk $0 < \|\rho\| < 1$,
+and $\operatorname{UcPdisk} = \operatorname{UcDisk} \times \operatorname{UcDisk}$ is the universal
+cover of the punctured unit polydisk.
+-/
+
+/-- The universal cover of the punctured unit disk $0 < \|\rho\| < 1$ via $\rho = e^w$,
+i.e., the left half-plane $\{w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\}$. -/
+def UcDisk : Set ℂ :=
+  { w : ℂ | w.re < 0 }
+
+/-- The universal cover of the punctured unit polydisk via $(\rho_l, \rho_r) = (e^{w_l}, e^{w_r})$,
+i.e., $\operatorname{UcDisk} \times \operatorname{UcDisk}$. -/
+def UcPdisk : Set (ℂ × ℂ) :=
+  UcDisk ×ˢ UcDisk
+
+@[simp]
+lemma mem_UcDisk_iff {w : ℂ} : w ∈ UcDisk ↔ w.re < 0 := Iff.rfl
+
+@[simp]
+lemma mem_UcPdisk_iff {w : ℂ × ℂ} : w ∈ UcPdisk ↔ w.1.re < 0 ∧ w.2.re < 0 := Iff.rfl
+
+lemma isOpen_UcDisk : IsOpen UcDisk :=
+  isOpen_lt continuous_re continuous_const
+
+lemma isOpen_UcPdisk : IsOpen UcPdisk :=
+  isOpen_UcDisk.prod isOpen_UcDisk
+
+lemma exp_norm_lt_one_of_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) : ‖Complex.exp w‖ < 1 := by
+  rw [Complex.norm_exp, Real.exp_lt_one_iff]
+  exact hw
+
+/-- The logarithmic radial coordinate $w(z) = \log(\rho(z))$ mapping `CutPlane` into `UcDisk`,
+so that $\rho(z) = e^{w(z)}$. -/
+noncomputable def logRho (z : ℂ) : ℂ :=
+  Complex.log (rho z)
+
+lemma exp_logRho {z : ℂ} (hz : z ∈ CutPlane) : Complex.exp (logRho z) = rho z :=
+  Complex.exp_log (slitPlane_ne_zero (rho_mem_slitPlane hz))
+
+lemma logRho_mem_UcDisk {z : ℂ} (hz : z ∈ CutPlane) : logRho z ∈ UcDisk := by
+  rw [mem_UcDisk_iff, logRho, Complex.log_re,
+    Real.log_neg_iff (norm_pos_iff.mpr (slitPlane_ne_zero (rho_mem_slitPlane hz)))]
+  exact rho_norm_lt_one hz
+
+lemma conj_logRho {z : ℂ} (hz : z ∈ CutPlane) :
+    logRho (conj z) = conj (logRho z) := by
+  dsimp [logRho]
+  rw [conj_rho hz, Complex.log_conj (rho z) (slitPlane_arg_ne_pi (rho_mem_slitPlane hz))]
+
+lemma differentiableAt_logRho {z : ℂ} (hz : z ∈ CutPlane) : DifferentiableAt ℂ logRho z :=
+  (differentiableAt_rho hz).clog (rho_mem_slitPlane hz)
+
+lemma differentiableOn_logRho : DifferentiableOn ℂ logRho CutPlane := fun _ hz =>
+  (differentiableAt_logRho hz).differentiableWithinAt
+
