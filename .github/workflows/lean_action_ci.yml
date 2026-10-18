@@ -5,6 +5,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read # Read access to repository contents
@@ -18,26 +22,127 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
-      - uses: leanprover-community/docgen-action@v1
 
-      - name: Hide external libraries in doc-gen4 sidebar and expand CFT
+      - name: Cache doc-gen4 binary and dependencies
+        if: github.event_name == 'push'
+        uses: actions/cache@v4
+        with:
+          path: |
+            docbuild/lake-manifest.json
+            .lake/packages/doc-gen4
+            .lake/packages/leansqlite
+            .lake/packages/MD4Lean
+            .lake/packages/UnicodeBasic
+            .lake/packages/BibtexQuery
+          key: docgen4-cft-v1-${{ hashFiles('lean-toolchain') }}
+
+      - name: Build CFT API documentation
         if: github.event_name == 'push'
         run: |
-          cat << 'EOF' >> docs/docs/style.css
+          set -euo pipefail
+          mkdir -p docbuild
+          cat << EOF > docbuild/lakefile.toml
+          name = "docbuild"
+          reservoir = false
+          version = "0.1.0"
+          packagesDir = "../.lake/packages"
 
-          /* Hide external dependency libraries in the sidebar and keep only CFT */
-          .module_list > details.nav_sect:not([data-path="./CFT.html"]) {
-            display: none !important;
-          }
+          [[require]]
+          name = "cft"
+          path = "../"
+
+          [[require]]
+          scope = "leanprover"
+          name = "doc-gen4"
+          rev = "$(< lean-toolchain cut -f 2 -d: )"
           EOF
+
+          if [ ! -d ".lake/packages/doc-gen4" ] || [ ! -f "docbuild/lake-manifest.json" ]; then
+            (cd docbuild && MATHLIB_NO_CACHE_ON_UPDATE=1 ~/.elan/bin/lake update cft)
+          fi
+
+          # Patch doc-gen4 to build docs only for CFT modules and link external declarations to mathlib4_docs
+          python3 - << 'PYEOF'
+          from pathlib import Path
+
+          lakefile = Path(".lake/packages/doc-gen4/lakefile.lean")
+          orig_text = lakefile.read_text()
+          text = orig_text.replace(
+              "  let coreComponents := #[`Init, `Std, `Lake, `Lean]",
+              "  let coreComponents : Array Lean.Name := #[]",
+          )
+          text = text.replace(
+              "  let depDocJobs := Job.mixArray <| ← imports.mapM fun mod => fetch <| mod.facet `docInfo",
+              "  let depDocJobs := Job.mixArray <| ← (imports.filter (·.pkg.name == mod.pkg.name)).mapM fun mod => fetch <| mod.facet `docInfo",
+          )
+          text = text.replace(
+              """  let coreRoots := #[`Init, `Std, `Lake, `Lean]
+            let rootNames := rootMods.map (·.name) ++ coreRoots
+            let manifestFile := buildDir / "doc-manifest.json"
+            coreJob.bindM fun _ => do
+              docInfoJobs.bindM fun _ => do
+                bibPrepassJob.bindM fun _ => do
+                  exeJob.mapM fun exeFile => do
+                    buildFileUnlessUpToDate' markerFile do
+                      logInfo description
+                      proc {
+                        cmd := exeFile.toString
+                        args := #["fromDb", "--build", buildDir.toString, "--manifest", manifestFile.toString, dbPath.toString] ++ rootNames.map (·.toString)""",
+              """  let manifestFile := buildDir / "doc-manifest.json"
+            coreJob.bindM fun _ => do
+              docInfoJobs.bindM fun _ => do
+                bibPrepassJob.bindM fun _ => do
+                  exeJob.mapM fun exeFile => do
+                    buildFileUnlessUpToDate' markerFile do
+                      logInfo description
+                      proc {
+                        cmd := exeFile.toString
+                        args := #["fromDb", "--build", buildDir.toString, "--manifest", manifestFile.toString, dbPath.toString]""",
+          )
+          if text != orig_text:
+              lakefile.write_text(text)
+
+          base = Path(".lake/packages/doc-gen4/DocGen4/Output/Base.lean")
+          orig_btext = base.read_text()
+          btext = orig_btext.replace(
+              """def moduleNameToLink (n : Name) : BaseHtmlM String := do
+            let parts := n.components.map (Name.toString (escape := False))
+            return (← getRoot) ++ (parts.intersperse "/").foldl (· ++ ·) "" ++ ".html\"""",
+              """def moduleNameToLink (n : Name) : BaseHtmlM String := do
+            let parts := n.components.map (Name.toString (escape := False))
+            if n.getRoot == `CFT then
+              return (← getRoot) ++ (parts.intersperse "/").foldl (· ++ ·) "" ++ ".html"
+            else
+              return "https://leanprover-community.github.io/mathlib4_docs/" ++ (parts.intersperse "/").foldl (· ++ ·) "" ++ ".html\"""",
+          )
+          btext = btext.replace(
+              """          | none =>
+                      -- Step 3: Give up
+                      return (innerHasAnchor, fn innerHtml)""",
+              """          | none =>
+                      -- Step 3: Link external names to mathlib4_docs
+                      let extLink := s!"https://leanprover-community.github.io/mathlib4_docs/find/?pattern={name}#doc"
+                      if innerHasAnchor then
+                        return (true, innerHtml)
+                      else
+                        return (true, #[<a href={extLink}>[innerHtml]</a>])""",
+          )
+          if btext != orig_btext:
+              base.write_text(btext)
+          PYEOF
+
+          (cd docbuild && ~/.elan/bin/lake build CFT:docs)
+
+          mkdir -p docs
+          cp -r docbuild/.lake/build/doc docs/docs
           sed -i 's|<details class="nav_sect" data-path="./CFT.html">|<details class="nav_sect" data-path="./CFT.html" open>|g' docs/docs/navbar.html
 
-      - name: Upload cleaned website artifact
+      - name: Upload website artifact
         if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: docs/
 
-      - name: Deploy cleaned website to GitHub Pages
+      - name: Deploy website to GitHub Pages
         if: github.event_name == 'push'
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
