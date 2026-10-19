@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Balt van Rees
+Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.RingTheory.Polynomial.Pochhammer
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
@@ -11,21 +11,24 @@ import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.Tactic.Positivity
 
 /-!
-# One-Dimensional ($SL(2, \mathbb{R})$ / Collinear) Conformal Blocks
+# One-Dimensional Conformal Blocks
 
-This file defines the one-dimensional (collinear) conformal blocks $k_h(e^w)$ of conformal weight
-$h$ in the universal-cover coordinate $w$ (where $\rho = e^w$ and $\operatorname{Re}(w) < 0$):
+This file defines the one-dimensional (collinear or $SL(2,ℝ)$) conformal blocks $k_h(e^w)$ of
+conformal weight $h$, using a coordinate $w$ such that $\rho = e^w$. This allows for a smooth
+extension to the universal cover of the polydisk, which is the domain $\operatorname{Re}(w) < 0$).
+
+We have:
 $$
 k_h(e^w) = e^{h w} \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; e^{2w}\right)
   = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} e^{(h + 2n) w}.
 $$
 For $h \ge 0$, all series coefficients are non-negative and bounded above by $1$, ensuring absolute
-convergence on the left half-plane $\operatorname{Re}(w) < 0$.
+convergence on the left half-plane.
 -/
 
 open Real Complex Topology Set Metric Polynomial
 
-/-- Rising Pochhammer symbol $(x)_n$ evaluated on `ℝ`. -/
+/-- Real rising Pochhammer symbol $(x)_n$. -/
 noncomputable def realPochhammer (x : ℝ) (n : ℕ) : ℝ :=
   (ascPochhammer ℝ n).eval x
 
@@ -71,8 +74,7 @@ lemma realPochhammer_one (n : ℕ) :
     push_cast
     ring
 
-/-- Expansion coefficient of $e^{(h + 2n) w}$ in the 1D conformal block
-$k_h(e^w) = e^{h w} \, {}_2F_1(h, 1/2; h + 1/2; e^{2w})$:
+/-- Coefficient of $e^{(h + 2n) w}$ in the expansion of the conformal block:
 $$c_n(h) = \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!}.$$ -/
 noncomputable def block1dCoeff (h : ℝ) (n : ℕ) : ℝ :=
   realPochhammer h n * realPochhammer (1 / 2) n /
@@ -114,13 +116,11 @@ lemma block1dCoeff_le_one {h : ℝ} (hh : 0 ≤ h) (n : ℕ) :
   exact mul_le_mul h_le1 h_le2
     (realPochhammer_nonneg (by norm_num) n) (le_of_lt h3)
 
-/-- The one-dimensional ($SL(2, \mathbb{R})$ / collinear) conformal block of weight $h$ in the
-coordinate $w$ (where $\rho = e^w$ and $\operatorname{Re}(w) < 0$):
-$$k_h(e^w) = e^{h w} \, {}_2F_1\!\left(h, \frac{1}{2}; h + \frac{1}{2}; e^{2w}\right)
-  = \sum_{n=0}^{\infty} \frac{(h)_n (1/2)_n}{(h + 1/2)_n \, n!} e^{(h + 2n) w}.$$ -/
+/-- The one-dimensional conformal block defined through its series expansion as above. -/
 noncomputable def block1d (h : ℝ) (w : ℂ) : ℂ :=
   ∑' n : ℕ, (block1dCoeff h n : ℂ) * Complex.exp (((h + 2 * (n : ℝ) : ℝ) : ℂ) * w)
 
+/-- Proof of summability (convergence) of the sum if $\operatorname{Re}(w) < 0$ and $0 ≤ h$. -/
 lemma summable_block1d {h : ℝ} (hh : 0 ≤ h) {w : ℂ} (hw : w.re < 0) :
     Summable (fun n : ℕ =>
       (block1dCoeff h n : ℂ) * Complex.exp (((h + 2 * (n : ℝ) : ℝ) : ℂ) * w)) := by

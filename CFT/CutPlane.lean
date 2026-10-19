@@ -11,7 +11,34 @@ import Mathlib.Topology.Connected.PathConnected
 import Mathlib.Tactic.LinearCombination
 
 /-!
-# The Twice-Cut Plane and Radial Coordinate `rho`
+# The twice-cut $z$ plane, the unit $ρ$ disk, and the left half $w$ plane.
+
+In this file we define the set `CutPlane` as the doubly cut complex plane:
+$$
+ℂ  \backslash ((-∞, 0] ∪ [1, ∞))
+$$
+where both the $s$- and the $t$-channel OPE converge absolutely. We then introduce
+the radial coordinate $ρ$ such that
+$$
+z = \frac{4 ρ}{(1+ρ)^2}
+$$
+which maps the unit ρ disk biholomorphically to theregion $z ∈ ℂ \backslash [1, ∞)$, and maps
+$ρ ∈ (-1,0]$ to $z ∈ (-∞, 0]$. Correlation functions have a branch cut at this second interval,
+so we pass to the universal cover of the punctured ρ disk by defining:
+$$
+\rho = e^{w}
+$$
+We will always take $\operatorname{Re}(w) < 0$, and call the corresponding left half plane
+`UcDisk` since it is the universal cover of the punctured unit disk. Repeating the analysis for
+$\bar \rho$ we get the regions we call `pdisk` for the polydisk and `UcPdisk` for the product
+of two left half planes.
+-/
+
+/-!
+## The twice-cut $z$ plane
+
+Here we define `CutPlane` and provide some elementary properties. Not all of these are used
+elsewhere at the moment.
 -/
 
 open Real Complex Topology Set Metric
@@ -148,6 +175,177 @@ lemma one_sub_cpow_half_re_pos {z : ℂ} (hz : z ∈ CutPlane) : 0 < ((1 - z) ^ 
     exact ⟨h_npi, lt_of_le_of_ne h_pi (slitPlane_arg_ne_pi hz.1)⟩
   exact ⟨by linarith [harg.1], by linarith [harg.2]⟩
 
+/-!
+## Analyticity and analytic continuations on `CutPlane`
+
+Recall that in Lean, analyticity is encountered as complex differentiability. There is
+`DifferentiableAt` for analyticity at a point, and `DifferentiableOn` for analyticity in
+a region.
+-/
+
+lemma differentiableOn_cpow_const (c : ℂ) :
+    DifferentiableOn ℂ (fun z => z ^ c) CutPlane := by
+  intro z hz
+  exact (differentiableAt_id.cpow_const hz.2).differentiableWithinAt
+
+lemma differentiableOn_one_sub_cpow_const (c : ℂ) :
+    DifferentiableOn ℂ (fun z => (1 - z) ^ c) CutPlane := by
+  intro z hz
+  have h1z_diff : DifferentiableAt ℂ (fun z => 1 - z) z := by fun_prop
+  exact (h1z_diff.cpow_const hz.1).differentiableWithinAt
+
+/-- Proof that $z^{-Δ} \bar z^{-Δ} = \| z \|^{-2 Δ}$ on the `CutPlane`. This will allow us
+to analytically continue the crossing symmetry equation. -/
+lemma cpow_mul_conj_cpow {Δ : ℝ} {z : ℂ} (hz : z ∈ slitPlane) :
+    z ^ (- (Δ : ℂ)) * (conj z) ^ (- (Δ : ℂ)) = (‖z‖ : ℂ) ^ (-2 * (Δ : ℂ)) := by
+  have hz_arg : z.arg ≠ π := slitPlane_arg_ne_pi hz
+  have hz_ne : z ≠ 0 := slitPlane_ne_zero hz
+  have h_real : conj (- (Δ : ℂ)) = - (Δ : ℂ) := by
+    have : (- (Δ : ℂ)) = ↑(-Δ) := by push_cast; rfl
+    rw [this, conj_ofReal]
+  have h_conj : (conj z) ^ (- (Δ : ℂ)) = conj (z ^ (- (Δ : ℂ))) := by
+    have h := conj_cpow z (- (Δ : ℂ)) hz_arg
+    rwa [h_real] at h
+  rw [h_conj, mul_conj, Complex.normSq_eq_norm_sq]
+  have h_norm : ‖z ^ (- (Δ : ℂ))‖ = ‖z‖ ^ (-Δ) := by
+    have : (- (Δ : ℂ)) = ↑(-Δ) := by push_cast; rfl
+    rw [this, norm_cpow_real]
+  rw [h_norm]
+  have hz_pos : 0 < ‖z‖ := norm_pos_iff.mpr hz_ne
+  have h_sq : (‖z‖ ^ (-Δ)) ^ 2 = ‖z‖ ^ (-2 * Δ) := by
+    rw [sq, ← Real.rpow_add hz_pos]
+    ring_nf
+  rw [h_sq]
+  have h_cast : ((-2 * Δ : ℝ) : ℂ) = -2 * (Δ : ℂ) := by push_cast; rfl
+  rw [← h_cast]
+  exact ofReal_cpow hz_pos.le (-2 * Δ)
+
+lemma mem_closure_of_subset_real_interval (a b : ℝ) (x₀ : ℝ) (hx₀ : x₀ ∈ Set.Ioo a b)
+    (s : Set ℂ) (hs : ∀ x ∈ Set.Ioo a b, (x : ℂ) ∈ s) :
+    (x₀ : ℂ) ∈ closure (s \ {(x₀ : ℂ)}) := by
+  have h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo x₀ b ⊆ s \ {(x₀ : ℂ)} := by
+    rintro z ⟨x, hx, rfl⟩
+    refine ⟨hs x ⟨by linarith [hx₀.1, hx.1], hx.2⟩, ?_⟩
+    simp only [Set.mem_singleton_iff, ofReal_inj]
+    exact ne_of_gt hx.1
+  apply closure_mono h_sub
+  have h_cl : (x₀ : ℂ) ∈ (fun x : ℝ => (x : ℂ)) '' closure (Set.Ioo x₀ b) := by
+    refine ⟨x₀, ?_, rfl⟩
+    rw [closure_Ioo (ne_of_lt hx₀.2)]
+    exact Set.left_mem_Icc.mpr (le_of_lt hx₀.2)
+  exact image_closure_subset_closure_image continuous_ofReal h_cl
+
+lemma eqOn_of_differentiableOn_of_eqOn_real_interval
+    {U : Set ℂ} (hU_open : IsOpen U) (hU_conn : IsPreconnected U)
+    {f g : ℂ → ℂ} (hf : DifferentiableOn ℂ f U) (hg : DifferentiableOn ℂ g U)
+    (a b : ℝ) (x₀ : ℝ) (hx₀ : x₀ ∈ Set.Ioo a b)
+    (h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo a b ⊆ U)
+    (h_eq : ∀ x ∈ Set.Ioo a b, f (x : ℂ) = g (x : ℂ)) :
+    EqOn f g U := by
+  have hf_an : AnalyticOnNhd ℂ f U := hf.analyticOnNhd hU_open
+  have hg_an : AnalyticOnNhd ℂ g U := hg.analyticOnNhd hU_open
+  have hx₀_U : (x₀ : ℂ) ∈ U := h_sub ⟨x₀, hx₀, rfl⟩
+  have h_cl : (x₀ : ℂ) ∈ closure ({z | f z = g z} \ {(x₀ : ℂ)}) := by
+    apply mem_closure_of_subset_real_interval a b x₀ hx₀
+    exact h_eq
+  exact hf_an.eqOn_of_preconnected_of_mem_closure hg_an hU_conn hx₀_U h_cl
+
+/-- An analytic continuation theorem: two functions analytic on `CutPlane` and being pointwise
+equal on the real unit interval, are in fact the same everywhere. -/
+theorem eqOn_CutPlane_of_differentiableOn_of_eqOn_interval
+    {f g : ℂ → ℂ} (hf : DifferentiableOn ℂ f CutPlane) (hg : DifferentiableOn ℂ g CutPlane)
+    (h_eq : ∀ x ∈ Set.Ioo (0 : ℝ) 1, f (x : ℂ) = g (x : ℂ)) :
+    EqOn f g CutPlane := by
+  have h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo 0 1 ⊆ CutPlane := by
+    rintro z ⟨x, hx, rfl⟩
+    rw [mem_CutPlane_iff]
+    right
+    simp [hx.1, hx.2]
+  have h_half : (1/2 : ℝ) ∈ Set.Ioo (0 : ℝ) 1 := by
+    constructor <;> norm_num
+  exact eqOn_of_differentiableOn_of_eqOn_real_interval
+    isOpen_CutPlane isPreconnected_CutPlane hf hg 0 1 (1/2) h_half h_sub h_eq
+
+lemma exists_ball_pdisk_dom (ρl : ℂ) (hρl_slit : ρl ∈ slitPlane) (hρl_norm : ‖ρl‖ < 1) :
+    ∃ (ε r₀ r₁ : ℝ), 0 < ε ∧ 0 < r₀ ∧ r₁ < 1 ∧
+      (∀ z ∈ ball ρl ε, z ∈ slitPlane ∧ r₀ ≤ ‖z‖ ∧ ‖z‖ ≤ r₁) := by
+  have h_open : IsOpen (slitPlane ∩ ball (0 : ℂ) 1) :=
+    isOpen_slitPlane.inter Metric.isOpen_ball
+  have h_mem : ρl ∈ slitPlane ∩ ball (0 : ℂ) 1 :=
+    ⟨hρl_slit, mem_ball_zero_iff.mpr hρl_norm⟩
+  rcases Metric.isOpen_iff.mp h_open ρl h_mem with ⟨ε₁, hε₁_pos, hε₁_sub⟩
+  have hρl_pos : 0 < ‖ρl‖ := norm_pos_iff.mpr (slitPlane_ne_zero hρl_slit)
+  set r₀ := ‖ρl‖ / 2
+  set r₁ := (1 + ‖ρl‖) / 2
+  have hr₀_pos : 0 < r₀ := by dsimp [r₀]; linarith [hρl_pos]
+  have hr₁_lt1 : r₁ < 1 := by dsimp [r₁]; linarith [hρl_norm]
+  set ε := min ε₁ (min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2))
+  have hε_pos : 0 < ε := by
+    refine lt_min hε₁_pos (lt_min (by positivity) (by linarith))
+  refine ⟨ε, r₀, r₁, hε_pos, hr₀_pos, hr₁_lt1, ?_⟩
+  intro z hz
+  have hz_ε₁ : z ∈ ball ρl ε₁ := by
+    apply Metric.ball_subset_ball (min_le_left _ _) hz
+  have hz_mem := hε₁_sub hz_ε₁
+  have hz_dist : dist z ρl < ε := Metric.mem_ball.mp hz
+  have hz_norm_dist : ‖z - ρl‖ < ε := by rwa [dist_eq_norm] at hz_dist
+  have hz_dist_r₀ : ‖z - ρl‖ < ‖ρl‖ / 2 := by
+    calc
+      ‖z - ρl‖ < ε := hz_norm_dist
+      _ ≤ min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2) := min_le_right _ _
+      _ ≤ ‖ρl‖ / 2 := min_le_left _ _
+  have hz_dist_r₁ : ‖z - ρl‖ < (1 - ‖ρl‖) / 2 := by
+    calc
+      ‖z - ρl‖ < ε := hz_norm_dist
+      _ ≤ min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2) := min_le_right _ _
+      _ ≤ (1 - ‖ρl‖) / 2 := min_le_right _ _
+  have h_ge : r₀ ≤ ‖z‖ := by
+    have : ‖ρl‖ - ‖z‖ ≤ ‖z - ρl‖ := by
+      calc
+        ‖ρl‖ - ‖z‖ ≤ ‖ρl - z‖ := norm_sub_norm_le ρl z
+        _ = ‖z - ρl‖ := norm_sub_rev ρl z
+    dsimp [r₀]
+    linarith
+  have h_le : ‖z‖ ≤ r₁ := by
+    have : ‖z‖ - ‖ρl‖ ≤ ‖z - ρl‖ := norm_sub_norm_le z ρl
+    dsimp [r₁]
+    linarith
+  exact ⟨hz_mem.1, h_ge, h_le⟩
+
+lemma add_I_mul_mem_CutPlane {x₀ : ℝ} {y : ℂ} (hy : ‖y‖ < min x₀ (1 - x₀)) :
+    (x₀ : ℂ) + I * y ∈ CutPlane := by
+  rw [mem_CutPlane_iff]
+  right
+  have h_im : |y.im| < min x₀ (1 - x₀) := (abs_im_le_norm y).trans_lt hy
+  rw [abs_lt] at h_im
+  have h1 := min_le_left x₀ (1 - x₀)
+  have h2 := min_le_right x₀ (1 - x₀)
+  have h_re : ((x₀ : ℂ) + I * y).re = x₀ - y.im := by simp [sub_eq_add_neg]
+  rw [h_re]
+  constructor <;> linarith [h_im.1, h_im.2]
+
+lemma sub_I_mul_mem_CutPlane {x₀ : ℝ} {y : ℂ} (hy : ‖y‖ < min x₀ (1 - x₀)) :
+    (x₀ : ℂ) - I * y ∈ CutPlane := by
+  have hy' : ‖-y‖ < min x₀ (1 - x₀) := by rwa [norm_neg]
+  have h := add_I_mul_mem_CutPlane hy'
+  rwa [mul_neg, ← sub_eq_add_neg] at h
+
+lemma ofReal_mem_CutPlane {x : ℝ} (hx : x ∈ Ioo (0 : ℝ) 1) : (x : ℂ) ∈ CutPlane := by
+  rw [mem_CutPlane_iff]
+  right
+  simp [hx.1, hx.2]
+
+/-!
+## The radial coordinate ρ
+
+We define `rho` as:
+$$
+ρ(z) = \frac{z}{(1 + (1 - z)^{1/2})^2}.
+$$
+We provide some simple properties, in particular that the the image of `CutPlane` lies
+within the unit $ρ$ disk.
+-/
+
 noncomputable def rho (z : ℂ) : ℂ :=
   z / (1 + (1 - z)^(1/2 : ℂ))^2
 
@@ -184,6 +382,7 @@ lemma rho_norm_lt_one {z : ℂ} (hz : z ∈ CutPlane) : ‖rho z‖ < 1 := by
   rw [div_lt_iff₀ hw'', one_mul]
   exact hw'
 
+/-- Alternative definition of rho -/
 lemma rho_eq_div {z : ℂ} (hz : z ∈ CutPlane) :
     rho z = (1 - (1 - z) ^ (1/2 : ℂ)) / (1 + (1 - z) ^ (1/2 : ℂ)) := by
   dsimp [rho]
@@ -313,156 +512,8 @@ lemma differentiableOn_rho_comp_sub_one : DifferentiableOn ℂ (fun z => rho (1 
   have h_comp := (differentiableAt_rho (CutPlane.sub_one hz)).comp z h_sub
   exact h_comp.differentiableWithinAt
 
-lemma differentiableOn_cpow_const (c : ℂ) :
-    DifferentiableOn ℂ (fun z => z ^ c) CutPlane := by
-  intro z hz
-  exact (differentiableAt_id.cpow_const hz.2).differentiableWithinAt
-
-lemma differentiableOn_one_sub_cpow_const (c : ℂ) :
-    DifferentiableOn ℂ (fun z => (1 - z) ^ c) CutPlane := by
-  intro z hz
-  have h1z_diff : DifferentiableAt ℂ (fun z => 1 - z) z := by fun_prop
-  exact (h1z_diff.cpow_const hz.1).differentiableWithinAt
-
-lemma cpow_mul_conj_cpow {Δ : ℝ} {z : ℂ} (hz : z ∈ slitPlane) :
-    z ^ (- (Δ : ℂ)) * (conj z) ^ (- (Δ : ℂ)) = (‖z‖ : ℂ) ^ (-2 * (Δ : ℂ)) := by
-  have hz_arg : z.arg ≠ π := slitPlane_arg_ne_pi hz
-  have hz_ne : z ≠ 0 := slitPlane_ne_zero hz
-  have h_real : conj (- (Δ : ℂ)) = - (Δ : ℂ) := by
-    have : (- (Δ : ℂ)) = ↑(-Δ) := by push_cast; rfl
-    rw [this, conj_ofReal]
-  have h_conj : (conj z) ^ (- (Δ : ℂ)) = conj (z ^ (- (Δ : ℂ))) := by
-    have h := conj_cpow z (- (Δ : ℂ)) hz_arg
-    rwa [h_real] at h
-  rw [h_conj, mul_conj, Complex.normSq_eq_norm_sq]
-  have h_norm : ‖z ^ (- (Δ : ℂ))‖ = ‖z‖ ^ (-Δ) := by
-    have : (- (Δ : ℂ)) = ↑(-Δ) := by push_cast; rfl
-    rw [this, norm_cpow_real]
-  rw [h_norm]
-  have hz_pos : 0 < ‖z‖ := norm_pos_iff.mpr hz_ne
-  have h_sq : (‖z‖ ^ (-Δ)) ^ 2 = ‖z‖ ^ (-2 * Δ) := by
-    rw [sq, ← Real.rpow_add hz_pos]
-    ring_nf
-  rw [h_sq]
-  have h_cast : ((-2 * Δ : ℝ) : ℂ) = -2 * (Δ : ℂ) := by push_cast; rfl
-  rw [← h_cast]
-  exact ofReal_cpow hz_pos.le (-2 * Δ)
-
-lemma mem_closure_of_subset_real_interval (a b : ℝ) (x₀ : ℝ) (hx₀ : x₀ ∈ Set.Ioo a b)
-    (s : Set ℂ) (hs : ∀ x ∈ Set.Ioo a b, (x : ℂ) ∈ s) :
-    (x₀ : ℂ) ∈ closure (s \ {(x₀ : ℂ)}) := by
-  have h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo x₀ b ⊆ s \ {(x₀ : ℂ)} := by
-    rintro z ⟨x, hx, rfl⟩
-    refine ⟨hs x ⟨by linarith [hx₀.1, hx.1], hx.2⟩, ?_⟩
-    simp only [Set.mem_singleton_iff, ofReal_inj]
-    exact ne_of_gt hx.1
-  apply closure_mono h_sub
-  have h_cl : (x₀ : ℂ) ∈ (fun x : ℝ => (x : ℂ)) '' closure (Set.Ioo x₀ b) := by
-    refine ⟨x₀, ?_, rfl⟩
-    rw [closure_Ioo (ne_of_lt hx₀.2)]
-    exact Set.left_mem_Icc.mpr (le_of_lt hx₀.2)
-  exact image_closure_subset_closure_image continuous_ofReal h_cl
-
-lemma eqOn_of_differentiableOn_of_eqOn_real_interval
-    {U : Set ℂ} (hU_open : IsOpen U) (hU_conn : IsPreconnected U)
-    {f g : ℂ → ℂ} (hf : DifferentiableOn ℂ f U) (hg : DifferentiableOn ℂ g U)
-    (a b : ℝ) (x₀ : ℝ) (hx₀ : x₀ ∈ Set.Ioo a b)
-    (h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo a b ⊆ U)
-    (h_eq : ∀ x ∈ Set.Ioo a b, f (x : ℂ) = g (x : ℂ)) :
-    EqOn f g U := by
-  have hf_an : AnalyticOnNhd ℂ f U := hf.analyticOnNhd hU_open
-  have hg_an : AnalyticOnNhd ℂ g U := hg.analyticOnNhd hU_open
-  have hx₀_U : (x₀ : ℂ) ∈ U := h_sub ⟨x₀, hx₀, rfl⟩
-  have h_cl : (x₀ : ℂ) ∈ closure ({z | f z = g z} \ {(x₀ : ℂ)}) := by
-    apply mem_closure_of_subset_real_interval a b x₀ hx₀
-    exact h_eq
-  exact hf_an.eqOn_of_preconnected_of_mem_closure hg_an hU_conn hx₀_U h_cl
-
-theorem eqOn_CutPlane_of_differentiableOn_of_eqOn_interval
-    {f g : ℂ → ℂ} (hf : DifferentiableOn ℂ f CutPlane) (hg : DifferentiableOn ℂ g CutPlane)
-    (h_eq : ∀ x ∈ Set.Ioo (0 : ℝ) 1, f (x : ℂ) = g (x : ℂ)) :
-    EqOn f g CutPlane := by
-  have h_sub : (fun x : ℝ => (x : ℂ)) '' Set.Ioo 0 1 ⊆ CutPlane := by
-    rintro z ⟨x, hx, rfl⟩
-    rw [mem_CutPlane_iff]
-    right
-    simp [hx.1, hx.2]
-  have h_half : (1/2 : ℝ) ∈ Set.Ioo (0 : ℝ) 1 := by
-    constructor <;> norm_num
-  exact eqOn_of_differentiableOn_of_eqOn_real_interval
-    isOpen_CutPlane isPreconnected_CutPlane hf hg 0 1 (1/2) h_half h_sub h_eq
-
-lemma exists_ball_pdisk_dom (ρl : ℂ) (hρl_slit : ρl ∈ slitPlane) (hρl_norm : ‖ρl‖ < 1) :
-    ∃ (ε r₀ r₁ : ℝ), 0 < ε ∧ 0 < r₀ ∧ r₁ < 1 ∧
-      (∀ z ∈ ball ρl ε, z ∈ slitPlane ∧ r₀ ≤ ‖z‖ ∧ ‖z‖ ≤ r₁) := by
-  have h_open : IsOpen (slitPlane ∩ ball (0 : ℂ) 1) :=
-    isOpen_slitPlane.inter Metric.isOpen_ball
-  have h_mem : ρl ∈ slitPlane ∩ ball (0 : ℂ) 1 :=
-    ⟨hρl_slit, mem_ball_zero_iff.mpr hρl_norm⟩
-  rcases Metric.isOpen_iff.mp h_open ρl h_mem with ⟨ε₁, hε₁_pos, hε₁_sub⟩
-  have hρl_pos : 0 < ‖ρl‖ := norm_pos_iff.mpr (slitPlane_ne_zero hρl_slit)
-  set r₀ := ‖ρl‖ / 2
-  set r₁ := (1 + ‖ρl‖) / 2
-  have hr₀_pos : 0 < r₀ := by dsimp [r₀]; linarith [hρl_pos]
-  have hr₁_lt1 : r₁ < 1 := by dsimp [r₁]; linarith [hρl_norm]
-  set ε := min ε₁ (min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2))
-  have hε_pos : 0 < ε := by
-    refine lt_min hε₁_pos (lt_min (by positivity) (by linarith))
-  refine ⟨ε, r₀, r₁, hε_pos, hr₀_pos, hr₁_lt1, ?_⟩
-  intro z hz
-  have hz_ε₁ : z ∈ ball ρl ε₁ := by
-    apply Metric.ball_subset_ball (min_le_left _ _) hz
-  have hz_mem := hε₁_sub hz_ε₁
-  have hz_dist : dist z ρl < ε := Metric.mem_ball.mp hz
-  have hz_norm_dist : ‖z - ρl‖ < ε := by rwa [dist_eq_norm] at hz_dist
-  have hz_dist_r₀ : ‖z - ρl‖ < ‖ρl‖ / 2 := by
-    calc
-      ‖z - ρl‖ < ε := hz_norm_dist
-      _ ≤ min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2) := min_le_right _ _
-      _ ≤ ‖ρl‖ / 2 := min_le_left _ _
-  have hz_dist_r₁ : ‖z - ρl‖ < (1 - ‖ρl‖) / 2 := by
-    calc
-      ‖z - ρl‖ < ε := hz_norm_dist
-      _ ≤ min (‖ρl‖ / 2) ((1 - ‖ρl‖) / 2) := min_le_right _ _
-      _ ≤ (1 - ‖ρl‖) / 2 := min_le_right _ _
-  have h_ge : r₀ ≤ ‖z‖ := by
-    have : ‖ρl‖ - ‖z‖ ≤ ‖z - ρl‖ := by
-      calc
-        ‖ρl‖ - ‖z‖ ≤ ‖ρl - z‖ := norm_sub_norm_le ρl z
-        _ = ‖z - ρl‖ := norm_sub_rev ρl z
-    dsimp [r₀]
-    linarith
-  have h_le : ‖z‖ ≤ r₁ := by
-    have : ‖z‖ - ‖ρl‖ ≤ ‖z - ρl‖ := norm_sub_norm_le z ρl
-    dsimp [r₁]
-    linarith
-  exact ⟨hz_mem.1, h_ge, h_le⟩
-
-lemma add_I_mul_mem_CutPlane {x₀ : ℝ} {y : ℂ} (hy : ‖y‖ < min x₀ (1 - x₀)) :
-    (x₀ : ℂ) + I * y ∈ CutPlane := by
-  rw [mem_CutPlane_iff]
-  right
-  have h_im : |y.im| < min x₀ (1 - x₀) := (abs_im_le_norm y).trans_lt hy
-  rw [abs_lt] at h_im
-  have h1 := min_le_left x₀ (1 - x₀)
-  have h2 := min_le_right x₀ (1 - x₀)
-  have h_re : ((x₀ : ℂ) + I * y).re = x₀ - y.im := by simp [sub_eq_add_neg]
-  rw [h_re]
-  constructor <;> linarith [h_im.1, h_im.2]
-
-lemma sub_I_mul_mem_CutPlane {x₀ : ℝ} {y : ℂ} (hy : ‖y‖ < min x₀ (1 - x₀)) :
-    (x₀ : ℂ) - I * y ∈ CutPlane := by
-  have hy' : ‖-y‖ < min x₀ (1 - x₀) := by rwa [norm_neg]
-  have h := add_I_mul_mem_CutPlane hy'
-  rwa [mul_neg, ← sub_eq_add_neg] at h
-
-lemma ofReal_mem_CutPlane {x : ℝ} (hx : x ∈ Ioo (0 : ℝ) 1) : (x : ℂ) ∈ CutPlane := by
-  rw [mem_CutPlane_iff]
-  right
-  simp [hx.1, hx.2]
-
 /-!
-## Universal Cover of the Punctured Unit Disk and Polydisk (`UcDisk` and `UcPdisk`)
+## The universal cover of the punctured $ρ$ disk
 
 Under $\rho = e^w$, the left half-plane $\operatorname{UcDisk} = \{w \in \mathbb{C} \mid
 \operatorname{Re}(w) < 0\}$ is the universal cover of the punctured unit disk $0 < \|\rho\| < 1$,
@@ -519,4 +570,3 @@ lemma differentiableAt_logRho {z : ℂ} (hz : z ∈ CutPlane) : DifferentiableAt
 
 lemma differentiableOn_logRho : DifferentiableOn ℂ logRho CutPlane := fun _ hz =>
   (differentiableAt_logRho hz).differentiableWithinAt
-

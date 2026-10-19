@@ -12,9 +12,22 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.FieldSimp
 
 /-!
-Gegenbauer polynomials C_n^{(ν)}(x).
-For CFTs in d dimensions, the relevant parameter is ν = d/2 - 1.
-Defined over ℂ so we can easily evaluate on complex kinematics.
+# The Gegenbauer polynomials
+
+In this file we define the Gegenbauer polynomials:
+$$
+C_n^{(ν)}(x)
+$$
+for $n ∈ ℕ$ as elements of $ℂ[x]$, using their known recursion relation.
+For CFTs in d dimensions, the parameter ν = d/2 - 1.
+
+We then move on to an important property relevant for conformal blocks: the construction of the
+two-variable functions
+$$
+(ρ_1 ρ_2)^n C_n^{(ν)}\big( (ρ1 / ρ2 + ρ2 / ρ1) / 2 \big)
+$$
+We explicitly construct these in terms of a finite series expansion, and then prove that this
+expansion agrees with the expression in terms of Gegenbauers.
 -/
 
 open Polynomial
@@ -23,6 +36,7 @@ open scoped Polynomial.Bivariate
 open Complex
 open scoped ComplexConjugate
 
+/-- The fundamental recursive definition. -/
 noncomputable def gegenbauer (ν : ℂ) : ℕ → ℂ[X]
   | 0 => C 1
   | 1 => C (2 * ν) * X
@@ -52,9 +66,10 @@ theorem eval_neg (n : ℕ) (x : ℂ) :
     rw [h_sign]
 
 /-!
-Construction of the two-variable functions r^n C_n^{(ν)}(η) with
-r = ρ1 ρ2 and η = ((ρ1 / ρ2 + ρ2 / ρ1) / 2. We show that the coefficients
-of this polynomial in ρl and ρr are known and always nonnegative.
+## Construction of the two-variable function
+
+We begin with some auxiliary definitions of the factorial and ascending Pochhammer to more cleanly
+write some of the theorems below.
 -/
 
 -- Complex-valued factorial
@@ -91,10 +106,21 @@ lemma ph_is_nonneg_real (ν : ℝ) (hν : 0 ≤ ν) (a : ℕ) :
 noncomputable def geg_two_var_coeff (ν : ℂ) (j : ℕ) (a : ℕ) : ℂ :=
     ph ν a * ph ν (j-a) / fact a / fact (j - a)
 
+/-- The fundamental definition of the two-variable function:
+$$
+\sum_{a=0}^j \frac{(ν)_a (ν)_{j-a}}{a! (j-a)!} ρ_1^a ρ_2^{j-a}
+$$
+Note that it is not explicitly defined as a polynomial.
+-/
 noncomputable def geg_two_var_sum (ν ρ1 ρ2 : ℂ) (j : ℕ) : ℂ :=
   ∑ a ∈ Finset.range (j + 1),
     geg_two_var_coeff ν j a * ρ1 ^ a * ρ2 ^ (j - a)
 
+/-- The (tedious) proof that the two-variable function is nothing but
+$$
+(ρ_1 ρ_2)^n C_n^{(ν)}\big( (ρ1 / ρ2 + ρ2 / ρ1) / 2 \big)
+$$
+-/
 theorem geg_two_var_explicit (ν ρ1 ρ2 : ℂ) (j : ℕ) (h1 : ρ1 ≠ 0) (h2 : ρ2 ≠ 0) :
   (ρ1 * ρ2) ^ j * (gegenbauer ν j).eval ((ρ1 / ρ2 + ρ2 / ρ1) / 2) =
     geg_two_var_sum ν (ρ1 ^ 2) (ρ2 ^ 2) j := by
@@ -246,10 +272,11 @@ theorem geg_two_var_explicit (ν ρ1 ρ2 : ℂ) (j : ℕ) (h1 : ρ1 ≠ 0) (h2 :
     ring
 
 /-!
-Positivity of the coefficients of the two-variable function r^n C_n^{(ν)}(η) with
-r = ρ1 ρ2 and η = ((ρ1 / ρ2 + ρ2 / ρ1) / 2.
--/
+## Positivity of the coefficients, and related inequalities
 
+The coefficients of the two-variable function are positive, as per the first lemma below. This
+allows us to prove several inequalties important for applications to conformal blocks.
+-/
 lemma geg_two_var_coeff_is_nonneg_real (ν : ℝ) (hν : 0 ≤ ν) (j a : ℕ) :
     ∃ r : ℝ, 0 ≤ r ∧ geg_two_var_coeff (ν : ℂ) j a = (r : ℂ) := by
   rcases ph_is_nonneg_real ν hν a with ⟨r1, hr1, h1⟩
@@ -270,11 +297,9 @@ lemma geg_two_var_coeff_nonneg (ν : ℝ) (hν : 0 ≤ ν) (j a : ℕ) :
   rw [h_eq]
   simp [hr]
 
-/-!
-Positivity of the coefficients allows for the following inequalities.
+/--
+A simple equality for a single term in the series expansion.
 -/
-
--- inequality for a single coefficient
 lemma norm_term_eq_re (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j a : ℕ) :
     ‖geg_two_var_coeff (ν : ℂ) j a * ρl ^ a * ρr ^ (j - a)‖ =
     (geg_two_var_coeff (ν : ℂ) j a * (norm ρl : ℂ) ^ a * (norm ρr : ℂ) ^ (j - a)).re := by
@@ -290,6 +315,36 @@ lemma norm_term_eq_re (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j a : ℕ) :
       ((c * ‖ρl‖ ^ a * ‖ρr‖ ^ (j - a) : ℝ) : ℂ) := by push_cast; rfl
   rw [H, Complex.ofReal_re]
 
+/--
+A simple inequality for the two-variable function: evaluation at complex $(ρ_l, ρ_r)$ is bounded in
+modulus by evaluation at $(\| ρ_l\|,  \| ρ_r\|)$.
+-/
+lemma norm_geg_two_var_sum_le (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j : ℕ) :
+    ‖geg_two_var_sum (ν : ℂ) ρl ρr j‖ ≤
+      (geg_two_var_sum (ν : ℂ) (norm ρl) (norm ρr) j).re := by
+  dsimp [geg_two_var_sum]
+  have h1 :
+      ‖∑ a ∈ Finset.range (j + 1), geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ ≤
+        ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ :=
+    norm_sum_le _ _
+  have h2 :
+      ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ =
+        ∑ a ∈ Finset.range (j + 1),
+          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
+    apply Finset.sum_congr rfl
+    intro x _
+    rw [norm_term_eq_re ν hν ρl ρr j x]
+  have h3 :
+      ∑ a ∈ Finset.range (j + 1),
+          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re =
+        (∑ a ∈ Finset.range (j + 1),
+          geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
+    simp
+  linarith
+
+/--
+Evaluation at real $(x, y)$ is bounded by evaluation at $(1,1)$ times $\max(x,y)^j$.
+-/
 lemma geg_two_var_sum_le_max_R (ν : ℝ) (hν : 0 ≤ ν) (x y : ℝ) (hx : 0 ≤ x) (hy : 0 ≤ y) (j : ℕ) :
     (geg_two_var_sum (ν : ℂ) (x : ℂ) (y : ℂ) j).re ≤
     (max x y) ^ j * (geg_two_var_sum (ν : ℂ) (1 : ℂ) (1 : ℂ) j).re := by
@@ -343,30 +398,7 @@ lemma geg_two_var_sum_le_max_R (ν : ℝ) (hν : 0 ≤ ν) (x y : ℝ) (hx : 0 �
       mul_le_mul_of_nonneg_left h_prod h_coeff_re
     _ = (max x y) ^ j * (geg_two_var_coeff (ν : ℂ) j a).re := mul_comm _ _
 
-lemma norm_geg_two_var_sum_le (ν : ℝ) (hν : 0 ≤ ν) (ρl ρr : ℂ) (j : ℕ) :
-    ‖geg_two_var_sum (ν : ℂ) ρl ρr j‖ ≤
-      (geg_two_var_sum (ν : ℂ) (norm ρl) (norm ρr) j).re := by
-  dsimp [geg_two_var_sum]
-  have h1 :
-      ‖∑ a ∈ Finset.range (j + 1), geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ ≤
-        ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ :=
-    norm_sum_le _ _
-  have h2 :
-      ∑ a ∈ Finset.range (j + 1), ‖geg_two_var_coeff (↑ν) j a * ρl ^ a * ρr ^ (j - a)‖ =
-        ∑ a ∈ Finset.range (j + 1),
-          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
-    apply Finset.sum_congr rfl
-    intro x _
-    rw [norm_term_eq_re ν hν ρl ρr j x]
-  have h3 :
-      ∑ a ∈ Finset.range (j + 1),
-          (geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re =
-        (∑ a ∈ Finset.range (j + 1),
-          geg_two_var_coeff (↑ν) j a * (↑‖ρl‖) ^ a * (↑‖ρr‖) ^ (j - a)).re := by
-    simp
-  linarith
-
-/-- Specialization of `geg_two_var_explicit` to the Euclidean section
+/-- Specialization of the main theorem `geg_two_var_explicit` to the Euclidean section
 $(\rho_l, \rho_r) = (\rho, \bar{\rho})$. -/
 theorem geg_two_var_conj (ν ρ : ℂ) (j : ℕ) :
     (‖ρ‖ : ℂ) ^ j * (gegenbauer ν j).eval (Real.cos ρ.arg : ℂ) =

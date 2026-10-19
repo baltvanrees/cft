@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 ModularPhysics Contributors. All rights reserved.
+Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: ModularPhysics Contributors
+Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.Analysis.Complex.LocallyUniformLimit
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
@@ -10,30 +10,40 @@ import CFT.CutPlane
 import CFT.Blocks_pdisk
 
 /-!
-# Montel Equicontinuity and the Vitali–Porter Theorem
+# Real-Interval Vitali-Type Convergence Theorems for Bounded Holomorphic Families
 
-This file establishes the Vitali–Porter convergence theorem for families of holomorphic
-functions on connected open subsets of $\mathbb{C}$ (and specifically on the universal-cover
-half-plane $\operatorname{UcDisk} = \{w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\}$):
+This file establishes a real-interval Vitali-type convergence theorem for uniformly bounded
+families of holomorphic functions on connected open subsets of $\mathbb{C}$.
 
-1. **Cauchy Derivative & Lipschitz Bound (`norm_sub_le_of_differentiableOn_of_norm_le`)**:
+Compared to the classical Vitali–Porter theorem, our formulation makes two simplifications
+tailored to the lightcone bootstrap:
+- We assume the limit function $f : \mathbb{C} \to \mathbb{C}$ is already given and known to be
+  holomorphic on $U$, and that $F_i \to f$ pointwise on a non-empty open real interval
+  $(a, b) \subseteq U$ (rather than on an arbitrary subset with an accumulation point in $U$).
+- The proof bypasses Montel's normal-family theorem and Arzelà–Ascoli entirely, using instead
+  Tychonoff compactness in the pointwise product topology together with Cauchy's derivative
+  estimate:
+
+1. **Cauchy Derivative & Local Lipschitz Bound (`norm_sub_le_of_differentiableOn_of_norm_le`)**:
    Using `Complex.cderiv_eq_deriv` and `Complex.norm_cderiv_le` on closed balls inside an open
    set $U \subseteq \mathbb{C}$, any holomorphic function bounded by $M$ on $\overline{B}(z_0, r)$
    has derivative bounded by $2M/r$ on $B(z_0, r/2)$ and is therefore $(2M/r)$-Lipschitz on
    $B(z_0, r/2)$.
 2. **Locally Uniform Convergence from Pointwise Convergence
    (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`)**:
-   By the uniform Lipschitz bound on $B(z_0, r/2)$, pointwise convergence of a uniformly bounded
-   holomorphic family on an open set $U$ automatically upgrades to locally uniform convergence on
-   $U$, and its limit is holomorphic by `TendstoLocallyUniformlyOn.differentiableOn`.
-3. **Vitali–Porter Theorem (`vitali_porter_real_interval`, `vitali_porter_ucDisk`)**:
-   Combining Tychonoff compactness of $\prod_{z \in U} \overline{B}(0, M)$
-   (`isCompact_univ_pi`), `IsCompact.tendsto_nhds_of_unique_mapClusterPt`,
-   `mapClusterPt_iff_ultrafilter`, Weierstrass's theorem
-   (`TendstoLocallyUniformlyOn.differentiableOn`), and the identity theorem from a real interval
-   (`eqOn_of_differentiableOn_of_eqOn_real_interval`), any uniformly bounded family of holomorphic
-   functions on a preconnected open set $U$ that converges on a real interval $(a, b) \subseteq U$
-   converges locally uniformly on $U$.
+   By the uniform local Lipschitz bound on $B(z_0, r/2)$, pointwise convergence of a uniformly
+   bounded holomorphic family on an open set $U$ automatically upgrades to locally uniform
+   convergence on $U$, and its limit is holomorphic by `TendstoLocallyUniformlyOn.differentiableOn`.
+3. **Real-Interval Vitali-Type Theorem (`vitali_porter_real_interval`, `vitali_porter_ucDisk`)**:
+   Instead of invoking Montel's theorem in $C(U, \mathbb{C})$, we work in the pointwise product
+   space $\prod_{z \in U} \overline{B}(0, M)$, which is compact by Tychonoff's theorem
+   (`isCompact_univ_pi`). By `IsCompact.tendsto_nhds_of_unique_mapClusterPt` and
+   `mapClusterPt_iff_ultrafilter`, it suffices to show that every ultrafilter cluster point $g$ in
+   the product topology equals $f$. Along any such ultrafilter, pointwise convergence $F_i \to g$ on
+   $U$ upgrades to locally uniform convergence by Step 2, so $g$ is holomorphic on $U$ by
+   Weierstrass's theorem (`TendstoLocallyUniformlyOn.differentiableOn`). Since $g = f$ on the real
+   interval $(a, b) \subseteq U$, the real-interval identity theorem
+   (`eqOn_of_differentiableOn_of_eqOn_real_interval`) forces $g = f$ throughout $U$.
 -/
 
 noncomputable section
@@ -148,12 +158,18 @@ theorem tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le
   rw [norm_sub_rev (F i z₀) (F i w)] at h_tri
   linarith [h_lip_f w hw_ball, hi_lip w hw_ball]
 
-/-- **The Vitali–Porter Theorem on a Preconnected Open Domain from a Real Interval**:
+/-- **Real-Interval Vitali-Type Theorem on a Preconnected Open Domain**:
 Let $U \subseteq \mathbb{C}$ be open and preconnected, and let $(a, b) \subseteq \mathbb{R}$ be a
 non-empty open interval embedded in $U$. If $F_i : \mathbb{C} \to \mathbb{C}$ is eventually
 holomorphic and uniformly bounded by $M$ on $U$ along a filter $p$, $f : \mathbb{C} \to \mathbb{C}$
 is holomorphic on $U$, and $F_i(x) \to f(x)$ for every $x \in (a, b)$, then $F_i \to f$ locally
-uniformly on $U$. -/
+uniformly on $U$.
+
+Unlike the general Vitali–Porter theorem, this assumes convergence on an entire open real interval
+$(a, b) \subseteq U$ to a known holomorphic limit $f$, and bypasses Montel's theorem by combining
+Tychonoff compactness in the pointwise product topology $\prod_{z \in U} \overline{B}(0, M)$ with
+`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le` and the real-interval identity theorem
+`eqOn_of_differentiableOn_of_eqOn_real_interval`. -/
 theorem vitali_porter_real_interval
     {ι : Type*} {U : Set ℂ} (hU : IsOpen U) (hU_conn : IsPreconnected U)
     {a b : ℝ} (hab : a < b) (h_sub : (fun x : ℝ => (x : ℂ)) '' Ioo a b ⊆ U)
@@ -204,12 +220,12 @@ theorem vitali_porter_real_interval
   intro z hz
   exact (continuous_apply ⟨z, hz⟩).tendsto (U.domRestrict f) |>.comp h_pt
 
-/-- **The Vitali–Porter Theorem on `UcDisk`**:
+/-- **Real-Interval Vitali-Type Theorem on `UcDisk`**:
 If $F_i$ is eventually holomorphic on
 $\operatorname{UcDisk} = \{w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\}$, uniformly bounded on
 every left half-plane $\{w \mid \operatorname{Re}(w) < \sigma\}$ ($\sigma < 0$), $f$ is
-holomorphic on $\operatorname{UcDisk}$, and $F_i(\sigma) \to f(\sigma)$ for all $\sigma < 0$, then
-$F_i(w) \to f(w)$ for every $w \in \operatorname{UcDisk}$. -/
+holomorphic on $\operatorname{UcDisk}$, and $F_i(\sigma) \to f(\sigma)$ for all real $\sigma < 0$,
+then $F_i(w) \to f(w)$ for every $w \in \operatorname{UcDisk}$. -/
 theorem vitali_porter_ucDisk
     {ι : Type*} {F : ι → ℂ → ℂ} {f : ℂ → ℂ} {p : Filter ι}
     (hF : ∀ᶠ i in p, DifferentiableOn ℂ (F i) UcDisk)

@@ -14,4 +14,4 @@ We will always start the derivations in Euclidean signature. In the long run it 
 
 Our axioms will therefore mimic the OS axioms, although we have much more control in CFTs than in general QFTs. Lorentzian CFTs, and the associated Wightman functions, will be defined by analytic continuation.
 
-Automatically generated documentation is available at https://baltvanrees.github.io/cft/docs/
+While AI is used heavily throughout this repository, we aim for the documentation at https://baltvanrees.github.io/cft/docs/ to be maximally useful and educational.
