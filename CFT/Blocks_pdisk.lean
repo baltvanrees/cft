@@ -1,35 +1,49 @@
 /-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Balt van Rees
+Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import CFT.CutPlane
+import CFT.Vitali
 import CFT.Gegenbauers
 import CFT.Blocks_1d
 import CFT.Blocks
 
 /-!
-# Polydisk & Lightcone Conformal Blocks on the Universal Cover (`UcPdisk`)
+# Conformal blocks on the universal cover of the punctured polydisk `UcPdisk`
 
-This file extends conformal blocks from `Blocks.lean` to two independent complex variables
-$(w_l, w_r) \in \operatorname{UcPdisk}$ on the universal cover of the punctured polydisk,
-where $(\rho_l, \rho_r) = (e^{w_l}, e^{w_r})$ with $\operatorname{Re}(w_l) < 0$ and
-$\operatorname{Re}(w_r) < 0$.
+This file extends the Euclidean conformal blocks from `Blocks.lean`, which are defined there as
+$G_Δ^{(l)}(ρ)$ with $ρ$ in the unit disk (so as functions of one complex variable),
+to functions of two independent complex variables $(w_l, w_r)$ by analytic continuation.
 
-1. **Polydisk continuation (`ConformalBlock.evalPdisk`)**:
-   Using `geg_two_var_conj` from `Gegenbauers.lean`,
-   $$\|\rho\|^j C_j^\nu(\cos(\arg \rho)) = \sum_{a=0}^{j} c_{j, a}^\nu \rho^a \bar{\rho}^{j - a},$$
-   each level $n$ of a `ConformalBlock` extends holomorphically to $(w_l, w_r) \in
-   \operatorname{UcPdisk}$ by replacing $(\rho, \bar{\rho})$ with $(e^{w_l}, e^{w_r})$.
+These variables live in the
+product of the two left half planes, so $\operatorname{Re}(w_l) < 0$ and
+$\operatorname{Re}(w_r) < 0$. The corresponding domain is defined in `CutPlane.lean` as `UcPdisk`,
+the universal cover of the punctured polydisk. The relation to the familiar $ρ$ and $\bar ρ$
+variables is simply $(\rho, \bar \rho) = (e^{w_l}, e^{w_r})$.
 
-2. **Lightcone decomposition (`ConformalBlockLightcone`)**:
-   Expanding at fixed left-moving twist level $m \in \mathbb{N}$ gives
-   $$G_{\Delta, l}(e^{w_l}, e^{w_r}) =
-     \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),$$
-   where $g_0(w_r)$ is proportional to a single one-dimensional conformal block
-   $k_{(\Delta + l)/2}(e^{w_r})$ (`block1d` from `Blocks_1d.lean`) and each $g_m(w_r)$ ($m > 0$) is
-   a finite linear combination of 1D conformal blocks with non-negative coefficients.
+In the first part of this file we implement this analytic continuation and prove its summability
+(`ConformalBlock.summable_evalTermPdisk`) and joint holomorphy
+(`ConformalBlock.differentiableOn_evalPdisk`):
+- Using `geg_two_var_conj` from `Gegenbauers.lean`, the function at each descendant level $n$
+  extends to an entire function `ConformalBlockLevel.evalTermPdisk` on
+  $\mathbb{C} \times \mathbb{C}$. This function reproduces the corresponding function
+  in the Euclidean block at level $n$ when $w_r = \bar{w}_l$.
+- Positivity of the Gegenbauer expansion coefficients implies that for $\Delta \ge l$ on any
+  half-polydisk $\operatorname{Re}(w_l) \le \sigma < 0, \operatorname{Re}(w_r) \le \sigma < 0$,
+  the modulus of the level-$n$ contribution is bounded by its Euclidean radial value at
+  $r = e^\sigma \in (0, 1)$ (`ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm_of_re_le`).
+- From this bound and radial summability (`ConformalBlock.summable_evalTerm_exp`), we deduce
+  summability (`ConformalBlock.summable_evalTermPdisk`) and apply the locally dominated series
+  holomorphy criterion `CFT.differentiableOn_tsum_of_differentiableOn_of_norm_le` from
+  `Vitali.lean` to establish joint holomorphy (`ConformalBlock.differentiableOn_evalPdisk`).
+
+In the second part we discuss the lightcone block decomposition of a $d$-dimensional conformal
+block into one-dimensional ($SL(2, \mathbb{R})$) collinear conformal blocks from `Blocks_1d.lean`.
+We in particular state that finitely many lightcone blocks appear at every twist level.
+This will be important for the lightcone bootstrap, though the proof of this result in
+`exists_conformalBlockLightcone` remains to be formalized.
 -/
 
 open Real Complex Topology Set Metric Polynomial
@@ -37,6 +51,12 @@ open scoped ComplexConjugate
 
 /-!
 ## Polydisk Continuation of `ConformalBlock`
+
+Using `geg_two_var_conj` from `Gegenbauers.lean`,
+$$\|\rho\|^j C_j^\nu(\cos(\arg \rho)) = \sum_{a=0}^{j} c_{j, a}^\nu \rho^a \bar{\rho}^{j - a},$$
+so every such term in the expansion of a `ConformalBlock` extends holomorphically to
+$(w_l, w_r) \in \operatorname{UcPdisk}$ by replacing $(\rho, \bar{\rho})$ with
+$(e^{w_l}, e^{w_r})$.
 -/
 
 namespace ConformalBlockLevel
@@ -55,8 +75,9 @@ noncomputable def evalTermPdisk (ν Δ : ℝ) (wl wr : ℂ) : ℂ :=
       Complex.exp ((((Δ + (n : ℝ) - (j : ℝ)) / 2 : ℝ) : ℂ) * wr) *
       gegenbauer.geg_two_var_sum (ν : ℂ) (Complex.exp wl) (Complex.exp wr) j
 
-/-- On the Euclidean section $w_r = \bar{w}$, `evalTermPdisk` agrees with the Euclidean level
-contribution `evalTerm` at $\rho = e^w$. -/
+/-- On the Euclidean section $w_r = \bar{w}$, `evalTermPdisk` agrees with the Euclidean
+function `evalTerm` at $\rho = e^w$. This demonstrates equivalence at each
+descendant level separately. -/
 theorem evalTermPdisk_conj {ν : ℝ} (hν : 0 ≤ ν) (Δ : ℝ) (w : ℂ) :
     lvl.evalTermPdisk ν Δ w (conj w) = (lvl.evalTerm ν Δ (Complex.exp w) : ℂ) := by
   dsimp [evalTermPdisk, evalTerm, evalAngular, evalGegenbauer, cosArg]
@@ -162,37 +183,40 @@ namespace ConformalBlock
 variable {ν Δ : ℝ} {l : ℕ} (B : ConformalBlock ν Δ l)
 
 /-- Evaluation of a `ConformalBlock` continued to $(w_l, w_r) \in \operatorname{UcPdisk}$,
-summed over descendant levels $n \in \mathbb{N}$. -/
+via a sum over descendant levels $n \in \mathbb{N}$. -/
 noncomputable def evalPdisk (wl wr : ℂ) : ℂ :=
   ∑' n : ℕ, (B.level n).evalTermPdisk ν Δ wl wr
 
 /-- On the Euclidean section $w_r = \bar{w}$, `B.evalPdisk` agrees with the Euclidean block
-`B.eval` at $\rho = e^w$. -/
+`B.eval` at $\rho = e^w$. A simple theorem to prove, given that we already have agreement at every
+descendant level. -/
 theorem evalPdisk_conj_eq_eval (hν : 0 ≤ ν) (w : ℂ) :
     B.evalPdisk w (conj w) = (B.eval (Complex.exp w) : ℂ) := by
   dsimp [evalPdisk, eval]
   rw [Complex.ofReal_tsum]
   exact tsum_congr fun n => (B.level n).evalTermPdisk_conj hν Δ w
 
-/-- For $z \in \text{CutPlane}$, `B.evalPdisk` at $(\operatorname{logRho}(z),
-\overline{\operatorname{logRho}(z)})$ agrees with the Euclidean block `B.eval (rho z)`. -/
-theorem evalPdisk_logRho_conj (hν : 0 ≤ ν) {z : ℂ} (hz : z ∈ CutPlane) :
-    B.evalPdisk (logRho z) (conj (logRho z)) = (B.eval (rho z) : ℂ) := by
-  rw [B.evalPdisk_conj_eq_eval hν (logRho z), exp_logRho hz]
+-- /-- For $z \in \text{CutPlane}$, evaluating the block `B.evalPdisk` at
+-- $(\operatorname{logRho}(z), \overline{\operatorname{logRho}(z)})$ agrees with the Euclidean
+-- block `B.eval (rho z)`. This theorem is unused at the moment.
+-- -/
+-- theorem evalPdisk_logRho_conj (hν : 0 ≤ ν) {z : ℂ} (hz : z ∈ CutPlane) :
+--     B.evalPdisk (logRho z) (conj (logRho z)) = (B.eval (rho z) : ℂ) := by
+--   rw [B.evalPdisk_conj_eq_eval hν (logRho z), exp_logRho hz]
 
-/-- Triangle inequality bound for `lvl.evalTermPdisk` on $\operatorname{UcPdisk}$ in terms of the
-Euclidean level contribution evaluated on the positive real $\rho$-axis at
-$r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))} \in (0, 1)$. -/
-theorem _root_.ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm {l n : ℕ}
+/-- Level-wise triangle inequality bound for `lvl.evalTermPdisk`: when
+$\operatorname{Re}(w_l) \le \sigma$ and $\operatorname{Re}(w_r) \le \sigma$, we have a bound
+of the level $n$ descendant contribution in terms of the Euclidean level $n$ descendant
+contribution evaluated at $ρ = e^\sigma$. -/
+theorem _root_.ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm_of_re_le {l n : ℕ}
     (lvl : ConformalBlockLevel l n) (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ)
-    {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
+    {wl wr : ℂ} {σ : ℝ} (hwl : wl.re ≤ σ) (hwr : wr.re ≤ σ) :
     ‖lvl.evalTermPdisk ν Δ wl wr‖ ≤
-      lvl.evalTerm ν Δ (Real.exp (max wl.re wr.re) : ℂ) := by
+      lvl.evalTerm ν Δ (Real.exp σ : ℂ) := by
   dsimp [ConformalBlockLevel.evalTermPdisk, ConformalBlockLevel.evalTerm,
     ConformalBlockLevel.evalAngular, evalGegenbauer, cosArg]
-  set r : ℝ := Real.exp (max wl.re wr.re)
+  set r : ℝ := Real.exp σ
   have hr_pos : 0 < r := Real.exp_pos _
-  have hr_lt1 : r < 1 := Real.exp_lt_one_iff.mpr (max_lt hwl hwr)
   have hr_norm : ‖(r : ℂ)‖ = r := by rw [Complex.norm_real, Real.norm_of_nonneg hr_pos.le]
   have hr_arg : (r : ℂ).arg = 0 := Complex.arg_ofReal_of_nonneg hr_pos.le
   rw [hr_norm, hr_arg, Real.cos_zero, Complex.ofReal_one, Finset.mul_sum]
@@ -206,36 +230,41 @@ theorem _root_.ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm {l n : ℕ}
     Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul, sub_zero]
   have h_exp_wl :
       Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wl.re) ≤
-        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) :=
-    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left (le_max_left wl.re wr.re) h_exp_nonneg)
+        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left hwl h_exp_nonneg)
   have h_exp_wr :
       Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wr.re) ≤
-        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) :=
-    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left (le_max_right wl.re wr.re) h_exp_nonneg)
+        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left hwr h_exp_nonneg)
   have h_geg1 :
       ‖gegenbauer.geg_two_var_sum (ν : ℂ) (Complex.exp wl) (Complex.exp wr) j‖ ≤
         r ^ j * ((gegenbauer (ν : ℂ) j).eval 1).re := by
     have h1 := gegenbauer.norm_geg_two_var_sum_le ν hν (Complex.exp wl) (Complex.exp wr) j
     have h2 := gegenbauer.geg_two_var_sum_le_max_R ν hν
       ‖Complex.exp wl‖ ‖Complex.exp wr‖ (norm_nonneg _) (norm_nonneg _) j
-    have h_max_norm : max ‖Complex.exp wl‖ ‖Complex.exp wr‖ = r := by
-      rw [Complex.norm_exp, Complex.norm_exp, ← Real.exp_monotone.map_max]
+    have h_max_le : max ‖Complex.exp wl‖ ‖Complex.exp wr‖ ≤ r := by
+      rw [Complex.norm_exp, Complex.norm_exp]
+      exact max_le (Real.exp_le_exp.mpr hwl) (Real.exp_le_exp.mpr hwr)
     have h_geg_one :
         (gegenbauer.geg_two_var_sum (ν : ℂ) 1 1 j).re = ((gegenbauer (ν : ℂ) j).eval 1).re := by
       have h_conj := (gegenbauer.geg_two_var_conj (ν : ℂ) 1 j).symm
       simp only [norm_one, ofReal_one, one_pow, one_mul, arg_one, Real.cos_zero, map_one] at h_conj
       exact congrArg Complex.re h_conj
-    rw [h_max_norm, h_geg_one] at h2
-    exact h1.trans h2
+    have h_geg_nonneg : 0 ≤ ((gegenbauer (ν : ℂ) j).eval 1).re := by
+      rw [← h_geg_one]
+      have h_11 := gegenbauer.norm_geg_two_var_sum_le ν hν 1 1 j
+      simpa using (norm_nonneg _).trans h_11
+    rw [h_geg_one] at h2
+    exact (h1.trans h2).trans (mul_le_mul_of_nonneg_right
+      (pow_le_pow_left₀ (le_max_of_le_left (norm_nonneg _)) h_max_le j) h_geg_nonneg)
   have h_exp_r :
-      Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) *
-        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) * r ^ j =
+      Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) *
+        Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) * r ^ j =
       r ^ (Δ + (n : ℝ)) := by
     rw [← Real.exp_add]
     have h_sum :
-        (Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re +
-          (Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re =
-        max wl.re wr.re * (Δ + (n : ℝ) - (j : ℝ)) := by ring
+        (Δ + (n : ℝ) - (j : ℝ)) / 2 * σ + (Δ + (n : ℝ) - (j : ℝ)) / 2 * σ =
+        σ * (Δ + (n : ℝ) - (j : ℝ)) := by ring
     rw [h_sum, Real.exp_mul, ← Real.rpow_natCast r j, ← Real.rpow_add hr_pos]
     congr 1
     ring
@@ -243,79 +272,155 @@ theorem _root_.ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm {l n : ℕ}
     lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wl.re) *
         Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wr.re) *
         ‖gegenbauer.geg_two_var_sum (ν : ℂ) (Complex.exp wl) (Complex.exp wr) j‖
-      ≤ lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) *
-          Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) *
+      ≤ lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) *
+          Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) *
           (r ^ j * ((gegenbauer (ν : ℂ) j).eval 1).re) := by
         have h_prod1 :
             lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wl.re) ≤
-              lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) :=
+              lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) :=
           mul_le_mul_of_nonneg_left h_exp_wl h_A_nonneg
         have h_prod2 :
             lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wl.re) *
                 Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * wr.re) ≤
-              lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) *
-                Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) :=
+              lvl.A j * Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) *
+                Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) :=
           mul_le_mul h_prod1 h_exp_wr (Real.exp_pos _).le (by positivity)
         exact mul_le_mul h_prod2 h_geg1 (norm_nonneg _) (by positivity)
     _ = lvl.A j *
-          (Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) *
-            Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * max wl.re wr.re) * r ^ j) *
+          (Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) *
+            Real.exp ((Δ + (n : ℝ) - (j : ℝ)) / 2 * σ) * r ^ j) *
           ((gegenbauer (ν : ℂ) j).eval 1).re := by ring
     _ = r ^ (Δ + (n : ℝ)) * (lvl.A j * ((gegenbauer (ν : ℂ) j).eval 1).re) := by
         rw [h_exp_r]
         ring
 
-/-- Triangle inequality bound for `B.evalPdisk` on $\operatorname{UcPdisk}$ in terms of the
-Euclidean conformal block evaluated on the positive real $\rho$-axis at
-$r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))} \in (0, 1)$. -/
-theorem norm_evalPdisk_le_eval (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) {wl wr : ℂ}
-    (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
-    ‖B.evalPdisk wl wr‖ ≤ B.eval (Real.exp (max wl.re wr.re) : ℂ) := by
-  dsimp [evalPdisk, eval]
-  set r : ℝ := Real.exp (max wl.re wr.re)
+/-- Same bound, but with $\sigma = \max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))$ and
+$r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))}$. -/
+theorem _root_.ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm {l n : ℕ}
+    (lvl : ConformalBlockLevel l n) (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ)
+    {wl wr : ℂ} (_hwl : wl ∈ UcDisk) (_hwr : wr ∈ UcDisk) :
+    ‖lvl.evalTermPdisk ν Δ wl wr‖ ≤
+      lvl.evalTerm ν Δ (Real.exp (max wl.re wr.re) : ℂ) :=
+  lvl.norm_evalTermPdisk_le_evalTerm_of_re_le hν hΔ (le_max_left _ _) (le_max_right _ _)
+
+/-- Summability of the Euclidean descendant series on the positive real axis at $r = e^\sigma$ for
+$\sigma < 0$. -/
+lemma summable_evalTerm_exp {σ : ℝ} (hσ : σ < 0) :
+    Summable (fun n : ℕ => (B.level n).evalTerm ν Δ (Real.exp σ : ℂ)) := by
+  set r : ℝ := Real.exp σ
   have hr_pos : 0 < r := Real.exp_pos _
-  have hr_lt1 : r < 1 := Real.exp_lt_one_iff.mpr (max_lt hwl hwr)
-  have hr_mem : r ∈ Ioo (0 : ℝ) 1 := ⟨hr_pos, hr_lt1⟩
   have h_radial_eq : ∀ n : ℕ,
       (B.level n).evalTerm ν Δ (r : ℂ) = r ^ (Δ + (n : ℝ)) * (B.level n).evalAngular ν 1 := by
     intro n
     dsimp [ConformalBlockLevel.evalTerm, cosArg]
     rw [Complex.norm_real, Real.norm_of_nonneg hr_pos.le,
       Complex.arg_ofReal_of_nonneg hr_pos.le, Real.cos_zero]
-  have h_sum_rhs : Summable (fun n : ℕ => (B.level n).evalTerm ν Δ (r : ℂ)) := by
-    simp_rw [h_radial_eq]
-    exact B.summable_radial r hr_mem
+  simp_rw [h_radial_eq]
+  exact B.summable_radial r ⟨hr_pos, Real.exp_lt_one_iff.mpr hσ⟩
+
+/-- Same bound, now for the entire block on the polydisk, in terms of the Euclidean conformal
+block. -/
+theorem norm_evalPdisk_le_eval_of_re_le (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) {wl wr : ℂ}
+    {σ : ℝ} (hσ : σ < 0) (hwl : wl.re ≤ σ) (hwr : wr.re ≤ σ) :
+    ‖B.evalPdisk wl wr‖ ≤ B.eval (Real.exp σ : ℂ) := by
+  dsimp [evalPdisk, eval]
+  have h_sum_rhs := B.summable_evalTerm_exp hσ
   have h_term_bound : ∀ n : ℕ,
-      ‖(B.level n).evalTermPdisk ν Δ wl wr‖ ≤ (B.level n).evalTerm ν Δ (r : ℂ) :=
-    fun n => (B.level n).norm_evalTermPdisk_le_evalTerm hν hΔ hwl hwr
+      ‖(B.level n).evalTermPdisk ν Δ wl wr‖ ≤ (B.level n).evalTerm ν Δ (Real.exp σ : ℂ) :=
+    fun n => (B.level n).norm_evalTermPdisk_le_evalTerm_of_re_le hν hΔ hwl hwr
   have h_sum_norm : Summable (fun n : ℕ => ‖(B.level n).evalTermPdisk ν Δ wl wr‖) :=
     Summable.of_nonneg_of_le (fun _ => norm_nonneg _) h_term_bound h_sum_rhs
   exact (norm_tsum_le_tsum_norm h_sum_norm).trans
     (h_sum_norm.tsum_le_tsum h_term_bound h_sum_rhs)
 
-/-- Joint holomorphy of `lvl.evalTermPdisk` on $\mathbb{C} \times \mathbb{C}$. -/
+/-- Same bound for the entire block, with $\sigma = \max(\operatorname{Re}(w_l),
+\operatorname{Re}(w_r))$ and $r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))}$. -/
+theorem norm_evalPdisk_le_eval (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) {wl wr : ℂ}
+    (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
+    ‖B.evalPdisk wl wr‖ ≤ B.eval (Real.exp (max wl.re wr.re) : ℂ) :=
+  B.norm_evalPdisk_le_eval_of_re_le hν hΔ (max_lt hwl hwr) (le_max_left _ _) (le_max_right _ _)
+
+/-- An important lemma: summability of the descendant level series for
+`B.evalPdisk` at any point of $\operatorname{UcPdisk}$. -/
+lemma summable_evalTermPdisk (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) {wl wr : ℂ}
+    (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
+    Summable (fun n : ℕ => (B.level n).evalTermPdisk ν Δ wl wr) :=
+  Summable.of_norm_bounded (B.summable_evalTerm_exp (max_lt hwl hwr)) fun n =>
+    (B.level n).norm_evalTermPdisk_le_evalTerm_of_re_le
+      hν hΔ (le_max_left _ _) (le_max_right _ _)
+
+
+/-! ## Joint holomorphy-/
+
+/-- We have joint holomorphy of every level function `lvl.evalTermPdisk`
+on $\mathbb{C} \times \mathbb{C}$. Easy theorem by `fun_prop`. -/
 theorem _root_.ConformalBlockLevel.differentiable_evalTermPdisk {l n : ℕ}
     (lvl : ConformalBlockLevel l n) (ν Δ : ℝ) :
     Differentiable ℂ (fun w : ℂ × ℂ => lvl.evalTermPdisk ν Δ w.1 w.2) := by
   dsimp [ConformalBlockLevel.evalTermPdisk, gegenbauer.geg_two_var_sum]
   fun_prop
 
-/-- Joint holomorphy of `B.evalPdisk` on $\operatorname{UcPdisk}$. -/
-theorem differentiableOn_evalPdisk (hν : 0 ≤ ν) :
+/-- Every point $w_0 \in \operatorname{UcPdisk}$ has a closed ball $\overline{B}(w_0, \delta)
+\subseteq \operatorname{UcPdisk}$ on which both coordinates have real part bounded above by some
+$\sigma < 0$. -/
+lemma _root_.exists_closedBall_subset_UcPdisk {w₀ : ℂ × ℂ} (hw₀ : w₀ ∈ UcPdisk) :
+    ∃ δ > 0, ∃ σ < (0 : ℝ), closedBall w₀ δ ⊆ UcPdisk ∧
+      ∀ w ∈ closedBall w₀ δ, w.1.re ≤ σ ∧ w.2.re ≤ σ := by
+  set σ₀ : ℝ := max w₀.1.re w₀.2.re
+  have hσ₀ : σ₀ < 0 := max_lt hw₀.1 hw₀.2
+  set σ : ℝ := σ₀ / 2
+  have hσ : σ < 0 := by dsimp [σ]; linarith
+  set δ : ℝ := -σ
+  have hδ : 0 < δ := by dsimp [δ]; linarith
+  have h_re : ∀ w ∈ closedBall w₀ δ, w.1.re ≤ σ ∧ w.2.re ≤ σ := by
+    intro w hw
+    rw [mem_closedBall, Prod.dist_eq, max_le_iff] at hw
+    have h1 : w.1.re - w₀.1.re ≤ δ := by
+      calc
+        w.1.re - w₀.1.re = (w.1 - w₀.1).re := by simp
+        _ ≤ ‖w.1 - w₀.1‖ := Complex.re_le_norm _
+        _ = dist w.1 w₀.1 := (dist_eq_norm _ _).symm
+        _ ≤ δ := hw.1
+    have h2 : w.2.re - w₀.2.re ≤ δ := by
+      calc
+        w.2.re - w₀.2.re = (w.2 - w₀.2).re := by simp
+        _ ≤ ‖w.2 - w₀.2‖ := Complex.re_le_norm _
+        _ = dist w.2 w₀.2 := (dist_eq_norm _ _).symm
+        _ ≤ δ := hw.2
+    have hw₀1 : w₀.1.re ≤ σ₀ := le_max_left _ _
+    have hw₀2 : w₀.2.re ≤ σ₀ := le_max_right _ _
+    refine ⟨by dsimp [δ, σ] at h1 ⊢; linarith, by dsimp [δ, σ] at h2 ⊢; linarith⟩
+  refine ⟨δ, hδ, σ, hσ, ?_, h_re⟩
+  intro w hw
+  obtain ⟨h1, h2⟩ := h_re w hw
+  exact ⟨lt_of_le_of_lt h1 hσ, lt_of_le_of_lt h2 hσ⟩
+
+/-- An important theorem: joint holomorphy of the block `B.evalPdisk` on
+$\operatorname{UcPdisk}$. -/
+theorem differentiableOn_evalPdisk (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) :
     DifferentiableOn ℂ (fun w : ℂ × ℂ => B.evalPdisk w.1 w.2) UcPdisk := by
-  sorry
+  dsimp [evalPdisk]
+  refine CFT.differentiableOn_tsum_of_differentiableOn_of_norm_le isOpen_UcPdisk
+    (fun n => ((B.level n).differentiable_evalTermPdisk ν Δ).differentiableOn) ?_
+  intro w₀ hw₀
+  obtain ⟨δ, hδ, σ, hσ, h_sub, h_re⟩ := exists_closedBall_subset_UcPdisk hw₀
+  refine ⟨δ, hδ, h_sub, fun n => (B.level n).evalTerm ν Δ (Real.exp σ : ℂ),
+    B.summable_evalTerm_exp hσ, fun n w hw => ?_⟩
+  obtain ⟨hw1, hw2⟩ := h_re w hw
+  exact (B.level n).norm_evalTermPdisk_le_evalTerm_of_re_le hν hΔ hw1 hw2
 
 end ConformalBlock
 
 /-!
-## Lightcone Conformal Block Decomposition into 1D Conformal Blocks
+## Lightcone conformal block decomposition into one-dimensional conformal blocks
 
-In the lightcone expansion on $\operatorname{UcPdisk}$:
+Consider the lightcone expansion on $\operatorname{UcPdisk}$:
 $$G_{\Delta, l}(e^{w_l}, e^{w_r}) =
   \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),$$
-the leading twist function $g_0(w_r)$ is proportional to a single one-dimensional conformal
-block $k_{(\Delta + l)/2}(e^{w_r})$ from `Blocks_1d.lean`, while each subleading twist function
-$g_m(w_r)$ ($m > 0$) is a finite linear combination of 1D conformal blocks
+We claim, though it is not yet proven, that the leading twist function $g_0(w_r)$ is proportional
+to a single one-dimensional conformal block $k_{(\Delta + l)/2}(e^{w_r})$ from `Blocks_1d.lean`,
+while each subleading twist function
+$g_m(w_r)$ ($m > 0$) is a *finite* linear combination of 1D conformal blocks
 $k_{(\Delta - l)/2 + k_r}(e^{w_r})$ with non-negative coefficients.
 -/
 
@@ -401,7 +506,7 @@ variable {ν Δ : ℝ} {l : ℕ} (B : ConformalBlock ν Δ l)
 
 /-- Every conformal block continued to $\operatorname{UcPdisk}$ admits a lightcone decomposition
 into finite non-negative sums of one-dimensional conformal blocks at each left-moving twist
-level $m$. -/
+level $m$. Proof at the moment is `sorry`. -/
 theorem exists_conformalBlockLightcone (hν : 0 < ν) (hΔ : (l : ℝ) ≤ Δ) :
     ∃ L : ConformalBlockLightcone Δ l,
       ∀ wl ∈ UcDisk, ∀ wr ∈ UcDisk,

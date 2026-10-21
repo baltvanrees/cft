@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Balt van Rees
+Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import CFT.CutPlane
@@ -39,6 +39,10 @@ structure FourPointData (ν Δ_phi : ℝ) where
 
   /-- Family of conformal blocks $G_{\Delta, l}$ for each $(\Delta, l)$. -/
   blocks : ∀ (Δ : ℝ) (l : ℕ), ConformalBlock ν Δ l
+
+  /-- Measurability of the conformal block coefficients $A_{n, j}(\Delta, l)$ across the
+  spectrum. -/
+  measurable_A : ∀ n j : ℕ, Measurable (fun p : ℝ × ℕ => ((blocks p.1 p.2).level n).A j)
 
   /-- Unitarity bound support: the OPE measure is supported on non-negative twist
   $\tau = \Delta - l \ge 0$. (We should make this $d$-dependent.) -/

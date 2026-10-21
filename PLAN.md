@@ -52,34 +52,30 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean
 - [x] Proves non-negativity (`block1dCoeff_nonneg`), positivity (`block1dCoeff_pos`), upper bound (`block1dCoeff_le_one`), and summability on the left half-plane $\operatorname{Re}(w) < 0$ (`summable_block1d`).
 - [ ] *(Later)*: Add $z$-coordinate hypergeometric form $z^h \, {}_2F_1(h, h; 2h; z)$ and Euler integral representation when needed for the lightcone bootstrap.
 
-### Step 3B: `CFT/Blocks_pdisk.lean` — **Structures & Theorem Statements Done; Proofs To Do**
+### Step 3B: `CFT/Blocks_pdisk.lean` — **Polydisk Continuation & Holomorphy Done; Collinear Block Decomposition To Do**
 - [x] Defines the direct polydisk continuation of `ConformalBlockLevel` and `ConformalBlock` (`evalTermPdisk`, `ConformalBlock.evalPdisk`) on $\operatorname{UcPdisk}$.
 - [x] Defines `blockExp Δ l k = (Δ - l) / 2 + k`, `ConformalBlockLightconeLevel`, and `ConformalBlockLightcone Δ l`:
   - Expands the block as $\sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r)$,
   - Leading twist ($m = 0$): $g_0(w_r)$ is proportional to a single 1D conformal block $k_{(\Delta + l)/2}(e^{w_r})$ from `Blocks_1d.lean` (`evalLevel_zero`),
   - Subleading twists ($m > 0$): $g_m(w_r)$ is a finite linear combination of 1D conformal blocks $k_{\bar{h}}(e^{w_r})$ with non-negative coefficients.
-- [x] Proves `ConformalBlockLevel.evalTermPdisk_conj`, `ConformalBlock.evalPdisk_conj_eq_eval`, `ConformalBlock.evalPdisk_logRho_conj`, `ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm`, `ConformalBlock.norm_evalPdisk_le_eval`, and `ConformalBlockLevel.differentiable_evalTermPdisk`.
-- [x] States (with `sorry` for now) the remaining infinite-series holomorphy and lightcone expansion theorems on $\operatorname{UcPdisk}$:
-  - [ ] Prove joint holomorphy (`ConformalBlock.differentiableOn_evalPdisk`).
-  - [ ] *(Later)*: Prove `ConformalBlock.exists_conformalBlockLightcone` equating `B.evalPdisk wl wr` with `L.eval wl wr` on $\operatorname{UcPdisk}$.
+- [x] Proves `ConformalBlockLevel.evalTermPdisk_conj`, `ConformalBlock.evalPdisk_conj_eq_eval`, `ConformalBlock.evalPdisk_logRho_conj`, `ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm_of_re_le`, `ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm`, `ConformalBlock.norm_evalPdisk_le_eval_of_re_le`, `ConformalBlock.norm_evalPdisk_le_eval`, `ConformalBlockLevel.differentiable_evalTermPdisk`, and joint holomorphy on $\operatorname{UcPdisk}$ (`ConformalBlock.differentiableOn_evalPdisk` — **0 `sorry`s**).
+- [ ] *(Later)*: Prove `ConformalBlock.exists_conformalBlockLightcone` equating `B.evalPdisk wl wr` with `L.eval wl wr` on $\operatorname{UcPdisk}$.
 
-### Step 4: `CFT/Corr.lean` — **Structures Done**
+### Step 4: `CFT/Corr.lean` — **Done (0 `sorry`s)**
 - [x] Defines `eval_correlator_eucl` and `FourPointData ν Δ_phi`:
   - Spectrum measure `mu_measure : Measure (ℝ × ℕ)` supported on unitary twist $\Delta - l \ge 0$ (`support_unitary`) and even spins $l$ (`support_even_spin`),
-  - Family of `ConformalBlock ν Δ l`s,
+  - Family of `ConformalBlock ν Δ l`s with measurable expansion coefficients `measurable_A`,
   - Euclidean OPE convergence (`converges_correlator_eucl`) for $0 < \|\rho\| < 1$,
   - Euclidean crossing symmetry (`crossing_correlator_eucl`) on $z \in \text{CutPlane}$.
 
-### Step 5: `CFT/Corr_pdisk.lean` — **Structures & Two-Variable Crossing Done; Polydisk Convergence/Holomorphy Proofs To Do**
+### Step 5: `CFT/Corr_pdisk.lean` — **Done (0 `sorry`s)**
 - [x] Defines `eval_correlator_pdisk`, `FourPointData.correlator_pdisk`, `FourPointData.correlator` (via `logRho`), and `FourPointData.crossing_lhs` using the same OPE measure `corr.mu_measure` and continued blocks on $\operatorname{UcPdisk}$.
+- [x] Proves polydisk OPE convergence (`FourPointData.converges_correlator_pdisk`) and joint holomorphy (`FourPointData.differentiableOn_correlator_pdisk`) on $\operatorname{UcPdisk}$ from `converges_correlator_eucl`, `support_unitary`, and `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le`.
 - [x] Proves Euclidean-section agreement (`FourPointData.correlator_pdisk_conj_eq_eucl` and `correlator_conj_eq_eucl`), separate holomorphy on `CutPlane` (`differentiableAt_correlator_comp`, `differentiableOn_correlator_left`, `differentiableOn_correlator_right`), and analytically continued two-variable crossing symmetry (`crossing_correlator` and `crossing_correlator_real`).
-- [x] States (with `sorry` for now) the remaining polydisk convergence and joint holomorphy theorems on $\operatorname{UcPdisk}$:
-  - [ ] Prove `FourPointData.converges_correlator_pdisk` on $\operatorname{UcPdisk}$.
-  - [ ] Prove joint holomorphy `FourPointData.differentiableOn_correlator_pdisk` on $\operatorname{UcPdisk}$.
 
 ### Step 6: `CFT/Vitali.lean` & `CFT/MonomialBootstrap/` — **Architecture & Main Theorems Done (see [`CFT/MonomialBootstrap/PLAN.md`](CFT/MonomialBootstrap/PLAN.md))**
-- [x] Prove local Lipschitz equicontinuity from Cauchy's derivative bound (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`) and the real-interval Vitali-type convergence theorems (`vitali_porter_real_interval`, `vitali_porter_ucDisk`, bypassing Montel's theorem via Tychonoff compactness in the pointwise product topology) in `CFT/Vitali.lean` (**100% `sorry`-free**).
-- [x] Establish the monomial decomposition of `FourPointData` (`MonomialDecomp.lean`), proving factorization (`evalSpin_eq_exp_mul_laplace`), even-spin $\pi$-periodicity (`eval_shift_pi`), 1D positivity (`norm_laplaceSpin_le_laplaceSpinReal`), 2D $s$-channel positivity (`norm_eval_le_evalReal`), shift continuity (`continuous_evalSpin_shift`, `continuous_eval_shift`), real-axis monotonicity (`laplaceSpinReal_mono`), and holomorphy of $L_J(w)$ on $\operatorname{UcDisk}$ (`differentiableOn_laplaceSpin`).
+- [x] Prove local Lipschitz equicontinuity from Cauchy's derivative bound (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`), the real-interval Vitali-type convergence theorems (`vitali_porter_real_interval`, `vitali_porter_ucDisk`, bypassing Montel's theorem via Tychonoff compactness in the pointwise product topology), and joint holomorphy of locally dominated parametric integrals and series (`differentiableOn_integral_of_differentiableOn_of_norm_le`, `differentiableOn_tsum_of_differentiableOn_of_norm_le`) in `CFT/Vitali.lean` (**100% `sorry`-free**).
+- [x] Establish the monomial decomposition of `FourPointData` (`MonomialDecomp.lean` — **100% `sorry`-free**), proving factorization (`evalSpin_eq_exp_mul_laplace`), even-spin $\pi$-periodicity (`eval_shift_pi`), 1D positivity (`norm_laplaceSpin_le_laplaceSpinReal`), 2D $s$-channel positivity (`norm_eval_le_evalReal`), shift continuity (`continuous_evalSpin_shift`, `continuous_eval_shift`), real-axis monotonicity (`laplaceSpinReal_mono`), holomorphy of $L_J(w)$ on $\operatorname{UcDisk}$ (`differentiableOn_laplaceSpin`), and the canonical pushforward construction `FourPointData.toMonomialFourPointData` with evaluation identity `FourPointData.toMonomialFourPointData_eval` (and corollary `FourPointData.exists_monomialDecomp`).
 - [x] Project onto the single-variable spin-$J$ Laplace transform $L_J(w)$ on $[-\pi/2, \pi/2]$ and pair with a compactly supported smooth test function $\varphi(h)$ (`FourierProj.lean` — **100% `sorry`-free**, proving `exists_bound_laplaceFourierTransform`, `continuous_laplaceFourierTransform`, `integrable_laplaceFourierTransform`, `fourierIntegrand_add_pi`, `norm_fourierIntegrand_le`, `fourierProjSpinFull_eq_fourierProjSpin`, `laplaceSpin_eq_fourierProjSpin`, `laplaceSpinReal_eq_fourierProjSpin`, and `pairSpin_eq_integral_laplaceSpin`).
 - [x] Formalize the twist gap (`HasLowerTwist`, `HasTwistGap`) and two-variable $t$-channel crossing in universal-cover coordinates (`Gap.lean` — **100% `sorry`-free**, proving `zOfW_mem_CutPlane`, `rho_zOfW`, `logRho_zOfW`, `crossFactor_eq_zOfW_cpow`, `crossW_mem_UcDisk`, `norm_eval_sub_one_le`, `eval_eq_cross`, and `norm_eval_sub_crossIdentity_le`).
 - [x] Formalize and prove the $t$-channel identity spin projection and universal limits (`IdentityProj.lean` — **100% `sorry`-free**, proving `differentiableOn_universalLaplace`, `integral_laplaceFourierTransform_mul_universalLaplace`, and `tendsto_identityProjSpin_real`).

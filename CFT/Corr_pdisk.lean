@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Balt van Rees
+Authors: AI-generated, edited by Balt van Rees
 -/
 import CFT.CutPlane
 import CFT.Blocks_pdisk
@@ -10,14 +10,40 @@ import CFT.Corr
 /-!
 # Polydisk Four-Point Functions & Analytic Continuation on `UcPdisk`
 
-This file extends `FourPointData` from `Corr.lean` to the universal cover of the punctured polydisk
-$(w_l, w_r) \in \operatorname{UcPdisk}$ (where $\rho_l = e^{w_l}, \rho_r = e^{w_r}$ with
+This file extends `FourPointData` and the Euclidean correlator from `Corr.lean` to the universal
+cover of the punctured polydisk $(w_l, w_r) \in \operatorname{UcPdisk}$
+(where $\rho_l = e^{w_l}, \rho_r = e^{w_r}$ with
 $\operatorname{Re}(w_l) < 0, \operatorname{Re}(w_r) < 0$) and to independent complex coordinates
 $(z_l, z_r) \in \text{CutPlane} \times \text{CutPlane}$, by integrating the continued conformal
 blocks from `Blocks_pdisk.lean` against the OPE measure `corr.mu_measure`.
+
+We establish three main results:
+1. **Polydisk OPE Convergence (`FourPointData.converges_correlator_pdisk`)**:
+   Because `corr.mu_measure` is supported on unitary twist $\Delta \ge l$ (`ae_unitary`) and
+   $\|G_{\Delta, l}^{\text{pdisk}}(w_l, w_r)\| \le G_{\Delta, l}(e^{\max(\operatorname{Re} w_l,
+   \operatorname{Re} w_r)})$ (`ConformalBlock.norm_evalPdisk_le_eval`), Euclidean OPE convergence
+   (that is, integrability of the Euclidean blocks against `corr.mu_measure`)
+   at $r = e^{\max(\operatorname{Re} w_l, \operatorname{Re} w_r)} \in (0, 1)$ immediately implies
+   integrability at every point $(w_l, w_r) \in \operatorname{UcPdisk}$.
+2. **Joint Holomorphy on $\operatorname{UcPdisk}$
+   (`FourPointData.differentiableOn_correlator_pdisk`)**:
+   On any closed ball $\overline{B}(w_0, \delta) \subseteq \operatorname{UcPdisk}$ where both
+   coordinates satisfy $\operatorname{Re}(w_l), \operatorname{Re}(w_r) \le \sigma < 0$, the
+   integrand is uniformly dominated by the integrable Euclidean block
+   $G_{\Delta, l}(e^\sigma)$. Applying
+   `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le` from `Vitali.lean` proves joint
+   holomorphy on $\operatorname{UcPdisk}$.
+3. **Analytic Continuation of Crossing Symmetry (`FourPointData.crossing_correlator`)**:
+   Starting from Euclidean crossing symmetry on the conjugate section $z_r = \bar{z}_l$
+   (`crossing_correlator_eucl`), we first apply the 1D real-interval identity theorem along
+   complexified Euclidean slices $y \mapsto (x_0 + i y, x_0 - i y)$ to deduce real-interval
+   crossing (`crossing_lhs_real`) for $(x_l, x_r) \in (0, 1)^2$, and then apply the identity
+   theorem on $\operatorname{CutPlane}$ (`eqOn_CutPlane_of_differentiableOn_of_eqOn_interval`)
+   in each variable separately to obtain full two-variable crossing on
+   $\operatorname{CutPlane} \times \operatorname{CutPlane}$.
 -/
 
-open Real Complex Topology Set Metric MeasureTheory
+open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped ComplexConjugate
 
 /-- Evaluation of the four-point correlator on $\operatorname{UcPdisk}$ from a family of
@@ -54,12 +80,68 @@ noncomputable def crossing_lhs (zl zr : ℂ) : ℂ :=
 ## Convergence, Holomorphy, and Analytic Continuation of Crossing Symmetry
 -/
 
-/-- Polydisk OPE convergence on $\operatorname{UcPdisk}$, deduced from Euclidean OPE convergence
-`corr.converges_correlator_eucl` and the conformal block bound `norm_evalPdisk_le_eval`. -/
+/-- Almost everywhere unitarity bound $(l : \mathbb{R}) \le \Delta$ with respect to
+`corr.mu_measure`. A direct consequence of the unitarity assumption in `CFT.Corr`. -/
+lemma ae_unitary : ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure, (p.2 : ℝ) ≤ p.1 := by
+  rw [ae_iff]
+  convert corr.support_unitary using 2
+  ext p
+  simp [not_le]
+
+/-- Measurability of the level-$n$ descendant contribution to the polydisk block
+across the spectrum $(\Delta, l)$. This in turn is used in
+`measurable_evalPdisk` below to establish measurability of the full block. -/
+lemma measurable_evalTermPdisk (n : ℕ) (wl wr : ℂ) :
+    Measurable (fun p : ℝ × ℕ => ((corr.blocks p.1 p.2).level n).evalTermPdisk ν p.1 wl wr) := by
+  let term : ℕ → (ℝ × ℕ) → ℂ := fun j p =>
+    (((corr.blocks p.1 p.2).level n).A j : ℂ) *
+      Complex.exp ((((p.1 + (n : ℝ) - (j : ℝ)) / 2 : ℝ) : ℂ) * wl) *
+      Complex.exp ((((p.1 + (n : ℝ) - (j : ℝ)) / 2 : ℝ) : ℂ) * wr) *
+      gegenbauer.geg_two_var_sum (ν : ℂ) (Complex.exp wl) (Complex.exp wr) j
+  have h_term_meas : ∀ j : ℕ, Measurable (term j) := by
+    intro j
+    have hA_j := corr.measurable_A n j
+    dsimp [term]
+    fun_prop
+  let partial_sum : ℕ → (ℝ × ℕ) → ℂ := fun M p => ∑ j ∈ Finset.range M, term j p
+  have h_part_meas : ∀ M : ℕ, Measurable (partial_sum M) :=
+    fun M => Finset.measurable_sum (Finset.range M) (fun j _ => h_term_meas j)
+  refine measurable_of_tendsto_metrizable (f := partial_sum) h_part_meas (tendsto_pi_nhds.mpr ?_)
+  intro p
+  refine tendsto_atTop_of_eventually_const (i₀ := p.2 + n + 1) fun M hM => ?_
+  dsimp [partial_sum, ConformalBlockLevel.evalTermPdisk, term]
+  refine (Finset.sum_subset (fun j hj => ?_) (fun j _ hj => ?_)).symm
+  · rw [Finset.mem_range]
+    have hj_le : j ≤ p.2 + n := (mem_descendantSpins.mp hj).2.1
+    omega
+  · rw [((corr.blocks p.1 p.2).level n).A_support j hj, Complex.ofReal_zero, zero_mul, zero_mul,
+      zero_mul]
+
+/-- Measurability of the full polydisk conformal block across the spectrum on
+$\operatorname{UcPdisk}$. -/
+lemma measurable_evalPdisk (wl wr : ℂ) :
+    Measurable (fun p : ℝ × ℕ => (corr.blocks p.1 p.2).evalPdisk wl wr) := by
+  dsimp [ConformalBlock.evalPdisk]
+  have h := fun n => corr.measurable_evalTermPdisk n wl wr
+  fun_prop
+
+/-- Polydisk OPE convergence on $\operatorname{UcPdisk}$, deduced from (postulated) Euclidean
+OPE convergence `corr.converges_correlator_eucl` and the bound `norm_evalPdisk_le_eval` for the
+conformal block in the polydisk in terms of the conformal block on the Euclidean section. -/
 theorem converges_correlator_pdisk (hν : 0 ≤ ν) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     Integrable (fun p : ℝ × ℕ => (corr.blocks p.1 p.2).evalPdisk wl wr) corr.mu_measure := by
-  sorry
+  set r : ℝ := Real.exp (max wl.re wr.re)
+  have hr_pos : 0 < r := Real.exp_pos _
+  have hr_lt1 : r < 1 := Real.exp_lt_one_iff.mpr (max_lt hwl hwr)
+  have hr_mem : (r : ℂ) ∈ ball (0 : ℂ) 1 \ {0} := by
+    refine ⟨?_, by simp [hr_pos.ne']⟩
+    rw [mem_ball_zero_iff, Complex.norm_real, Real.norm_of_nonneg hr_pos.le]
+    exact hr_lt1
+  refine (corr.converges_correlator_eucl (r : ℂ) hr_mem).mono'
+    (corr.measurable_evalPdisk wl wr).aestronglyMeasurable ?_
+  filter_upwards [corr.ae_unitary] with p hp
+  exact (corr.blocks p.1 p.2).norm_evalPdisk_le_eval hν hp hwl hwr
 
 /-- On the Euclidean section $w_r = \bar{w}$, `correlator_pdisk` agrees with the Euclidean
 correlator at $\rho = e^w$. -/
@@ -80,7 +162,24 @@ theorem correlator_conj_eq_eucl (hν : 0 ≤ ν) {z : ℂ} (hz : z ∈ CutPlane)
 $\operatorname{UcPdisk}$. -/
 theorem differentiableOn_correlator_pdisk (hν : 0 ≤ ν) :
     DifferentiableOn ℂ (fun w : ℂ × ℂ => corr.correlator_pdisk w.1 w.2) UcPdisk := by
-  sorry
+  dsimp [correlator_pdisk, eval_correlator_pdisk]
+  refine CFT.differentiableOn_integral_of_differentiableOn_of_norm_le isOpen_UcPdisk
+    (fun w _ => (corr.measurable_evalPdisk w.1 w.2).aestronglyMeasurable)
+    (corr.ae_unitary.mono fun p hp => (corr.blocks p.1 p.2).differentiableOn_evalPdisk hν hp) ?_
+  intro w₀ hw₀
+  obtain ⟨δ, hδ, σ, hσ, h_sub, h_re⟩ := exists_closedBall_subset_UcPdisk hw₀
+  set r : ℝ := Real.exp σ
+  have hr_pos : 0 < r := Real.exp_pos _
+  have hr_lt1 : r < 1 := Real.exp_lt_one_iff.mpr hσ
+  have hr_mem : (r : ℂ) ∈ ball (0 : ℂ) 1 \ {0} := by
+    refine ⟨?_, by simp [hr_pos.ne']⟩
+    rw [mem_ball_zero_iff, Complex.norm_real, Real.norm_of_nonneg hr_pos.le]
+    exact hr_lt1
+  refine ⟨δ, hδ, h_sub, fun p => (corr.blocks p.1 p.2).eval (r : ℂ),
+    corr.converges_correlator_eucl (r : ℂ) hr_mem, ?_⟩
+  filter_upwards [corr.ae_unitary] with p hp w hw
+  obtain ⟨hw1, hw2⟩ := h_re w hw
+  exact (corr.blocks p.1 p.2).norm_evalPdisk_le_eval_of_re_le hν hp hσ hw1 hw2
 
 /-- The physical correlator is holomorphic along any pair of holomorphic curves in `CutPlane`. -/
 theorem differentiableAt_correlator_comp (hν : 0 ≤ ν) {φ ψ : ℂ → ℂ} {y : ℂ}

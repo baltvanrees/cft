@@ -45,31 +45,29 @@ CFT/Corr_pdisk.lean  (includes general two-variable crossing symmetry `crossing_
        ▼
 CFT/MonomialBootstrap/
   ├── PLAN.md
-  ├── MonomialDecomp.lean  (MonomialFourPointData, even-spin π-periodicity, s-channel positivity, & construction from FourPointData)
+  ├── MonomialDecomp.lean  (MonomialFourPointData, even-spin π-periodicity, s-channel positivity, & canonical construction from FourPointData — 0 sorry's)
   ├── FourierProj.lean     (Spin-J spectral density μ_J, test functions φ(h), & folded double integral on ℝ × [-π/2, π/2] — 0 sorry's)
   ├── Gap.lean             (Twist-gap axiom, t-channel identity dominance, and cross-channel error bounds — 0 sorry's)
   ├── IdentityProj.lean    (t-channel identity spin projection, universal limits, & explicit t-channel integrals — 0 sorry's)
   └── LargeSpin.lean       (J-dependent contour, Vitali's theorem + s-/t-channel bounds, & universal lim_{J → ∞} for even J)
 ```
-(Supported by [`CFT/Vitali.lean`](../Vitali.lean) for Montel equicontinuity and the Vitali–Porter theorem — 0 `sorry`s.)
+(Supported by [`CFT/Vitali.lean`](../Vitali.lean) for Cauchy Lipschitz equicontinuity, parametric integral/series holomorphy, and the real-interval Vitali-type convergence theorem — 0 `sorry`s.)
 
 ---
 
 ## 3. Step-by-Step Implementation Plan
 
-### Step 0 (Outside Subfolder): Two-Variable Crossing Symmetry in `CFT/Corr_pdisk.lean` & Vitali–Porter in `CFT/Vitali.lean` — **Done**
-- [x] State `FourPointData.crossing_correlator` and `crossing_correlator_real` in `CFT/Corr_pdisk.lean`.
-- [x] Prove `FourPointData.crossing_correlator` from `crossing_correlator_eucl`, `correlator_conj_eq_eucl`, and separate holomorphy on `CutPlane` using `eqOn_CutPlane_of_differentiableOn_of_eqOn_interval`.
-- [x] Prove Montel equicontinuity (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`) and the Vitali–Porter theorem (`vitali_porter_real_interval`, `vitali_porter_ucDisk`) in `CFT/Vitali.lean` (**0 `sorry`s**).
+### Step 0 (Outside Subfolder): Two-Variable Crossing Symmetry in `CFT/Corr_pdisk.lean` & Real-Interval Vitali-Type Theorem in `CFT/Vitali.lean` — **Done (0 `sorry`s)**
+- [x] Prove `FourPointData.converges_correlator_pdisk` and `FourPointData.differentiableOn_correlator_pdisk` on $\operatorname{UcPdisk}$, and state and prove `FourPointData.crossing_correlator` and `crossing_correlator_real` in `CFT/Corr_pdisk.lean` (**0 `sorry`s**).
+- [x] Prove local Lipschitz equicontinuity from Cauchy's derivative bound (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`), the real-interval Vitali-type convergence theorems (`vitali_porter_real_interval`, `vitali_porter_ucDisk`, bypassing Montel's theorem via Tychonoff compactness in the pointwise product topology), and joint holomorphy of locally dominated parametric integrals and series (`differentiableOn_integral_of_differentiableOn_of_norm_le`, `differentiableOn_tsum_of_differentiableOn_of_norm_le`) in `CFT/Vitali.lean` (**0 `sorry`s**).
 
-### Step 1: `CFT/MonomialBootstrap/MonomialDecomp.lean` — **Structures & Core Bounds Done**
+### Step 1: `CFT/MonomialBootstrap/MonomialDecomp.lean` — **Done (0 `sorry`s)**
 - [x] Define `MonomialFourPointData`:
   - Family of non-negative spin-$J$ spectral measures $\mu_J$ on $h \in \mathbb{R}$ for $J \in \mathbb{Z}$ supported on $h \ge 0, h + J \ge 0$ (`support_unitary`) and vanishing for odd $J$ (`support_odd_spin`),
   - Monomial evaluation on $\operatorname{UcPdisk}$ (`eval`, `evalSpin`, `laplaceSpin`, `laplaceSpinReal`) and factorization `evalSpin_eq_exp_mul_laplace`:
     $$\mathcal{G}_{\text{mon}}(w_l, w_r) = \sum_{J \in \mathbb{Z}} \int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) = \sum_{J \in \mathbb{Z}} e^{J w_r} L_J(w_l + w_r).$$
 - [x] Prove $\pi$-periodicity under opposite imaginary shifts `eval_shift_pi`: $\mathcal{G}_{\text{mon}}(w_l - i\pi, w_r + i\pi) = \mathcal{G}_{\text{mon}}(w_l, w_r)$, the 1D positivity bound `norm_laplaceSpin_le_laplaceSpinReal` ($\|L_J(w)\| \le L_J(\operatorname{Re}(w))$), the 2D $s$-channel positivity bound `norm_eval_le_evalReal` ($\|\mathcal{G}_{\text{mon}}(w_l, w_r)\| \le \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \operatorname{Re}(w_r))$), continuity along opposite imaginary shifts (`continuous_evalSpin_shift`, `continuous_eval_shift`), real-axis monotonicity (`laplaceSpinReal_mono`), and holomorphy of $L_J(w)$ on $\operatorname{UcDisk}$ (`differentiableOn_laplaceSpin`).
-- [x] State `FourPointData.exists_monomialDecomp` (that every `FourPointData ν Δ_phi` in `CFT/Corr_pdisk.lean` admits a `MonomialFourPointData` whose evaluation on $\operatorname{UcPdisk}$ equals `corr.correlator_pdisk wl wr`).
-  - [ ] *(Later)*: Fill in the measure-pushforward proof of `FourPointData.exists_monomialDecomp` from `geg_two_var_sum`, `ConformalBlock.A_odd_level`, and `FourPointData.support_even_spin`.
+- [x] Define the canonical construction `FourPointData.toMonomialFourPointData` (pushing forward `corr.mu_measure` weighted by $A_{n, j}(\Delta, l)\, c_{j, a}^{(\nu)}$ along $h(\Delta, l) = \frac{\Delta + n - j}{2} + a$ and summing over all triples $q = (n, j, a)$ with $j - 2a = J$) and prove `FourPointData.toMonomialFourPointData_eval` and `FourPointData.exists_monomialDecomp` (**0 `sorry`s**).
 
 ### Step 2: `CFT/MonomialBootstrap/FourierProj.lean` — **Done (0 `sorry`s)**
 - [x] Define `laplaceFourierTransform φ σ t` for a test function $\varphi : \mathbb{R} \to \mathbb{R}$, and prove its rapid large-$\|t\|$ decay `exists_bound_laplaceFourierTransform` for compactly supported $C^k$ functions $\varphi$, together with `continuous_laplaceFourierTransform` and `integrable_laplaceFourierTransform`.
