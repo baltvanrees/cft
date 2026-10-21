@@ -31,8 +31,8 @@ We establish three main results:
    coordinates satisfy $\operatorname{Re}(w_l), \operatorname{Re}(w_r) \le \sigma < 0$, the
    integrand is uniformly dominated by the integrable Euclidean block
    $G_{\Delta, l}(e^\sigma)$. Applying
-   `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le` from `Vitali.lean` proves joint
-   holomorphy on $\operatorname{UcPdisk}$.
+   `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le` from
+   `CFT/Analysis/DominatedHolomorphy.lean` proves joint holomorphy on $\operatorname{UcPdisk}$.
 3. **Analytic Continuation of Crossing Symmetry (`FourPointData.crossing_correlator`)**:
    Starting from Euclidean crossing symmetry on the conjugate section $z_r = \bar{z}_l$
    (`crossing_correlator_eucl`), we first apply the 1D real-interval identity theorem along

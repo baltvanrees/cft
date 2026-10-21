@@ -5,7 +5,7 @@ Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import CFT.CutPlane
-import CFT.Vitali
+import CFT.Analysis.DominatedHolomorphy
 import CFT.Gegenbauers
 import CFT.Blocks_1d
 import CFT.Blocks
@@ -37,7 +37,8 @@ In the first part of this file we implement this analytic continuation and prove
 - From this bound and radial summability (`ConformalBlock.summable_evalTerm_exp`), we deduce
   summability (`ConformalBlock.summable_evalTermPdisk`) and apply the locally dominated series
   holomorphy criterion `CFT.differentiableOn_tsum_of_differentiableOn_of_norm_le` from
-  `Vitali.lean` to establish joint holomorphy (`ConformalBlock.differentiableOn_evalPdisk`).
+  `CFT/Analysis/DominatedHolomorphy.lean` to establish joint holomorphy
+  (`ConformalBlock.differentiableOn_evalPdisk`).
 
 In the second part we discuss the lightcone block decomposition of a $d$-dimensional conformal
 block into one-dimensional ($SL(2, \mathbb{R})$) collinear conformal blocks from `Blocks_1d.lean`.

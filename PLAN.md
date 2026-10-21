@@ -12,16 +12,19 @@ The goal is to formalize four-point correlation functions expanded in conformal 
 ## 2. Module Dependency Graph
 
 ```text
-CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean
-      │                       │                        │
-      │                       ▼                        │
-      │                  Blocks.lean                   │
-      │                 ╱           ╲                  │
-      ▼                ▼             ▼                 ▼
-      ├────────► Corr.lean          Blocks_pdisk.lean ◄┘
+CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean     Analysis/DominatedHolomorphy.lean
+      │                       │                        │                           │
+      │                       ▼                        │                           │
+      │                  Blocks.lean                   │                           │
+      │                 ╱           ╲                  │                           │
+      ▼                ▼             ▼                 ▼                           ▼
+      ├────────► Corr.lean          Blocks_pdisk.lean ◄────────────────────────────┘
       │                ╲             ╱
       │                 ▼           ▼
       └──────────────► Corr_pdisk.lean
+                              │
+                              ▼
+                     LightconeBootstrap/ ◄─── Analysis/{HermiteMeasure,TwoConstants,LaplaceTauberian}.lean
 ```
 
 ---
@@ -73,11 +76,16 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean
 - [x] Proves polydisk OPE convergence (`FourPointData.converges_correlator_pdisk`) and joint holomorphy (`FourPointData.differentiableOn_correlator_pdisk`) on $\operatorname{UcPdisk}$ from `converges_correlator_eucl`, `support_unitary`, and `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le`.
 - [x] Proves Euclidean-section agreement (`FourPointData.correlator_pdisk_conj_eq_eucl` and `correlator_conj_eq_eucl`), separate holomorphy on `CutPlane` (`differentiableAt_correlator_comp`, `differentiableOn_correlator_left`, `differentiableOn_correlator_right`), and analytically continued two-variable crossing symmetry (`crossing_correlator` and `crossing_correlator_real`).
 
-### Step 6: `CFT/Vitali.lean` & `CFT/MonomialBootstrap/` — **Architecture & Main Theorems Done (see [`CFT/MonomialBootstrap/PLAN.md`](CFT/MonomialBootstrap/PLAN.md))**
-- [x] Prove local Lipschitz equicontinuity from Cauchy's derivative bound (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`), the real-interval Vitali-type convergence theorems (`vitali_porter_real_interval`, `vitali_porter_ucDisk`, bypassing Montel's theorem via Tychonoff compactness in the pointwise product topology), and joint holomorphy of locally dominated parametric integrals and series (`differentiableOn_integral_of_differentiableOn_of_norm_le`, `differentiableOn_tsum_of_differentiableOn_of_norm_le`) in `CFT/Vitali.lean` (**100% `sorry`-free**).
-- [x] Establish the monomial decomposition of `FourPointData` (`MonomialDecomp.lean` — **100% `sorry`-free**), proving factorization (`evalSpin_eq_exp_mul_laplace`), even-spin $\pi$-periodicity (`eval_shift_pi`), 1D positivity (`norm_laplaceSpin_le_laplaceSpinReal`), 2D $s$-channel positivity (`norm_eval_le_evalReal`), shift continuity (`continuous_evalSpin_shift`, `continuous_eval_shift`), real-axis monotonicity (`laplaceSpinReal_mono`), holomorphy of $L_J(w)$ on $\operatorname{UcDisk}$ (`differentiableOn_laplaceSpin`), and the canonical pushforward construction `FourPointData.toMonomialFourPointData` with evaluation identity `FourPointData.toMonomialFourPointData_eval` (and corollary `FourPointData.exists_monomialDecomp`).
-- [x] Project onto the single-variable spin-$J$ Laplace transform $L_J(w)$ on $[-\pi/2, \pi/2]$ and pair with a compactly supported smooth test function $\varphi(h)$ (`FourierProj.lean` — **100% `sorry`-free**, proving `exists_bound_laplaceFourierTransform`, `continuous_laplaceFourierTransform`, `integrable_laplaceFourierTransform`, `fourierIntegrand_add_pi`, `norm_fourierIntegrand_le`, `fourierProjSpinFull_eq_fourierProjSpin`, `laplaceSpin_eq_fourierProjSpin`, `laplaceSpinReal_eq_fourierProjSpin`, and `pairSpin_eq_integral_laplaceSpin`).
-- [x] Formalize the twist gap (`HasLowerTwist`, `HasTwistGap`) and two-variable $t$-channel crossing in universal-cover coordinates (`Gap.lean` — **100% `sorry`-free**, proving `zOfW_mem_CutPlane`, `rho_zOfW`, `logRho_zOfW`, `crossFactor_eq_zOfW_cpow`, `crossW_mem_UcDisk`, `norm_eval_sub_one_le`, `eval_eq_cross`, and `norm_eval_sub_crossIdentity_le`).
-- [x] Formalize and prove the $t$-channel identity spin projection and universal limits (`IdentityProj.lean` — **100% `sorry`-free**, proving `differentiableOn_universalLaplace`, `integral_laplaceFourierTransform_mul_universalLaplace`, and `tendsto_identityProjSpin_real`).
-- [x] Formalize and prove all 3 stages of the Viewpoint B large-spin pipeline in `LargeSpin.lean`: Stage 1 (`tendsto_laplaceSpinReal_of_half_lt`, `tendsto_laplaceSpinReal`, and `tendsto_fourierProjSpin_sub_identity_real_of_half_lt`), Stage 2 (`norm_rescaled_laplaceSpin_le`, `tendsto_laplaceSpin_of_half_lt`, and `tendsto_laplaceSpin` via `vitali_porter_ucDisk`), and Stage 3 (`tendsto_integral_laplaceSpin_of_half_lt`, `tendsto_integral_laplaceSpin`, and the main theorems `tendsto_pairSpin_large_even_spin_of_half_lt` (**100% `sorry`-free** for $\Delta_\phi > 1/2$) and `tendsto_pairSpin_large_even_spin`).
+### Step 6: `CFT/Analysis/` & `CFT/LightconeBootstrap/` — **Done (0 `sorry`s; see [`CFT/LightconeBootstrap/PLAN.md`](CFT/LightconeBootstrap/PLAN.md))**
+- [x] **Standalone Analysis Modules (`CFT/Analysis/`)**:
+  - `DominatedHolomorphy.lean`: Cauchy Fréchet derivative and local Lipschitz bounds, joint measurability of derivatives, and joint holomorphy of locally dominated parametric integrals and series (`differentiableOn_integral_of_differentiableOn_of_norm_le`, `differentiableOn_tsum_of_differentiableOn_of_norm_le` — **100% `sorry`-free**).
+  - `Vitali.lean`: 1D Cauchy derivative bounds, local uniform equicontinuity (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`), and real-interval Vitali–Porter convergence theorems (`vitali_porter_real_interval`, `vitali_porter_ucDisk` — **100% `sorry`-free**).
+  - `HermiteMeasure.lean`: Fejér kernel $K(u)$, Fejér–Hermite interpolant $H_\psi$, and non-asymptotic $C_c^2$ lattice measure estimate from bounded-frequency Fourier agreement on $[-2\pi, 2\pi]$ (**100% `sorry`-free**).
+  - `TwoConstants.lean`: Explicit half-strip harmonic measure $\omega(\sigma, t)$ and Nevanlinna's Two-Constants Theorem on a vertical strip (`norm_le_two_constants_vertical_strip`, `norm_le_midpoint_two_constants` — **100% `sorry`-free**).
+  - `LaplaceTauberian.lean`: Single-pair non-asymptotic and power-law Laplace-to-$C_c^2$ Tauberian theorems via exponential tilting (**100% `sorry`-free**).
+- [x] **Quantitative Monomial Lightcone Bootstrap (`CFT/LightconeBootstrap/`)**:
+  - `MonomialDecomp.lean`: Monomial decomposition `MonomialFourPointData`, canonical pushforward `FourPointData.toMonomialFourPointData` with evaluation identity `FourPointData.toMonomialFourPointData_eval`, folded spin-$J$ Fourier projection on $[-\pi/2, \pi/2]$ (`laplaceSpinReal_eq_fourierProjSpin`), and test-function pairing `pairSpin` (**100% `sorry`-free**).
+  - `Gap.lean`: Twist gap (`HasLowerTwist`, `HasTwistGap`) and two-variable $t$-channel crossing in universal-cover coordinates (`norm_eval_sub_crossIdentity_le` — **100% `sorry`-free**).
+  - `RealLaplaceBound.lean`: Uniform real-axis Laplace error bounds on compact negative intervals $[\sigma_-, \sigma_+] \subset (-\infty, 0)$ against both the exact finite-spin $t$-channel identity Laplace transform `identityLaplaceReal` ($\alpha = \min(2 h_{\text{gap}},\, 2\Delta_\phi - 1)$, `exists_uniform_laplaceSpinReal_sub_identity_bounds`) and the asymptotic universal double-twist Laplace transform `universalLaplaceReal` ($\alpha = \min(2 h_{\text{gap}},\, 1,\, 2\Delta_\phi - 1)$, `exists_uniform_laplaceSpinReal_bounds` — **100% `sorry`-free**).
+  - `QuantitativeLargeSpin.lean`: Main quantitative large-spin theorems for $\varphi \in C_c^2(I)$ at even spin $J = 2k$ against the exact finite-spin $t$-channel identity pairing (`exists_const_abs_pairSpin_sub_identity_le`, `exists_const_abs_pairSpin_sub_identity_le_contDiff`, and `FourPointData.exists_const_abs_pairSpin_sub_identity_le`) and against the asymptotic $J \to \infty$ universal pairing (`exists_const_abs_pairSpin_sub_universal_le`, `exists_const_abs_pairSpin_sub_universal_le_contDiff`, and `FourPointData.exists_const_abs_pairSpin_sub_universal_le` — **100% `sorry`-free**).
 

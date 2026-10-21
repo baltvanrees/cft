@@ -3,12 +3,13 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.MonomialBootstrap.FourierProj
+import CFT.LightconeBootstrap.MonomialDecomp
 
 /-!
 # Twist Gap, $t$-Channel Identity Dominance, and Cross-Channel Error Bounds
 
-This file formalizes Step 3 of the monomial lightcone bootstrap:
+This file formalizes the twist gap and $t$-channel identity dominance bounds for the quantitative
+monomial lightcone bootstrap:
 
 1. **Inverse Coordinate Map `zOfW` and Crossed Coordinate `crossW`**:
    For $w \in \operatorname{UcDisk}$ with $\operatorname{Im}(w) \in (-\pi, \pi)$ (which includes the
@@ -32,6 +33,8 @@ This file formalizes Step 3 of the monomial lightcone bootstrap:
 
 open Real Complex Topology Set Metric MeasureTheory
 open scoped ComplexConjugate
+
+namespace CFT.LightconeBootstrap
 
 /-!
 ## Inverse Radial Map `zOfW`, Crossed Coordinate `crossW`, and $t$-Channel Identity
@@ -232,13 +235,15 @@ lemma crossFactor_eq_zOfW_cpow_ofReal (Δ_phi : ℝ) {x : ℝ} (hx : x < 0) :
     rw [h1z_eq]
     positivity
   have h_exp_x : Complex.exp (x : ℂ) = (q : ℂ) := (Complex.ofReal_exp x).symm
-  have hz_cast : (4 : ℂ) * Complex.exp (x : ℂ) / (1 + Complex.exp (x : ℂ)) ^ 2 = (z_re : ℂ) := by
+  have hz_cast :
+      (4 : ℂ) * Complex.exp (x : ℂ) / (1 + Complex.exp (x : ℂ)) ^ 2 = (z_re : ℂ) := by
     rw [h_exp_x]
     dsimp [z_re]
     push_cast
     rfl
   have h1z_cast :
-      1 - (4 : ℂ) * Complex.exp (x : ℂ) / (1 + Complex.exp (x : ℂ)) ^ 2 = ((1 - z_re : ℝ) : ℂ) := by
+      1 - (4 : ℂ) * Complex.exp (x : ℂ) / (1 + Complex.exp (x : ℂ)) ^ 2 =
+        ((1 - z_re : ℝ) : ℂ) := by
     rw [hz_cast]
     push_cast
     rfl
@@ -253,7 +258,8 @@ lemma crossFactor_eq_zOfW_cpow_ofReal (Δ_phi : ℝ) {x : ℝ} (hx : x < 0) :
     have : (Δ_phi : ℂ) * (x : ℂ) = ((Δ_phi * x : ℝ) : ℂ) := by push_cast; rfl
     rw [this, ← Complex.ofReal_exp, mul_comm Δ_phi x, Real.exp_mul]
   have h1q_cpow :
-      (1 - Complex.exp (x : ℂ)) ^ (- (2 * Δ_phi : ℂ)) = (((1 - q) ^ (- (2 * Δ_phi)) : ℝ) : ℂ) := by
+      (1 - Complex.exp (x : ℂ)) ^ (- (2 * Δ_phi : ℂ)) =
+        (((1 - q) ^ (- (2 * Δ_phi)) : ℝ) : ℂ) := by
     rw [h1q_cast]
     have : (- (2 * Δ_phi : ℂ)) = ((- (2 * Δ_phi) : ℝ) : ℂ) := by push_cast; rfl
     rw [this, ← Complex.ofReal_cpow h1sub_pos.le]
@@ -465,7 +471,7 @@ theorem re_crossW_le_of_re_ge {a : ℝ} {w : ℂ}
     have hcos_le : Real.sqrt 2 / 2 ≤ Real.cos (w.im / 2) := by
       rw [← Real.cos_pi_div_four]
       have h_abs : |w.im / 2| ≤ π / 4 := abs_le.mpr ⟨by linarith [him.1], by linarith [him.2]⟩
-      rw [ ← Real.cos_abs (w.im / 2)]
+      rw [← Real.cos_abs (w.im / 2)]
       exact Real.cos_le_cos_of_nonneg_of_le_pi (abs_nonneg _)
         (by linarith [Real.pi_pos]) h_abs
     calc
@@ -515,7 +521,8 @@ theorem norm_crossFactor_eq (Δ_phi : ℝ) {w : ℂ} (hw : w ∈ UcDisk) :
   have hexp_re : ((Δ_phi : ℂ) * w).re = Δ_phi * w.re := by simp [Complex.mul_re]
   have h1q_ne : 1 - Complex.exp w ≠ 0 :=
     slitPlane_ne_zero (one_sub_exp_mem_slitPlane hw)
-  have h1q : ‖(1 - Complex.exp w) ^ (- (2 * Δ_phi : ℂ))‖ = ‖1 - Complex.exp w‖ ^ (-2 * Δ_phi) := by
+  have h1q :
+      ‖(1 - Complex.exp w) ^ (- (2 * Δ_phi : ℂ))‖ = ‖1 - Complex.exp w‖ ^ (-2 * Δ_phi) := by
     rw [cpow_def_of_ne_zero h1q_ne, Complex.norm_exp]
     have hre : (Complex.log (1 - Complex.exp w) * -(2 * (Δ_phi : ℂ))).re =
         Real.log ‖1 - Complex.exp w‖ * (-2 * Δ_phi) := by
@@ -797,3 +804,4 @@ theorem norm_eval_sub_crossIdentity_le_of_re_le {ν Δ_phi h_gap : ℝ}
 
 end MonomialFourPointData
 
+end CFT.LightconeBootstrap

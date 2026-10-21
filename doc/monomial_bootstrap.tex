@@ -14,7 +14,7 @@
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 
-\title{\vspace{-1.5cm}\textbf{Universal Large-Spin Asymptotics in the Monomial Lightcone Bootstrap}\vspace{-0.6cm}}
+\title{\vspace{-1.5cm}\textbf{Quantitative Large-Spin Asymptotics in the Monomial Lightcone Bootstrap}\vspace{-0.6cm}}
 \author{}
 \date{}
 
@@ -47,11 +47,6 @@ For $(w_l, w_r) \in \mathbb{H}_-^2$ and $w \in \mathbb{H}_-$, the holomorphic fo
 \end{equation}
 \end{definition}
 
-\begin{theorem}[Monomial Decomposition of Conformal Four-Point Functions]
-\label{thm:monomial-decomp}
-Every reflection-positive conformal four-point correlation function of identical scalars in $d \ge 2$ dimensions ($\nu = (d-2)/2 \ge 0$) canonically defines a monomial four-point datum $\{\mu_J\}_{J \in \mathbb{Z}}$---obtained by pushing forward the conformal-block OPE measure $\mu(\Delta, l)$ weighted by $A_{n, j}(\Delta, l) \, c_{j, a}^{(\nu)}$ along $h(\Delta, l) = \frac{\Delta + n - j}{2} + a$ and summing over all $(n, j, a)$ with $0 \le a \le j$ and $j - 2a = J$---whose evaluation $\mathcal{G}(w_l, w_r)$ coincides with the analytically continued $s$-channel four-point function on $\mathbb{H}_-^2$.
-\end{theorem}
-
 On the $t$-channel strip $\mathcal{S}_\pi := \{(w_l, w_r) \in \mathbb{H}_-^2 : \operatorname{Im}(w_l), \operatorname{Im}(w_r) \in (-\pi, \pi)\}$, the crossing transformation maps $w \in \mathbb{H}_-$ with $\operatorname{Im}(w) \in (-\pi, \pi)$ to $w' := \log \rho(1 - z(w)) \in \mathbb{H}_-$. For external scalar scaling dimension $\Delta_\phi > 0$, define the single-variable crossing factor and the $t$-channel identity contribution by
 \begin{equation}
   \mathcal{C}_{\Delta_\phi}(w) := 4^{\Delta_\phi} e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi}, \qquad
@@ -61,89 +56,123 @@ On the $t$-channel strip $\mathcal{S}_\pi := \{(w_l, w_r) \in \mathbb{H}_-^2 : \
 \begin{definition}[Crossing Symmetry and Twist Gap]
 A monomial four-point datum $\{\mu_J\}_{J \in \mathbb{Z}}$ with external dimension $\Delta_\phi > 0$ is \emph{crossing-symmetric} on $\mathcal{S}_\pi$ if
 \begin{equation}
-  \mathcal{G}(w_l, w_r) = \mathcal{C}_{\Delta_\phi}(w_l) \, \mathcal{C}_{\Delta_\phi}(w_r) \, \mathcal{G}(w_r', w_l') \qquad \forall (w_l, w_r) \in \mathcal{S}_\pi.
+  \label{eq:crossing-sym}
+  \mathcal{G}(w_l, w_r) = \mathcal{C}_{\Delta_\phi}(w_l) \, \mathcal{C}_{\Delta_\phi}(w_r) \, \mathcal{G}(w_l', w_r') \qquad \forall (w_l, w_r) \in \mathcal{S}_\pi.
 \end{equation}
-It has a \emph{twist gap} $h_{\mathrm{gap}} > 0$ above the vacuum ($h = J = 0$) if:
-\begin{enumerate}
-  \item For $J = 0$, $\mu_0 = \delta_0 + \tilde{\mu}_0$, where $\delta_0$ is the Dirac point mass at $h = 0$ and $\tilde{\mu}_0((-\infty, h_{\mathrm{gap}})) = 0$;
-  \item For every non-zero spin $J \ne 0$, $\mu_J(\{h \in \mathbb{R} : h < h_{\mathrm{gap}} \text{ or } h + J < h_{\mathrm{gap}}\}) = 0$.
-\end{enumerate}
+It has a \emph{twist gap} $h_{\mathrm{gap}} > 0$ above the vacuum ($h = J = 0$) if $\{\mu_J\}_{J \in \mathbb{Z}}$ decomposes as $\mu_0 = \delta_0 + \tilde{\mu}_0$ and $\mu_J = \tilde{\mu}_J$ ($J \ne 0$) for a monomial four-point datum $\{\tilde{\mu}_J\}_{J \in \mathbb{Z}}$ satisfying $\tilde{\mu}_J(\{h \in \mathbb{R} : h < h_{\mathrm{gap}} \text{ or } h + J < h_{\mathrm{gap}}\}) = 0$ for all $J \in \mathbb{Z}$.
 \end{definition}
 
-\section{Main Results}
+\begin{theorem}[Monomial Decomposition and Crossing Symmetry of Conformal Four-Point Functions]
+\label{thm:monomial-decomp}
+Every reflection-positive, Euclidean crossing-symmetric conformal four-point correlation function of identical scalars of dimension $\Delta_\phi > 0$ in $d \ge 2$ dimensions ($\nu = (d-2)/2 \ge 0$) canonically defines a monomial four-point datum $\{\mu_J\}_{J \in \mathbb{Z}}$---obtained by pushing forward the conformal-block OPE measure $\mu(\Delta, l)$ weighted by $A_{n, j}(\Delta, l) \, c_{j, a}^{(\nu)}$ along $h(\Delta, l) = \frac{\Delta + n - j}{2} + a$ and summing over all $(n, j, a)$ with $0 \le a \le j$ and $j - 2a = J$---whose evaluation $\mathcal{G}(w_l, w_r)$ coincides with the analytically continued $s$-channel four-point function on $\mathbb{H}_-^2$ and satisfies the two-variable crossing symmetry relation~\eqref{eq:crossing-sym} on $\mathcal{S}_\pi$.
+\end{theorem}
 
-\begin{proposition}[$t$-Channel Twist-Gap Remainder Bound on the Half-Strip]
-\label{prop:gap-bound}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 0$ and twist gap $h_{\mathrm{gap}} > 0$. For any $a, b < 0$, set $\sigma_{l,0} := \log(1 - \frac{\sqrt{2}}{4} e^{a}) < 0$ and $\sigma_{r,0} := \log(1 - \frac{\sqrt{2}}{4} e^{b}) < 0$. Then for all $(w_l, w_r) \in \mathbb{H}_-^2$ satisfying $\operatorname{Im}(w_l), \operatorname{Im}(w_r) \in [-\pi/2, \pi/2]$ and $\operatorname{Re}(w_l) \le a$, $\operatorname{Re}(w_r) \le b$,
+\section{Tauberian Analysis on the Integer Lattice}
+
+\begin{proposition}[Fej\'er--Hermite Lattice Measure Estimate]
+\label{prop:hermite-measure}
+For every $N \in \mathbb{N}$, define
 \begin{equation}
-  \bigl|\mathcal{G}(w_l, w_r) - \mathcal{G}_{\mathrm{id}}(w_l, w_r)\bigr|
-  \le 16^{\Delta_\phi} (1 - e^a)^{-2\Delta_\phi} e^{-h_{\mathrm{gap}} \sigma_{r,0}} \bigl(\mathcal{G}(\sigma_{l,0}, \sigma_{r,0}) - 1\bigr) \, |1 - e^{w_r}|^{2(h_{\mathrm{gap}} - \Delta_\phi)}.
+  C_N := (2N + 1)\Bigl(1 + \frac{1}{\pi}\Bigr) + \frac{1}{4}\Bigl(1 + (2N + 1)\Bigl(\frac{2\pi^2}{3} + \frac{4\pi}{3}\Bigr)\Bigr).
+\end{equation}
+Let $\mu, \nu$ be finite positive Borel measures on $\mathbb{R}$ with $\nu(\mathbb{R} \setminus \mathbb{Z}) = 0$, and suppose that for some $\varepsilon \ge 0$,
+\begin{equation}
+  \left|\int_{\mathbb{R}} e^{i t u} \, d(\mu - \nu)(u)\right| \le \varepsilon \qquad \forall t \in [0, 2\pi].
+\end{equation}
+Then for every $\psi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{u \in \mathbb{R}} \max\{|\psi(u)|, |\psi'(u)|, |\psi''(u)|\} \le M_\psi$,
+\begin{equation}
+  \left|\int_{\mathbb{R}} \psi(u) \, d\mu(u) - \int_{\mathbb{R}} \psi(u) \, d\nu(u)\right| \le C_N \, \varepsilon \, M_\psi.
 \end{equation}
 \end{proposition}
 
-\begin{proposition}[Folded Spin-$2k$ Projection and Vertical Laplace Inversion]
-\label{prop:fourier-proj}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a monomial four-point datum.
+\begin{proposition}[Nevanlinna's Two-Constants Theorem on a Vertical Strip]
+\label{prop:two-constants}
+Let $\sigma_- < \sigma_+$ and define the strip harmonic measure of the real segment $[\sigma_-, \sigma_+]$ by $\omega(\sigma, 0) := 1$ and
+\begin{equation}
+  \omega(\sigma, t) := \frac{2}{\pi} \arctan\!\left(\frac{\sin\bigl(\pi(\sigma - \sigma_-)/(\sigma_+ - \sigma_-)\bigr)}{\sinh\bigl(\pi |t|/(\sigma_+ - \sigma_-)\bigr)}\right) \qquad (t \ne 0).
+\end{equation}
+If $E : \mathbb{C} \to \mathbb{C}$ is holomorphic on $\{s \in \mathbb{C} : \operatorname{Re}(s) \in (\sigma_-, \sigma_+)\}$, continuous and bounded by $M$ on $\{s \in \mathbb{C} : \operatorname{Re}(s) \in [\sigma_-, \sigma_+]\}$, and satisfies $|E(\sigma)| \le \delta$ for all $\sigma \in [\sigma_-, \sigma_+]$ with $0 < \delta \le M$, then
+\begin{equation}
+  \bigl|E(\sigma + i t)\bigr| \le M^{1 - \omega(\sigma, t)} \, \delta^{\omega(\sigma, t)} \qquad \forall \sigma \in [\sigma_-, \sigma_+], \; \forall t \in \mathbb{R}.
+\end{equation}
+In particular, for $A > 1$, $T > 0$, $[\sigma_-, \sigma_+] = [1 - 2A, -1]$, and $\vartheta(A, T) := \frac{2}{\pi}\arctan\bigl(1/\sinh(\frac{\pi T}{2(A-1)})\bigr) \in (0, 1)$, we have $\lim_{A \to \infty} \vartheta(A, T) = 1$ and $|E(-A + i t)| \le M^{1 - \vartheta(A, T)} \delta^{\vartheta(A, T)}$ for all $t \in [-T, T]$.
+\end{proposition}
+
+\begin{theorem}[Quantitative Laplace-to-$C_c^2$ Tauberian Theorem on $\mathbb{Z}$]
+\label{thm:laplace-tauberian}
+Let $A > 1$, $0 < \delta \le M$, and $\vartheta_A := \vartheta(A, 2\pi) = \frac{2}{\pi}\arctan\bigl(1/\sinh(\frac{\pi^2}{A-1})\bigr)$. Let $\mu, \nu$ be positive Borel measures on $\mathbb{R}$ with $\nu(\mathbb{R} \setminus \mathbb{Z}) = 0$ such that $e^{(1 - 2A)u}$ and $e^{-u}$ are integrable with respect to both $\mu$ and $\nu$, and for all $\sigma \in [1 - 2A, -1]$,
+\begin{equation}
+  \int_{\mathbb{R}} e^{\sigma u} \, d\mu(u) + \int_{\mathbb{R}} e^{\sigma u} \, d\nu(u) \le M, \qquad
+  \left|\int_{\mathbb{R}} e^{\sigma u} \, d\mu(u) - \int_{\mathbb{R}} e^{\sigma u} \, d\nu(u)\right| \le \delta.
+\end{equation}
+Then for every $N \in \mathbb{N}$ and every $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{u \in \mathbb{R}} \max\{|\varphi(u)|, |\varphi'(u)|, |\varphi''(u)|\} \le M_\varphi$,
+\begin{equation}
+  \left|\int_{\mathbb{R}} \varphi(u) \, d\mu(u) - \int_{\mathbb{R}} \varphi(u) \, d\nu(u)\right|
+  \le C_N (A + 1)^2 e^{A N} M^{1 - \vartheta_A} \delta^{\vartheta_A} M_\varphi.
+\end{equation}
+Consequently, for any $0 < \gamma < \alpha$, choosing $A > 1$ with $\alpha \vartheta_A \ge \gamma$ upgrades any power-law Laplace error bound $\delta = C_0 J^{-\alpha}$ ($J \ge 1$) to a power-law $C_c^2$ pairing bound $C J^{-\gamma} M_\varphi$.
+\end{theorem}
+
+\section{Uniform Real-Axis Laplace Bounds and Quantitative Lightcone Bootstrap}
+
+\begin{proposition}[$t$-Channel Twist-Gap Remainder Bound and Folded Spin Projection]
+\label{prop:gap-and-proj}
+Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 0$ and twist gap $h_{\mathrm{gap}} > 0$.
 \begin{enumerate}
+  \item For any $a, b < 0$, set $\sigma_{l,0} := \log(1 - \frac{\sqrt{2}}{4} e^{a}) < 0$ and $\sigma_{r,0} := \log(1 - \frac{\sqrt{2}}{4} e^{b}) < 0$. Then for all $(w_l, w_r) \in \mathbb{H}_-^2$ satisfying $\operatorname{Im}(w_l), \operatorname{Im}(w_r) \in [-\pi/2, \pi/2]$ and $\operatorname{Re}(w_l) \le a$, $\operatorname{Re}(w_r) \le b$,
+  \begin{equation}
+    \bigl|\mathcal{G}(w_l, w_r) - \mathcal{G}_{\mathrm{id}}(w_l, w_r)\bigr|
+    \le 16^{\Delta_\phi} (1 - e^a)^{-2\Delta_\phi} e^{-h_{\mathrm{gap}} \sigma_{r,0}} \bigl(\mathcal{G}(\sigma_{l,0}, \sigma_{r,0}) - 1\bigr) \, |1 - e^{w_r}|^{2(h_{\mathrm{gap}} - \Delta_\phi)}.
+  \end{equation}
   \item For every even spin $J = 2k \in 2\mathbb{Z}$ and every $(w_l, w_r) \in \mathbb{H}_-^2$,
   \begin{equation}
     L_{2k}(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \, e^{-2k (w_r + i\theta)} \, \mathcal{G}(w_l - i\theta, w_r + i\theta).
   \end{equation}
-  \item For every compactly supported smooth test function $\varphi \in C_c^\infty(\mathbb{R})$ and $\sigma \in \mathbb{R}$, the Laplace--Fourier transform $\widehat{\varphi}_\sigma(t) := \int_{\mathbb{R}} \varphi(h) e^{-h(\sigma + i t)} \, dh$ satisfies $|\widehat{\varphi}_\sigma(t)| \le C_m (1 + |t|)^{-m}$ for every $m \in \mathbb{N}$ uniformly on compact $\sigma$-intervals, and for every $\sigma < 0$ and $J \in \mathbb{Z}$,
-  \begin{equation}
-    \int_{\mathbb{R}} \varphi(h) \, d\mu_J(h) = \int_{-\infty}^{\infty} \frac{dt}{2\pi} \, \widehat{\varphi}_\sigma(t) \, L_J(\sigma + i t).
-  \end{equation}
 \end{enumerate}
 \end{proposition}
 
-Define the $t$-channel identity spin projection $I_J(\Delta_\phi; w_l, w_r)$ and the universal large-spin Laplace and spectral limits $L_{\mathrm{univ}}(\Delta_\phi; w)$ and $\mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi)$ by
+For $\Delta_\phi > 0$, even spin $J = 2k$ ($k \in \mathbb{N}$), $\sigma < 0$, and $\varphi : \mathbb{R} \to \mathbb{R}$, define the exact finite-spin $t$-channel identity Laplace transform $L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma)$ and monomial pairing $\mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi)$, as well as their universal $k \to \infty$ limits $L_{\mathrm{univ}}(\Delta_\phi; \sigma)$ and $\mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi)$, by
 \begin{align}
-  I_J(\Delta_\phi; w_l, w_r) &:= \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \, e^{-J(w_r + i\theta)} \, \mathcal{G}_{\mathrm{id}}(w_l - i\theta, w_r + i\theta), \\
-  L_{\mathrm{univ}}(\Delta_\phi; w) &:= \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \, e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi}, \qquad
-  \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi) := \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n).
+  L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma) &:= 2 \cdot 4^{2\Delta_\phi} e^{\Delta_\phi \sigma} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} \, e^{n \sigma}, &
+  L_{\mathrm{univ}}(\Delta_\phi; \sigma) &:= \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \, e^{\Delta_\phi \sigma} (1 - e^\sigma)^{-2\Delta_\phi}, \\
+  \mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi) &:= 2 \cdot 4^{2\Delta_\phi} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} \, \varphi(\Delta_\phi + n), &
+  \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi) &:= \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n).
 \end{align}
 
-\begin{proposition}[Explicit Evaluation of the $t$-Channel Identity Integrals]
-\label{prop:identity-eval}
-For every $\Delta_\phi > 0$, $\sigma < 0$, and $\varphi \in C_c^\infty(\mathbb{R})$,
-\begin{align}
-  \lim_{k \to \infty} (2k)^{1 - 2\Delta_\phi} I_{2k}\!\Bigl(\Delta_\phi; \sigma + \tfrac{1}{2k}, -\tfrac{1}{2k}\Bigr) &= L_{\mathrm{univ}}(\Delta_\phi; \sigma), \\
-  \int_{-\infty}^{\infty} \frac{dt}{2\pi} \, \widehat{\varphi}_\sigma(t) \, L_{\mathrm{univ}}(\Delta_\phi; \sigma + i t) &= \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi).
-\end{align}
-\end{proposition}
-
-\begin{proposition}[Real-Axis Remainder Suppression]
-\label{prop:remainder}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 0$ and twist gap $h_{\mathrm{gap}} > 0$. If $2(h_{\mathrm{gap}} - \Delta_\phi) \ne -1$, then for every $\sigma < 0$ there exists $C \ge 0$ such that for all sufficiently large $k \in \mathbb{N}$,
-\begin{equation}
-  (2k)^{1 - 2\Delta_\phi} \Bigl|L_{2k}(\sigma) - I_{2k}\!\Bigl(\Delta_\phi; \sigma + \tfrac{1}{2k}, -\tfrac{1}{2k}\Bigr)\Bigr|
-  \le C \Bigl((2k)^{-2 h_{\mathrm{gap}}} + (2k)^{1 - 2\Delta_\phi}\Bigr).
-\end{equation}
-In particular, if $\Delta_\phi > 1/2$, then for every $h_{\mathrm{gap}} > 0$ and every $\sigma < 0$,
-\begin{equation}
-  \label{eq:rem-vanish}
-  \lim_{k \to \infty} (2k)^{1 - 2\Delta_\phi} \Bigl(L_{2k}(\sigma) - I_{2k}\!\Bigl(\Delta_\phi; \sigma + \tfrac{1}{2k}, -\tfrac{1}{2k}\Bigr)\Bigr) = 0.
-\end{equation}
-\end{proposition}
-
-\begin{conjecture}[Remainder Vanishing for $0 < \Delta_\phi \le 1/2$]
-\label{conj:low-delta}
-For any crossing-symmetric monomial four-point datum with $0 < \Delta_\phi \le 1/2$ and twist gap $h_{\mathrm{gap}} > 0$, the remainder limit~\eqref{eq:rem-vanish} also holds for all $\sigma < 0$.
-\end{conjecture}
-
-\begin{theorem}[Universal Large-Spin Spectral Asymptotics]
-\label{thm:explicit-asymptotics}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 0$ and twist gap $h_{\mathrm{gap}} > 0$. If $\Delta_\phi > 1/2$ (or if $0 < \Delta_\phi \le 1/2$ assuming Conjecture~\ref{conj:low-delta}), then:
+\begin{proposition}[Uniform Real-Axis Laplace Bounds on Compact Negative Intervals]
+\label{prop:uniform-laplace}
+Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 1/2$ and twist gap $h_{\mathrm{gap}} > 0$ such that $2(h_{\mathrm{gap}} - \Delta_\phi) \ne -1$, and let $[\sigma_-, \sigma_+] \subset (-\infty, 0)$ be a compact interval.
 \begin{enumerate}
-  \item \emph{(Real-axis Laplace asymptotics)} For every $\sigma < 0$, $\displaystyle \lim_{k \to \infty} (2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) = L_{\mathrm{univ}}(\Delta_\phi; \sigma)$.
-  \item \emph{(Complex half-plane Laplace asymptotics)} For every $w \in \mathbb{H}_-$, $\displaystyle \lim_{k \to \infty} (2k)^{1 - 2\Delta_\phi} L_{2k}(w) = L_{\mathrm{univ}}(\Delta_\phi; w)$.
-  \item \emph{(Distributional spectral asymptotics)} For every test function $\varphi \in C_c^\infty(\mathbb{R})$,
+  \item \emph{(Comparison with the exact finite-spin $t$-channel identity)} Set $\alpha_{\mathrm{id}} := \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1) > 0$. There exist constants $M_{\mathrm{bd}}, C_{\mathrm{bd}} > 0$ such that for all integers $k \ge 1$ and all $\sigma \in [\sigma_-, \sigma_+]$,
+  \begin{align}
+    (2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) + (2k)^{1 - 2\Delta_\phi} L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma) &\le M_{\mathrm{bd}}, \\
+    \Bigl|(2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) - (2k)^{1 - 2\Delta_\phi} L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma)\Bigr| &\le C_{\mathrm{bd}} \, (2k)^{-\alpha_{\mathrm{id}}}.
+  \end{align}
+  \item \emph{(Comparison with the asymptotic universal limit)} Set $\alpha_{\mathrm{univ}} := \min(2 h_{\mathrm{gap}},\, 1,\, 2\Delta_\phi - 1) > 0$. There exist constants $M_{\mathrm{bd}}', C_{\mathrm{bd}}' > 0$ such that for all integers $k \ge 1$ and all $\sigma \in [\sigma_-, \sigma_+]$,
+  \begin{align}
+    (2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) + L_{\mathrm{univ}}(\Delta_\phi; \sigma) &\le M_{\mathrm{bd}}', \\
+    \Bigl|(2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) - L_{\mathrm{univ}}(\Delta_\phi; \sigma)\Bigr| &\le C_{\mathrm{bd}}' \, (2k)^{-\alpha_{\mathrm{univ}}}.
+  \end{align}
+\end{enumerate}
+\end{proposition}
+
+\begin{theorem}[Quantitative Monomial Lightcone Bootstrap]
+\label{thm:quantitative-large-spin}
+Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be the monomial four-point datum of a reflection-positive conformal four-point function in $d \ge 2$ dimensions with external dimension $\Delta_\phi > 1/2$ and twist gap $h_{\mathrm{gap}} > 0$, and let $N \in \mathbb{N}$.
+\begin{enumerate}
+  \item \emph{(Against the exact finite-spin $t$-channel identity)} For every target exponent $0 < \gamma < \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1)$, there exists a constant $C > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
   \begin{equation}
-    \lim_{k \to \infty} (2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
-    = \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n).
+    \left|(2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
+      - (2k)^{1 - 2\Delta_\phi} \, \mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi)\right|
+    \le C \, (2k)^{-\gamma} \, M_\varphi.
+  \end{equation}
+  \item \emph{(Against the asymptotic universal double-twist limit)} For every target exponent $0 < \gamma < \min(2 h_{\mathrm{gap}},\, 1,\, 2\Delta_\phi - 1)$, there exists a constant $C' > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
+  \begin{equation}
+    \left|(2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
+      - \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi)\right|
+    \le C' \, (2k)^{-\gamma} \, M_\varphi.
   \end{equation}
 \end{enumerate}
 \end{theorem}
 
 \end{document}
-
