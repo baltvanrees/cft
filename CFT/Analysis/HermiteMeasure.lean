@@ -224,14 +224,8 @@ lemma deriv_fejerSlopeKernelDeriv : deriv fejerSlopeKernelDeriv = fejerSlopeKern
 lemma continuous_fejerKernel : Continuous fejerKernel :=
   Differentiable.continuous (fun u => (hasDerivAt_fejerKernel u).differentiableAt)
 
-lemma continuous_fejerKernelDeriv : Continuous fejerKernelDeriv :=
-  Differentiable.continuous (fun u => (hasDerivAt_fejerKernelDeriv u).differentiableAt)
-
 lemma continuous_fejerSlopeKernel : Continuous fejerSlopeKernel :=
   Differentiable.continuous (fun u => (hasDerivAt_fejerSlopeKernel u).differentiableAt)
-
-lemma continuous_fejerSlopeKernelDeriv : Continuous fejerSlopeKernelDeriv :=
-  Differentiable.continuous (fun u => (hasDerivAt_fejerSlopeKernelDeriv u).differentiableAt)
 
 /-! ## 3. Closed Forms, Integer Interpolation Values, and Global Bounds -/
 
@@ -1214,26 +1208,5 @@ theorem abs_integral_sub_le_of_fourier_bound {μ ν : Measure ℝ}
   unfold hermiteConstant
   dsimp [M₂] at hR_μ
   linarith
-
-/-- Version of `abs_integral_sub_le_of_fourier_bound` assuming `ContDiff ℝ 2 ψ` and the
-symmetric Fourier window `t ∈ [-2π, 2π]`. -/
-theorem abs_integral_sub_le_of_fourier_bound_contDiff {μ ν : Measure ℝ}
-    [IsFiniteMeasure μ] [IsFiniteMeasure ν]
-    (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0)
-    (N : ℕ) {ψ : ℝ → ℝ} (hψ : ContDiff ℝ 2 ψ)
-    (hsupp : ∀ u : ℝ, (N : ℝ) < |u| → ψ u = 0)
-    {M_ψ ε : ℝ} (hM : 0 ≤ M_ψ) (hε : 0 ≤ ε)
-    (hψ0 : ∀ u, |ψ u| ≤ M_ψ) (hψ1 : ∀ u, |deriv ψ u| ≤ M_ψ)
-    (hψ2 : ∀ u, |deriv (deriv ψ) u| ≤ M_ψ)
-    (h_four : ∀ t ∈ Icc (-2 * π) (2 * π),
-      ‖(∫ u : ℝ, Complex.exp (Complex.I * (t : ℂ) * (u : ℂ)) ∂μ) -
-        (∫ u : ℝ, Complex.exp (Complex.I * (t : ℂ) * (u : ℂ)) ∂ν)‖ ≤ ε) :
-    |(∫ u : ℝ, ψ u ∂μ) - (∫ u : ℝ, ψ u ∂ν)| ≤ hermiteConstant N * ε * M_ψ := by
-  have hψ_diff : Differentiable ℝ ψ := hψ.differentiable (by norm_num)
-  have hψ_succ : ContDiff ℝ (1 + 1) ψ := hψ
-  have hψ'_diff : Differentiable ℝ (deriv ψ) :=
-    ((contDiff_succ_iff_deriv.mp hψ_succ).2.2).differentiable (by norm_num)
-  exact abs_integral_sub_le_of_fourier_bound hν N hψ_diff hψ'_diff hsupp hM hε hψ0 hψ1 hψ2
-    (fun t ht => h_four t ⟨by linarith [ht.1, Real.pi_pos], ht.2⟩)
 
 end CFT.LightconeBootstrap

@@ -202,11 +202,6 @@ $\varphi : \mathbb{R} \to \mathbb{R}$ with the spin-$J$ spectral measure $\mu_J$
 noncomputable def pairSpin (J : ℤ) (φ : ℝ → ℝ) : ℝ :=
   ∫ h : ℝ, φ h ∂(M.mu J)
 
-theorem pairSpin_of_odd {J : ℤ} (hJ : Odd J) (φ : ℝ → ℝ) :
-    M.pairSpin J φ = 0 := by
-  dsimp [pairSpin]
-  rw [M.support_odd_spin J hJ, integral_zero_measure]
-
 /-- Factorization of the spin-$J$ contribution into $e^{J w_r}$ times `laplaceSpin`:
 $$\int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) =
   e^{J w_r} L_J(w_l + w_r).$$ -/
@@ -220,12 +215,6 @@ theorem evalSpin_eq_exp_mul_laplace (J : ℤ) (wl wr : ℂ) :
 theorem evalSpin_of_odd {J : ℤ} (hJ : Odd J) (wl wr : ℂ) :
     M.evalSpin J wl wr = 0 := by
   dsimp [evalSpin]
-  rw [M.support_odd_spin J hJ, integral_zero_measure]
-
-/-- For odd spin $J$, `laplaceSpin` vanishes identically. -/
-theorem laplaceSpin_of_odd {J : ℤ} (hJ : Odd J) (w : ℂ) :
-    M.laplaceSpin J w = 0 := by
-  dsimp [laplaceSpin]
   rw [M.support_odd_spin J hJ, integral_zero_measure]
 
 /-- Each spin-$J$ contribution is invariant under $(w_l, w_r) \mapsto (w_l - i\pi, w_r + i\pi)$. -/
@@ -271,27 +260,6 @@ theorem evalSpin_ofReal (J : ℤ) (σl σr : ℝ) :
   dsimp [evalSpin, evalSpinReal]
   simp_rw [monomialTerm_ofReal]
   exact integral_ofReal
-
-theorem eval_ofReal (σl σr : ℝ) :
-    M.eval (σl : ℂ) (σr : ℂ) = (M.evalReal σl σr : ℂ) := by
-  dsimp [eval, evalReal]
-  simp_rw [M.evalSpin_ofReal]
-  exact (Complex.ofReal_tsum _).symm
-
-/-- **1D Positivity Bound for `laplaceSpin`**: because $\mu_J$ is a non-negative measure,
-increasing $|\operatorname{Im}(w)|$ never increases $\|L_J(w)\|$:
-$$\|L_J(w)\| \le L_J(\operatorname{Re}(w)).$$ -/
-theorem norm_laplaceSpin_le_laplaceSpinReal (J : ℤ) (w : ℂ) :
-    ‖M.laplaceSpin J w‖ ≤ M.laplaceSpinReal J w.re := by
-  dsimp [laplaceSpin, laplaceSpinReal]
-  calc
-    ‖∫ h : ℝ, Complex.exp ((h : ℂ) * w) ∂(M.mu J)‖
-      ≤ ∫ h : ℝ, ‖Complex.exp ((h : ℂ) * w)‖ ∂(M.mu J) := norm_integral_le_integral_norm _
-    _ = ∫ h : ℝ, Real.exp (h * w.re) ∂(M.mu J) := by
-      congr 1
-      ext h
-      rw [Complex.norm_exp]
-      simp [Complex.mul_re]
 
 /-- Integrability of `monomialTerm` on $\operatorname{UcPdisk}$ for every spin
 $J \in \mathbb{Z}$. -/
@@ -442,60 +410,6 @@ theorem evalReal_mono_left {σl₁ σl₂ σr : ℝ}
     (fun J => M.evalSpinReal_mono_left J hσl₁ hσl₂ hσr hle)
     (M.summable_real hσl₂ hσr)
 
-/-- Holomorphy of `laplaceSpin` on $\operatorname{UcDisk} = \{\operatorname{Re}(w) < 0\}$. -/
-theorem differentiableOn_laplaceSpin (J : ℤ) :
-    DifferentiableOn ℂ (M.laplaceSpin J) UcDisk := by
-  intro w₀ hw₀
-  have hw₀_re : w₀.re < 0 := hw₀
-  set σ : ℝ := w₀.re / 2
-  have hσ_neg : σ < 0 := by dsimp [σ]; linarith
-  set δ : ℝ := -σ / 2
-  have hδ_pos : 0 < δ := by dsimp [δ]; linarith
-  let s : Set ℂ := { w : ℂ | w.re < σ }
-  have hs_open : IsOpen s := isOpen_lt Complex.continuous_re continuous_const
-  have hw₀_s : w₀ ∈ s := by change w₀.re < w₀.re / 2; linarith
-  have hs_nhds : s ∈ 𝓝 w₀ := hs_open.mem_nhds hw₀_s
-  let F : ℂ → ℝ → ℂ := fun w h => Complex.exp ((h : ℂ) * w)
-  let F' : ℂ → ℝ → ℂ := fun w h => (h : ℂ) * Complex.exp ((h : ℂ) * w)
-  let bound : ℝ → ℝ := fun h => δ⁻¹ * Real.exp (h * (σ / 2))
-  have h_deriv := hasDerivAt_integral_of_dominated_loc_of_deriv_le
-    (F := F) (F' := F') (bound := bound) hs_nhds
-    (Filter.Eventually.of_forall fun w => by dsimp [F]; fun_prop)
-    (M.integrable_exp hw₀ J)
-    (by dsimp [F']; fun_prop)
-    ?_ ?_ ?_
-  · exact h_deriv.2.differentiableAt.differentiableWithinAt
-  · filter_upwards [M.ae_nonneg J] with h hh w hw
-    have hw_re : w.re < σ := hw
-    dsimp [F', bound]
-    rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg hh, Complex.norm_exp]
-    have h_re : ((h : ℂ) * w).re = h * w.re := by simp [Complex.mul_re]
-    rw [h_re]
-    have h_h_le : h ≤ δ⁻¹ * Real.exp (h * δ) := by
-      have h1 : h * δ ≤ Real.exp (h * δ) :=
-        (le_add_of_nonneg_right zero_le_one).trans (Real.add_one_le_exp (h * δ))
-      calc
-        h = δ⁻¹ * (h * δ) := by field_simp
-        _ ≤ δ⁻¹ * Real.exp (h * δ) :=
-          mul_le_mul_of_nonneg_left h1 (inv_nonneg.mpr hδ_pos.le)
-    have h_exp_le : Real.exp (h * w.re) ≤ Real.exp (h * σ) :=
-      Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left hw_re.le hh)
-    calc
-      h * Real.exp (h * w.re)
-        ≤ (δ⁻¹ * Real.exp (h * δ)) * Real.exp (h * σ) :=
-          mul_le_mul h_h_le h_exp_le (Real.exp_pos _).le (by positivity)
-      _ = δ⁻¹ * Real.exp (h * (σ / 2)) := by
-        rw [mul_assoc, ← Real.exp_add]
-        congr 2
-        dsimp [δ]
-        ring
-  · exact (M.integrable_exp_real (by linarith : σ / 2 < 0) J).const_mul δ⁻¹
-  · refine Filter.Eventually.of_forall fun h w _ => ?_
-    dsimp [F, F']
-    have h_id : HasDerivAt (fun z : ℂ => (h : ℂ) * z) (h : ℂ) w := by
-      simpa using (hasDerivAt_id w).const_mul (h : ℂ)
-    simpa [mul_comm] using h_id.cexp
-
 /-!
 ## Spin-$J$ Fourier Projection on $[-\pi, \pi]$ and Folding to $[-\pi/2, \pi/2]$
 -/
@@ -505,17 +419,6 @@ $$e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\thet
 noncomputable def fourierIntegrand (J : ℤ) (wl wr : ℂ) (θ : ℝ) : ℂ :=
   Complex.exp (- (J : ℂ) * (wr + (θ : ℂ) * I)) *
     M.eval (wl - (θ : ℂ) * I) (wr + (θ : ℂ) * I)
-
-/-- Opposite imaginary shifts $(w_l - i\theta, w_r + i\theta)$ preserve membership in `UcDisk`. -/
-lemma sub_I_mul_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) (θ : ℝ) :
-    w - (θ : ℂ) * I ∈ UcDisk := by
-  rw [mem_UcDisk_iff] at hw ⊢
-  simpa using hw
-
-lemma add_I_mul_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) (θ : ℝ) :
-    w + (θ : ℂ) * I ∈ UcDisk := by
-  rw [mem_UcDisk_iff] at hw ⊢
-  simpa using hw
 
 /-- For even spin $J$, `fourierIntegrand` is $\pi$-periodic in $\theta$:
 $$F_J(\theta + \pi) = F_J(\theta).$$ -/
@@ -534,27 +437,6 @@ theorem fourierIntegrand_add_pi {J : ℤ} (hJ : Even J) (wl wr : ℂ) (θ : ℝ)
       - ((k + k : ℤ) : ℂ) * (wr + (θ : ℂ) * I) + ((-k : ℤ) : ℂ) * (2 * π * I) := by
     push_cast; ring
   rw [h_exp, Complex.exp_add, Complex.exp_int_mul_two_pi_mul_I, mul_one]
-
-/-- **The $s$-channel positivity bound on the Fourier integrand**: for all $(w_l, w_r) \in
-\operatorname{UcPdisk}$ and $\theta \in \mathbb{R}$,
-$$\left\|e^{-J (w_r + i\theta)} \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta)\right\| \le
-  e^{-J \operatorname{Re}(w_r)} \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l),
-  \operatorname{Re}(w_r)).$$ -/
-theorem norm_fourierIntegrand_le (J : ℤ) {wl wr : ℂ}
-    (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) (θ : ℝ) :
-    ‖M.fourierIntegrand J wl wr θ‖ ≤
-      Real.exp (- (J : ℝ) * wr.re) * M.evalReal wl.re wr.re := by
-  dsimp [fourierIntegrand]
-  rw [norm_mul, Complex.norm_exp]
-  have h_re_exp : (- (J : ℂ) * (wr + (θ : ℂ) * I)).re = - (J : ℝ) * wr.re := by
-    simp [Complex.mul_re]
-  rw [h_re_exp]
-  have h_bound :=
-    M.norm_eval_le_evalReal (sub_I_mul_mem_UcDisk hwl θ) (add_I_mul_mem_UcDisk hwr θ)
-  have h_wl_re : (wl - (θ : ℂ) * I).re = wl.re := by simp
-  have h_wr_re : (wr + (θ : ℂ) * I).re = wr.re := by simp
-  rw [h_wl_re, h_wr_re] at h_bound
-  exact mul_le_mul_of_nonneg_left h_bound (Real.exp_pos _).le
 
 /-- Full spin-$J$ inverse Fourier projection over $\theta \in [-\pi, \pi]$:
 $$\int_{-\pi}^{\pi} \frac{d\theta}{2\pi} \,
@@ -605,6 +487,16 @@ theorem fourierProjSpinFull_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {wl wr : 
   rw [h_double]
   have hpi : (π : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr Real.pi_ne_zero
   field_simp
+
+lemma sub_I_mul_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) (θ : ℝ) :
+    w - (θ : ℂ) * I ∈ UcDisk := by
+  rw [mem_UcDisk_iff] at hw ⊢
+  simpa using hw
+
+lemma add_I_mul_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) (θ : ℝ) :
+    w + (θ : ℂ) * I ∈ UcDisk := by
+  rw [mem_UcDisk_iff] at hw ⊢
+  simpa using hw
 
 /-- Exact spin-$J$ Fourier projection on the full interval $[-\pi, \pi]$: for any
 $(w_l, w_r) \in \operatorname{UcPdisk}$,
@@ -699,8 +591,7 @@ theorem laplaceSpin_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {wl wr : ℂ}
 /-- Real-axis specialization of `laplaceSpin_eq_fourierProjSpin`: for even $J$ and real
 $\sigma_l < 0, \sigma_r < 0$, the real spin-$J$ Laplace transform $L_J(\sigma_l + \sigma_r)$ is
 given by the folded $\theta$-integral on $[-\pi/2, \pi/2]$ along $(\sigma_l - i\theta,
-\sigma_r + i\theta)$, where both arguments stay strictly inside the $t$-channel strip
-$\operatorname{Im} \in (-\pi, \pi)$. -/
+\sigma_r + i\theta)$. -/
 theorem laplaceSpinReal_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {σl σr : ℝ}
     (hσl : σl < 0) (hσr : σr < 0) :
     (M.laplaceSpinReal J (σl + σr) : ℂ) = M.fourierProjSpin J (σl : ℂ) (σr : ℂ) := by
@@ -1041,7 +932,7 @@ lemma tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk
   exact congrArg Complex.re h_eq
 
 /-- Summability of `monomialIdxRealTerm` over all $q = (n, j, a) \in \mathbb{N}^3$ at fixed primary
-$p = (\Delta, l)$ satisfying $(l : \mathbb{R}) \le \Delta$ and negative real arguments
+$p = (\Delta, l)$ (satisfying the unitarity bound $l \le \Delta$) and negative real arguments
 $\sigma_l < 0, \sigma_r < 0$. -/
 lemma summable_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ} (hσl : σl < 0) (hσr : σr < 0)
     (p : ℝ × ℕ) (hp : (p.2 : ℝ) ≤ p.1) :
@@ -1112,8 +1003,8 @@ lemma integrable_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ}
   have hwl : (σl : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσl
   have hwr : (σr : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσr
   refine (corr.converges_correlator_pdisk hν hwl hwr).norm.mono'
-    (corr.measurable_monomialIdxRealTerm q σl σr).aestronglyMeasurable ?_
-  filter_upwards [corr.ae_unitary] with p hp
+    (corr.measurable_monomialIdxRealTerm q σl σr).aestronglyMeasurable
+    (corr.ae_unitary.mono fun p hp => ?_)
   rw [Real.norm_of_nonneg (corr.monomialIdxRealTerm_nonneg hν q σl σr p)]
   calc
     corr.monomialIdxRealTerm q σl σr p
@@ -1162,13 +1053,17 @@ lemma summable_integral_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ}
   simp_rw [h_lint]
   rw [← lintegral_tsum
     (fun q => (corr.measurable_monomialIdxRealTerm q σl σr).ennreal_ofReal.aemeasurable)]
-  refine ne_of_lt (lt_of_le_of_lt (lintegral_mono_ae ?_)
+  have h_tsum_eq : ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure,
+      (∑' q : MonomialIdx, ENNReal.ofReal (corr.monomialIdxRealTerm q σl σr p)) =
+        ENNReal.ofReal (((corr.blocks p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re) := by
+    filter_upwards [corr.ae_unitary] with p hp
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun q => corr.monomialIdxRealTerm_nonneg hν q σl σr p)
+      (corr.summable_monomialIdxRealTerm hν hσl hσr p hp),
+      corr.tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp]
+  rw [lintegral_congr_ae h_tsum_eq]
+  refine ne_of_lt (lt_of_le_of_lt (lintegral_mono fun p => ?_)
     (corr.converges_correlator_pdisk hν hwl hwr).norm.hasFiniteIntegral)
-  filter_upwards [corr.ae_unitary] with p hp
-  rw [← ENNReal.ofReal_tsum_of_nonneg (fun q => corr.monomialIdxRealTerm_nonneg hν q σl σr p)
-    (corr.summable_monomialIdxRealTerm hν hσl hσr p hp),
-    corr.tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp,
-    ← ofReal_norm, Real.norm_of_nonneg (norm_nonneg _)]
+  rw [← ofReal_norm, Real.norm_of_nonneg (norm_nonneg _)]
   exact ENNReal.ofReal_le_ofReal (Complex.re_le_norm _)
 
 /-- Partitioning a summable series over $q \in \operatorname{MonomialIdx}$ into fibers of
@@ -1289,14 +1184,5 @@ theorem toMonomialFourPointData_eval (hν : 0 ≤ ν) {wl wr : ℂ}
     (fun q => corr.integrable_monomialIdxComplexTerm hν hwl hwr q) h_sum_norm).trans ?_
   refine integral_congr_ae (corr.ae_unitary.mono fun p hp => ?_)
   exact corr.tsum_monomialIdxComplexTerm_eq_evalPdisk hν hwl hwr p hp
-
-/-- Every `FourPointData` with $\nu \ge 0$ admits a monomial decomposition
-`M : MonomialFourPointData` whose evaluation on $\operatorname{UcPdisk}$ agrees with
-`corr.correlator_pdisk`. -/
-theorem exists_monomialDecomp (hν : 0 ≤ ν) :
-    ∃ M : MonomialFourPointData,
-      ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
-        M.eval wl wr = corr.correlator_pdisk wl wr :=
-  ⟨corr.toMonomialFourPointData hν, fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr⟩
 
 end FourPointData

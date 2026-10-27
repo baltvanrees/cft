@@ -19,6 +19,14 @@ import CFT.LightconeBootstrap.MonomialDecomp
 import CFT.LightconeBootstrap.Gap
 import CFT.LightconeBootstrap.RealLaplaceBound
 import CFT.LightconeBootstrap.QuantitativeLargeSpin
+import CFT.LightconeBootstrap.Transmute1d
+import CFT.LightconeBootstrap.LightconeBlockDecomp
+import CFT.LightconeBootstrap.TransmutedRealLaplace
+import CFT.LightconeBootstrap.PrimaryLargeSpin
+import CFT.Analysis.Karamata2d
+import CFT.ConeTauberian.ErdelyiKoberInversion
+import CFT.ConeTauberian.Branching2d
+import CFT.ConeTauberian.ConeAsymptotics
 
 /-!
 # Towards formalizing conformal field theory in Lean 4
@@ -26,7 +34,9 @@ import CFT.LightconeBootstrap.QuantitativeLargeSpin
 This library formalizes the analytic structure of four-point correlation functions of identical
 scalar primary operators in reflection-positive conformal field theories in $d \ge 2$ dimensions
 ($\nu = (d-2)/2 \ge 0$), starting from Euclidean OPE convergence and crossing symmetry and
-culminating in the **quantitative monomial lightcone bootstrap**.
+culminating in both the **quantitative lightcone bootstrap** ($\ell \to \infty$ at fixed twist)
+and **quantitative high-energy Tauberian asymptotics** ($\Delta \to \infty$ at fixed
+spin-to-dimension ratio $\xi = \ell / \Delta$) for $d$-dimensional primary operators.
 
 ## Module Overview
 
@@ -70,14 +80,18 @@ culminating in the **quantitative monomial lightcone bootstrap**.
      (`CFT.vitali_porter_real_interval`, `CFT.vitali_porter_ucDisk`).
    - `CFT.Analysis.HermiteMeasure`: Fejér kernel $K(u)$, Fejér–Hermite interpolant $H_\psi$, and
      the bandlimited + quadratic lattice-distance measure estimate on $\mathbb{Z}$
-     (`abs_integral_sub_le_of_fourier_bound`, `abs_integral_sub_le_of_fourier_bound_contDiff`).
+     (`abs_integral_sub_le_of_fourier_bound`).
    - `CFT.Analysis.TwoConstants`: Harmonic measure on a vertical half-strip and Nevanlinna's
      Two-Constants Theorem (`norm_le_two_constants_vertical_strip`,
      `norm_le_midpoint_two_constants`).
    - `CFT.Analysis.LaplaceTauberian`: Non-asymptotic and power-law Laplace-to-$C_c^2$ Tauberian
      theorems on $\mathbb{Z}$ via exponential tilting
      (`abs_integral_sub_le_of_laplaceReal_bound`, `exists_const_abs_integral_sub_le_rpow`).
-5. **Quantitative Monomial Lightcone Bootstrap (`CFT.LightconeBootstrap.*`)**:
+   - `CFT.Analysis.Karamata2d`: Non-asymptotic and quantitative $O(\Delta^{-\gamma})$ two-variable
+     Fourier-Laplace Tauberian theorems on $\mathbb{R}^2$ via bandlimited truncation on
+     $[-R, R]^2$ (`abs_integral_sub_le_of_laplace2d_bound`,
+     `exists_const_abs_integral_sub_le_rpow_2d`).
+5. **Quantitative Lightcone Bootstrap (`CFT.LightconeBootstrap.*`)**:
    - `CFT.LightconeBootstrap.MonomialDecomp`: Monomial four-point data (`MonomialFourPointData`),
      even-spin $\pi$-periodicity, $s$-channel positivity bounds, folded spin-$2k$ Fourier
      projection on $[-\pi/2, \pi/2]$ (`laplaceSpinReal_eq_fourierProjSpin`), and the canonical
@@ -86,13 +100,57 @@ culminating in the **quantitative monomial lightcone bootstrap**.
    - `CFT.LightconeBootstrap.Gap`: Twist-gap condition (`MonomialFourPointData.HasTwistGap`),
      universal-cover crossing equation (`MonomialFourPointData.eval_eq_cross`), and $t$-channel
      identity dominance bounds (`MonomialFourPointData.norm_eval_sub_crossIdentity_le`).
-   - `CFT.LightconeBootstrap.RealLaplaceBound`: Quantitative $O(K^{-1})$ Euler Gamma and binomial
-     series bounds (`exists_abs_rpow_mul_pochhammerCoeff_sub_inv_gamma_le`) and uniform real-axis
-     Laplace error bounds on compact negative intervals $[\sigma_-, \sigma_+]$
+   - `CFT.LightconeBootstrap.RealLaplaceBound`: Quantitative $O(K^{-1})$ Euler Gamma and
+     mixed-exponent binomial series bounds (`exists_abs_rpow_mul_pochhammerCoeff_sub_inv_gamma_le`,
+     `exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub`) and uniform real-axis Laplace error
+     bounds on compact negative intervals $[\sigma_-, \sigma_+]$
      (`MonomialFourPointData.exists_uniform_laplaceSpinReal_sub_identity_bounds`,
      `MonomialFourPointData.exists_uniform_laplaceSpinReal_bounds`).
    - `CFT.LightconeBootstrap.QuantitativeLargeSpin`: Main quantitative $O((2k)^{-\gamma})$
      monomial lightcone bootstrap theorems for compactly supported $C^2$ test functions against
      both the exact $t$-channel identity (`FourPointData.exists_const_abs_pairSpin_sub_identity_le`)
      and the universal Gamma limit (`FourPointData.exists_const_abs_pairSpin_sub_universal_le`).
+   - `CFT.LightconeBootstrap.Transmute1d`: 1D fractional transmutation operators (`transmuteCore`,
+     `transmuteOp`) on $\operatorname{UcDisk}$, half-binomial convolution and partial-fraction
+     identities (`sum_halfBinom_mul_halfBinom`, `sum_halfBinom_div_add_eq_pochhammer_div`),
+     the core transmutation theorems (`transmuteCore_block1d`, `transmuteOp_block1d`), and the
+     non-negative truncated weight (`transmutePosWeight`).
+   - `CFT.LightconeBootstrap.LightconeBlockDecomp`: Action of `transmuteOp` on
+     `ConformalBlockLightconeLevel` and `ConformalBlockLightcone`, Option A
+     `LightconeBlockFourPointData`, and its transmuted `MonomialFourPointData` construction
+     (`toTransmutedMonomialFourPointData`,
+     `pairSpin_toTransmuted_eq_primary_of_support_leadingTwist`,
+     `primary_pair_eq_toTransmuted_pair_div`).
+   - `CFT.LightconeBootstrap.TransmutedRealLaplace`: Transmuted universal and exact $t$-channel
+     identity Laplace transforms (`transmutedUniversalLaplaceReal`,
+     `transmutedIdentityLaplaceReal`), their uniform $O(K^{-1})$ proximity
+     (`exists_uniform_bound_transmutedIdentityLaplaceReal_sub_universal`), and uniform real-axis
+     Laplace bounds valid for **all $\Delta_\phi > 0$**
+     (`LightconeBlockFourPointData.exists_uniform_transmuted_laplaceSpinReal_sub_identity_bounds`,
+     `LightconeBlockFourPointData.exists_uniform_transmuted_laplaceSpinReal_bounds`).
+   - `CFT.LightconeBootstrap.PrimaryLargeSpin`: Main quantitative $O((2k)^{-\gamma})$ large-spin
+     bootstrap theorems for the transmuted spectral measure and for leading-twist $d$-dimensional
+     primary operators valid for **all $\Delta_\phi > 0$ and $h_{\text{gap}} > 0$**
+     (`LightconeBlockFourPointData.exists_const_abs_primary_leadingTwist_sub_identity_le`,
+     `LightconeBlockFourPointData.exists_const_abs_primary_leadingTwist_sub_universal_le`).
+6. **Quantitative High-Energy Cone Tauberian Bootstrap (`CFT.ConeTauberian.*`)**:
+   - `CFT.ConeTauberian.ErdelyiKoberInversion`: Real Euler Beta integral, Weyl / Erdélyi–Kober
+     fractional integral eigenfunction identity (`weylIntegralRight_one_sub_rpow`), continuum
+     primary spectral density $\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)$
+     (`primaryConeDensity`) and its closed-form Erdélyi–Kober fractional integral representation
+     (`primaryConeDensity_eq_weylIntegralRight`), its exact $d \to 2$ branching integral
+     (`integral_branchingKernel_mul_primaryConeDensity`), and its full unit-cylinder integral
+     (`integral_primaryConeDensity_cylinder`).
+   - `CFT.ConeTauberian.Branching2d`: 2D conformal blocks (`block2dChiral`, `block2d`), bilateral
+     1D transmutation $\mathcal{L}_0 \otimes \mathcal{L}_0$ (`transmuteOp2d_block2dChiral`,
+     `transmuteOp2d_block2d`), Gegenbauer-to-2D spin coefficients (`gegSpinCoeff`), transverse
+     shift binomial resummation (`hasSum_transverseShift`), and uniform $O(\Delta^{-1})$ Stirling
+     bounds (`exists_abs_rpow_mul_gegSpinCoeff_sub_inv_gamma_sq_le`,
+     `exists_abs_rpow_mul_transmuteWeight_nat_sub_one_le`).
+   - `CFT.ConeTauberian.ConeAsymptotics`: `ConeBlockFourPointData`, the pure $2 h_{\text{gap}}$
+     quantitative bound against the exact universal $t$-channel identity
+     (`ConeBlockFourPointData.exists_const_abs_transmuted2d_sub_identity_le`), the quantitative
+     $\min(2 h_{\text{gap}}, 1)$ smoothed primary bootstrap theorem
+     (`ConeBlockFourPointData.exists_const_abs_primaryCone_sub_le`), and cumulative spin-summed
+     primary asymptotics (`ConeBlockFourPointData.tendsto_cumulativePrimaryWeight`).
 -/

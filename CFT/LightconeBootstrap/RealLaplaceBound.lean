@@ -55,11 +55,6 @@ noncomputable def identityProjSpin (Δ_phi : ℝ) (J : ℤ) (wl wr : ℂ) : ℂ 
     Complex.exp (- (J : ℂ) * (wr + (θ : ℂ) * I)) *
       crossIdentity Δ_phi (wl - (θ : ℂ) * I) (wr + (θ : ℂ) * I)
 
-/-- The universal large-spin limit `L_id(Δ_φ, w)` of the rescaled spin-`J`
-Laplace transform `(2k)^(1 - 2Δ_φ) L_{2k}(w)` on `w ∈ UcDisk`. -/
-noncomputable def universalLaplace (Δ_phi : ℝ) (w : ℂ) : ℂ :=
-  ((2 * (4 : ℝ) ^ Δ_phi / Real.Gamma (2 * Δ_phi) : ℝ) : ℂ) * crossFactor Δ_phi w
-
 /-- The real-valued universal large-spin Laplace transform `L_id(Δ_φ, σ)` for `σ < 0`:
 `L_id(Δ_φ, σ) = (2 * 4^(2Δ_φ) / Γ(2Δ_φ)) * e^(Δ_φ σ) * (1 - e^σ)^(-2Δ_φ)`. -/
 noncomputable def universalLaplaceReal (Δ_phi : ℝ) (σ : ℝ) : ℝ :=
@@ -78,34 +73,6 @@ lemma universalLaplaceReal_nonneg {Δ_phi σ : ℝ} (hΔ : 0 < Δ_phi) (hσ : σ
   have h1 : 0 < Real.Gamma (2 * Δ_phi) := Real.Gamma_pos_of_pos (by positivity)
   have h2 : 0 < 1 - Real.exp σ := sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ)
   positivity
-
-/-- On the negative real axis `σ < 0`, `universalLaplace Δ_phi (σ : ℂ)` coincides with
-`(universalLaplaceReal Δ_phi σ : ℂ)`. -/
-theorem universalLaplace_ofReal (Δ_phi : ℝ) {σ : ℝ} (hσ : σ < 0) :
-    universalLaplace Δ_phi (σ : ℂ) = (universalLaplaceReal Δ_phi σ : ℂ) := by
-  dsimp [universalLaplace, universalLaplaceReal, crossFactor]
-  have h1q_pos : 0 < 1 - Real.exp σ := by
-    have : Real.exp σ < 1 := Real.exp_lt_one_iff.mpr hσ
-    linarith
-  have h4_cast : (4 : ℂ) ^ (Δ_phi : ℂ) = (((4 : ℝ) ^ Δ_phi : ℝ) : ℂ) := by
-    have : (4 : ℂ) = ((4 : ℝ) : ℂ) := by norm_cast
-    rw [this, ← Complex.ofReal_cpow (by norm_num)]
-  have hexp_cast :
-      Complex.exp ((Δ_phi : ℂ) * (σ : ℂ)) = ((Real.exp (Δ_phi * σ) : ℝ) : ℂ) := by
-    rw [← Complex.ofReal_mul, Complex.ofReal_exp]
-  have h1q_cast :
-      (1 - Complex.exp (σ : ℂ)) ^ (- (2 * Δ_phi : ℂ)) =
-        (((1 - Real.exp σ) ^ (- (2 * Δ_phi)) : ℝ) : ℂ) := by
-    have h_sub : 1 - Complex.exp (σ : ℂ) = ((1 - Real.exp σ : ℝ) : ℂ) := by
-      rw [← Complex.ofReal_exp]; push_cast; rfl
-    have h_exp : (- (2 * Δ_phi : ℂ)) = ((- (2 * Δ_phi) : ℝ) : ℂ) := by push_cast; rfl
-    rw [h_sub, h_exp, ← Complex.ofReal_cpow h1q_pos.le]
-  rw [h4_cast, hexp_cast, h1q_cast]
-  norm_cast
-  have h4_sq : (4 : ℝ) ^ (2 * Δ_phi) = (4 : ℝ) ^ Δ_phi * (4 : ℝ) ^ Δ_phi := by
-    rw [← Real.rpow_add (by norm_num), two_mul]
-  rw [h4_sq]
-  ring
 
 /-- Continuity of `crossFactor Δ_phi` on `UcDisk`. -/
 lemma continuousOn_crossFactor (Δ_phi : ℝ) :
@@ -786,21 +753,107 @@ lemma one_add_natCast_pow_mul_exp_le (p : ℕ) {σ_plus σ : ℝ}
     _ ≤ (1 + c⁻¹) ^ p * (Real.exp (σ_plus / 2)) ^ n :=
         mul_le_mul_of_nonneg_left h_exp_prod (by positivity)
 
-/-- **Uniform `O(K⁻¹)` Bound for the Shifted Binomial Series**:
-For `a > 0` and `σ_plus < 0`, there exists `C ≥ 0` such that for all `K ≥ 1` and all
-`σ ≤ σ_plus`,
-`|K^(1 - a) ∑_{n=0}^∞ ((a)_n / n!) ((a)_{n + K} / (n + K)!) e^(n σ) - (Γ(a))⁻¹ (1 - e^σ)^(-a)|`
-`≤ C / K`. -/
-theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
-    (ha : 0 < a) (hσ_plus : σ_plus < 0) :
+/-- Summability of the mixed-exponent shifted binomial series
+$\sum_{n=0}^\infty \operatorname{pochhammerCoeff}(a, n) \operatorname{pochhammerCoeff}(b, n + K)
+  (e^\sigma)^n$ for $a > 0, b > 0$, and $\sigma < 0$. -/
+lemma summable_pochhammerCoeff_mixed_mul_exp {a b : ℝ} (ha : 0 < a) (hb : 0 < b)
+    (K : ℕ) {σ : ℝ} (hσ : σ < 0) :
+    Summable (fun n : ℕ =>
+      pochhammerCoeff a n * pochhammerCoeff b (n + K) * (Real.exp σ) ^ n) := by
+  obtain ⟨B, hB_pos, hB⟩ := exists_bound_rpow_mul_pochhammerCoeff hb
+  set p : ℕ := ⌈|b - 1|⌉₊ + 1
+  set A_p : ℝ := (1 + (-σ / (2 * ((p : ℝ) + 1)))⁻¹) ^ p
+  have hAp : ∀ n : ℕ, (1 + (n : ℝ)) ^ p * (Real.exp σ) ^ n ≤
+      A_p * (Real.exp (σ / 2)) ^ n :=
+    fun n => one_add_natCast_pow_mul_exp_le p hσ le_rfl n
+  set q := Real.exp (σ / 2)
+  have hq_pos : 0 < q := Real.exp_pos _
+  have hq_abs : |q| < 1 := by
+    rw [abs_of_pos hq_pos]
+    exact Real.exp_lt_one_iff.mpr (by linarith)
+  have h_sum_q :=
+    ((hasSum_one_sub_rpow_neg a hq_abs).summable).mul_left
+      ((B + 1) * (1 + (K : ℝ)) ^ p * A_p)
+  refine Summable.of_nonneg_of_le
+    (fun n => mul_nonneg
+      (mul_nonneg (pochhammerCoeff_nonneg ha.le n)
+        (pochhammerCoeff_nonneg hb.le (n + K)))
+      (by positivity))
+    (fun n => ?_) h_sum_q
+  rcases Nat.eq_zero_or_pos (n + K) with h0 | hpos
+  · have hn0 : n = 0 := by omega
+    have hK0 : K = 0 := by omega
+    subst hn0 hK0
+    simp only [pochhammerCoeff, realPochhammer_zero, Nat.factorial_zero,
+      Nat.cast_one, div_self one_ne_zero, pow_zero, mul_one, Nat.cast_zero, add_zero, one_pow]
+    have hAp0 := hAp 0
+    simp only [Nat.cast_zero, add_zero, one_pow, pow_zero, mul_one] at hAp0
+    nlinarith [hB_pos]
+  · have hnK_pos : (0 : ℝ) < ((n + K : ℕ) : ℝ) := by exact_mod_cast hpos
+    have hnK_ge1 : (1 : ℝ) ≤ ((n + K : ℕ) : ℝ) := by exact_mod_cast hpos
+    have h_b := hB (n + K)
+    have h_rpow_canc :
+        ((n + K : ℕ) : ℝ) ^ (b - 1) * ((n + K : ℕ) : ℝ) ^ (1 - b) = 1 := by
+      rw [← Real.rpow_add hnK_pos, sub_add_sub_cancel, sub_self, Real.rpow_zero]
+    have h_pc_le : pochhammerCoeff b (n + K) ≤ (B + 1) * ((n + K : ℕ) : ℝ) ^ (b - 1) := by
+      calc
+        pochhammerCoeff b (n + K)
+          = ((n + K : ℕ) : ℝ) ^ (b - 1) *
+              (((n + K : ℕ) : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K)) := by
+            rw [← mul_assoc, h_rpow_canc, one_mul]
+        _ ≤ ((n + K : ℕ) : ℝ) ^ (b - 1) * (B + 1) :=
+            mul_le_mul_of_nonneg_left (by linarith) (by positivity)
+        _ = (B + 1) * ((n + K : ℕ) : ℝ) ^ (b - 1) := mul_comm _ _
+    have h_rpow_le_pow :
+        ((n + K : ℕ) : ℝ) ^ (b - 1) ≤ (1 + (K : ℝ)) ^ p * (1 + (n : ℝ)) ^ p := by
+      have h_exp_le : b - 1 ≤ (p : ℝ) := by
+        have h1 : b - 1 ≤ |b - 1| := le_abs_self _
+        have h2 : |b - 1| ≤ (⌈|b - 1|⌉₊ : ℝ) := Nat.le_ceil _
+        dsimp [p]
+        push_cast
+        linarith
+      have h_step1 : ((n + K : ℕ) : ℝ) ^ (b - 1) ≤ ((n + K : ℕ) : ℝ) ^ (p : ℝ) :=
+        Real.rpow_le_rpow_of_exponent_le hnK_ge1 h_exp_le
+      rw [Real.rpow_natCast] at h_step1
+      have h_base : ((n + K : ℕ) : ℝ) ≤ (1 + (K : ℝ)) * (1 + (n : ℝ)) := by
+        push_cast
+        nlinarith [Nat.cast_nonneg (α := ℝ) n, Nat.cast_nonneg (α := ℝ) K]
+      have h_step2 :
+          ((n + K : ℕ) : ℝ) ^ p ≤ ((1 + (K : ℝ)) * (1 + (n : ℝ))) ^ p :=
+        pow_le_pow_left₀ (by positivity) h_base p
+      rw [mul_pow] at h_step2
+      exact h_step1.trans h_step2
+    calc
+      pochhammerCoeff a n * pochhammerCoeff b (n + K) * (Real.exp σ) ^ n
+        ≤ pochhammerCoeff a n *
+            ((B + 1) * ((1 + (K : ℝ)) ^ p * (1 + (n : ℝ)) ^ p)) * (Real.exp σ) ^ n := by
+          refine mul_le_mul_of_nonneg_right
+            (mul_le_mul_of_nonneg_left
+              (h_pc_le.trans (mul_le_mul_of_nonneg_left h_rpow_le_pow (by positivity)))
+              (pochhammerCoeff_nonneg ha.le n))
+            (by positivity)
+      _ = (B + 1) * (1 + (K : ℝ)) ^ p * pochhammerCoeff a n *
+            ((1 + (n : ℝ)) ^ p * (Real.exp σ) ^ n) := by ring
+      _ ≤ (B + 1) * (1 + (K : ℝ)) ^ p * pochhammerCoeff a n * (A_p * q ^ n) :=
+          mul_le_mul_of_nonneg_left (hAp n)
+            (mul_nonneg (by positivity) (pochhammerCoeff_nonneg ha.le n))
+      _ = (B + 1) * (1 + (K : ℝ)) ^ p * A_p * (pochhammerCoeff a n * q ^ n) := by ring
+
+/-- **Uniform $O(K^{-1})$ Bound for the Mixed-Exponent Shifted Binomial Series**:
+For any $a > 0$, $b > 0$, and $\sigma_+ < 0$, there exists $C \ge 0$ such that for all $K \ge 1$
+and all $\sigma \le \sigma_+$,
+$$\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!} e^{n \sigma}
+  - \frac{1}{\Gamma(b)} (1 - e^\sigma)^{-a}\right| \le \frac{C}{K}.$$ -/
+theorem exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub {a b σ_plus : ℝ}
+    (ha : 0 < a) (hb : 0 < b) (hσ_plus : σ_plus < 0) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ {σ : ℝ}, σ ≤ σ_plus →
-      |(K : ℝ) ^ (1 - a) *
-          (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff a (n + K) *
+      |(K : ℝ) ^ (1 - b) *
+          (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff b (n + K) *
             (Real.exp σ) ^ n) -
-        (Real.Gamma a)⁻¹ * (1 - Real.exp σ) ^ (-a)| ≤ C / (K : ℝ) := by
-  obtain ⟨B, hB_pos, hB⟩ := exists_bound_rpow_mul_pochhammerCoeff ha
-  obtain ⟨C₀, hC₀_nonneg, hC₀⟩ := exists_abs_rpow_mul_pochhammerCoeff_sub_inv_gamma_le ha
-  set p : ℕ := ⌈|(a - 1) - 1|⌉₊ + 1
+        (Real.Gamma b)⁻¹ * (1 - Real.exp σ) ^ (-a)| ≤ C / (K : ℝ) := by
+  obtain ⟨B, hB_pos, hB⟩ := exists_bound_rpow_mul_pochhammerCoeff hb
+  obtain ⟨C₀, hC₀_nonneg, hC₀⟩ := exists_abs_rpow_mul_pochhammerCoeff_sub_inv_gamma_le hb
+  set p : ℕ := ⌈|(b - 1) - 1|⌉₊ + 1
   have h_neg_pos : 0 < -σ_plus := neg_pos.mpr hσ_plus
   set A_p : ℝ := (1 + (-(σ_plus) / (2 * ((p : ℝ) + 1)))⁻¹) ^ p
   have hAp_nonneg : 0 ≤ A_p := pow_nonneg (by positivity) p
@@ -809,8 +862,8 @@ theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
   have hq_lt1 : q < 1 := Real.exp_lt_one_iff.mpr (by linarith)
   have hq_abs : |q| < 1 := by rw [abs_of_pos hq_pos]; exact hq_lt1
   have h_sum_q := hasSum_one_sub_rpow_neg a hq_abs
-  set C_tot : ℝ := (C₀ + B * |a - 1| * A_p) * (1 - q) ^ (-a)
-  have h_coeff_nonneg : 0 ≤ C₀ + B * |a - 1| * A_p :=
+  set C_tot : ℝ := (C₀ + B * |b - 1| * A_p) * (1 - q) ^ (-a)
+  have h_coeff_nonneg : 0 ≤ C₀ + B * |b - 1| * A_p :=
     add_nonneg hC₀_nonneg (mul_nonneg (mul_nonneg hB_pos.le (abs_nonneg _)) hAp_nonneg)
   have hC_tot_nonneg : 0 ≤ C_tot :=
     mul_nonneg h_coeff_nonneg (Real.rpow_pos_of_pos (by linarith) _).le
@@ -822,58 +875,58 @@ theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
     rw [abs_of_pos (Real.exp_pos σ)]; exact Real.exp_lt_one_iff.mpr hσ_neg
   have h_sum_σ := hasSum_one_sub_rpow_neg a h_exp_abs
   set term1 : ℕ → ℝ := fun n =>
-    (K : ℝ) ^ (1 - a) * (pochhammerCoeff a n * pochhammerCoeff a (n + K) * (Real.exp σ) ^ n)
+    (K : ℝ) ^ (1 - b) * (pochhammerCoeff a n * pochhammerCoeff b (n + K) * (Real.exp σ) ^ n)
   set term2 : ℕ → ℝ := fun n =>
-    (Real.Gamma a)⁻¹ * (pochhammerCoeff a n * (Real.exp σ) ^ n)
+    (Real.Gamma b)⁻¹ * (pochhammerCoeff a n * (Real.exp σ) ^ n)
   set dom : ℕ → ℝ := fun n =>
-    ((C₀ + B * |a - 1| * A_p) / (K : ℝ)) * (pochhammerCoeff a n * q ^ n)
+    ((C₀ + B * |b - 1| * A_p) / (K : ℝ)) * (pochhammerCoeff a n * q ^ n)
   have h_pt : ∀ n : ℕ, |term1 n - term2 n| ≤ dom n := by
     intro n
     have h_diff_coeff :
-        |(K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K) - (Real.Gamma a)⁻¹| ≤
-          (C₀ + B * |a - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by
-      let u_nK := ((n + K : ℕ) : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K)
-      have h_id : (K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K) =
-          u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) := by
+        |(K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹| ≤
+          (C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by
+      let u_nK := ((n + K : ℕ) : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K)
+      have h_id : (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) =
+          u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) := by
         dsimp [u_nK]
         have h_cast : ((n + K : ℕ) : ℝ) = (K : ℝ) * (1 + (n : ℝ) / (K : ℝ)) := by
           push_cast; field_simp; ring
         have hpos_r : 0 < 1 + (n : ℝ) / (K : ℝ) := by positivity
         rw [h_cast, Real.mul_rpow hK_pos.le hpos_r.le]
         have h_canc :
-            (1 + (n : ℝ) / (K : ℝ)) ^ (1 - a) * (1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) = 1 := by
+            (1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) = 1 := by
           rw [← Real.rpow_add hpos_r, sub_add_sub_cancel, sub_self, Real.rpow_zero]
         calc
-          (K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K)
-            = (K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K) *
-                ((1 + (n : ℝ) / (K : ℝ)) ^ (1 - a) *
-                  (1 + (n : ℝ) / (K : ℝ)) ^ (a - 1)) := by rw [h_canc, mul_one]
-          _ = (K : ℝ) ^ (1 - a) * (1 + (n : ℝ) / (K : ℝ)) ^ (1 - a) *
-                pochhammerCoeff a (n + K) * (1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) := by ring
+          (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K)
+            = (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) *
+                ((1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) *
+                  (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1)) := by rw [h_canc, mul_one]
+          _ = (K : ℝ) ^ (1 - b) * (1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) *
+                pochhammerCoeff b (n + K) * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) := by ring
       rw [h_id]
       have hu_nonneg : 0 ≤ u_nK :=
-        mul_nonneg (by positivity) (pochhammerCoeff_nonneg ha.le (n + K))
-      have h_b1 : |u_nK - (Real.Gamma a)⁻¹| ≤ C₀ / (K : ℝ) := by
+        mul_nonneg (by positivity) (pochhammerCoeff_nonneg hb.le (n + K))
+      have h_b1 : |u_nK - (Real.Gamma b)⁻¹| ≤ C₀ / (K : ℝ) := by
         have hnK : 1 ≤ n + K := by omega
         have hnK_ge : (K : ℝ) ≤ ((n + K : ℕ) : ℝ) := by exact_mod_cast (by omega : K ≤ n + K)
         exact (hC₀ hnK).trans (div_le_div_of_nonneg_left hC₀_nonneg hK_pos hnK_ge)
-      have h_b2 := abs_one_add_div_rpow_sub_one_le (a - 1) n hK_ge1
+      have h_b2 := abs_one_add_div_rpow_sub_one_le (b - 1) n hK_ge1
       calc
-        |u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) - (Real.Gamma a)⁻¹|
-          = |(u_nK - (Real.Gamma a)⁻¹) +
-              u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) - 1)| := by ring_nf
-        _ ≤ |u_nK - (Real.Gamma a)⁻¹| +
-              |u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) - 1)| := abs_add_le _ _
-        _ = |u_nK - (Real.Gamma a)⁻¹| +
-              u_nK * |(1 + (n : ℝ) / (K : ℝ)) ^ (a - 1) - 1| := by
+        |u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - (Real.Gamma b)⁻¹|
+          = |(u_nK - (Real.Gamma b)⁻¹) +
+              u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1)| := by ring_nf
+        _ ≤ |u_nK - (Real.Gamma b)⁻¹| +
+              |u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1)| := abs_add_le _ _
+        _ = |u_nK - (Real.Gamma b)⁻¹| +
+              u_nK * |(1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1| := by
             rw [abs_mul, abs_of_nonneg hu_nonneg]
         _ ≤ C₀ / (K : ℝ) +
-              B * (|a - 1| * (1 + (n : ℝ)) ^ p / (K : ℝ)) :=
+              B * (|b - 1| * (1 + (n : ℝ)) ^ p / (K : ℝ)) :=
             add_le_add h_b1
               (mul_le_mul (hB (n + K)) h_b2 (abs_nonneg _) hB_pos.le)
-        _ = (C₀ + B * |a - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by ring
+        _ = (C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by ring
     have h_factor : term1 n - term2 n =
-        ((K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K) - (Real.Gamma a)⁻¹) *
+        ((K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹) *
           (pochhammerCoeff a n * (Real.exp σ) ^ n) := by
       dsimp [term1, term2]; ring
     rw [h_factor, abs_mul,
@@ -883,17 +936,17 @@ theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
         (Real.exp_le_exp.mpr (by linarith)) n
     have h_pow_exp := one_add_natCast_pow_mul_exp_le p hσ_plus hσ n
     calc
-      |(K : ℝ) ^ (1 - a) * pochhammerCoeff a (n + K) - (Real.Gamma a)⁻¹| *
+      |(K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹| *
           (pochhammerCoeff a n * (Real.exp σ) ^ n)
-        ≤ ((C₀ + B * |a - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ)) *
+        ≤ ((C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ)) *
             (pochhammerCoeff a n * (Real.exp σ) ^ n) :=
           mul_le_mul_of_nonneg_right h_diff_coeff
             (mul_nonneg (pochhammerCoeff_nonneg ha.le n) (by positivity))
       _ = (pochhammerCoeff a n / (K : ℝ)) *
             (C₀ * (Real.exp σ) ^ n +
-              B * |a - 1| * ((1 + (n : ℝ)) ^ p * (Real.exp σ) ^ n)) := by ring
+              B * |b - 1| * ((1 + (n : ℝ)) ^ p * (Real.exp σ) ^ n)) := by ring
       _ ≤ (pochhammerCoeff a n / (K : ℝ)) *
-            (C₀ * q ^ n + B * |a - 1| * (A_p * q ^ n)) := by
+            (C₀ * q ^ n + B * |b - 1| * (A_p * q ^ n)) := by
           refine mul_le_mul_of_nonneg_left
             (add_le_add
               (mul_le_mul_of_nonneg_left h_exp_le_q hC₀_nonneg)
@@ -901,27 +954,27 @@ theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
             (div_nonneg (pochhammerCoeff_nonneg ha.le n) hK_pos.le)
       _ = dom n := by dsimp [dom]; ring
   have h_sum_dom : HasSum dom (C_tot / (K : ℝ)) := by
-    have h1 := h_sum_q.mul_left ((C₀ + B * |a - 1| * A_p) / (K : ℝ))
-    have h_eq : ((C₀ + B * |a - 1| * A_p) / (K : ℝ)) * (1 - q) ^ (-a) =
+    have h1 := h_sum_q.mul_left ((C₀ + B * |b - 1| * A_p) / (K : ℝ))
+    have h_eq : ((C₀ + B * |b - 1| * A_p) / (K : ℝ)) * (1 - q) ^ (-a) =
         C_tot / (K : ℝ) := by dsimp [C_tot]; ring
     rwa [h_eq] at h1
   have h_sum1 : Summable term1 := by
     have h_sub : Summable (fun n => term1 n - term2 n) :=
       Summable.of_norm_bounded h_sum_dom.summable
         (fun n => by rw [Real.norm_eq_abs]; exact h_pt n)
-    have h_s2 : Summable term2 := (h_sum_σ.mul_left (Real.Gamma a)⁻¹).summable
+    have h_s2 : Summable term2 := (h_sum_σ.mul_left (Real.Gamma b)⁻¹).summable
     have h_add := h_sub.add h_s2
     refine h_add.congr (fun n => by ring)
   have h_tsum1 :
-      (K : ℝ) ^ (1 - a) *
-        (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff a (n + K) * (Real.exp σ) ^ n) =
+      (K : ℝ) ^ (1 - b) *
+        (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff b (n + K) * (Real.exp σ) ^ n) =
         ∑' n : ℕ, term1 n := by
     dsimp [term1]
     rw [tsum_mul_left]
-  have h_tsum2 : (Real.Gamma a)⁻¹ * (1 - Real.exp σ) ^ (-a) = ∑' n : ℕ, term2 n :=
-    ((h_sum_σ.mul_left (Real.Gamma a)⁻¹).tsum_eq).symm
+  have h_tsum2 : (Real.Gamma b)⁻¹ * (1 - Real.exp σ) ^ (-a) = ∑' n : ℕ, term2 n :=
+    ((h_sum_σ.mul_left (Real.Gamma b)⁻¹).tsum_eq).symm
   rw [h_tsum1, h_tsum2,
-    ← h_sum1.tsum_sub (h_sum_σ.mul_left (Real.Gamma a)⁻¹).summable]
+    ← h_sum1.tsum_sub (h_sum_σ.mul_left (Real.Gamma b)⁻¹).summable]
   have h_sum_norm : Summable (fun n => ‖term1 n - term2 n‖) :=
     Summable.of_nonneg_of_le (fun _ => norm_nonneg _)
       (fun n => by rw [Real.norm_eq_abs]; exact h_pt n) h_sum_dom.summable
@@ -934,6 +987,21 @@ theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
         h_sum_norm.tsum_le_tsum
           (fun n => by rw [Real.norm_eq_abs]; exact h_pt n) h_sum_dom.summable
     _ = C_tot / (K : ℝ) := h_sum_dom.tsum_eq
+
+/-- **Uniform `O(K⁻¹)` Bound for the Shifted Binomial Series** (diagonal case $a = b$ of
+`exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub`):
+For `a > 0` and `σ_plus < 0`, there exists `C ≥ 0` such that for all `K ≥ 1` and all
+`σ ≤ σ_plus`,
+`|K^(1 - a) ∑_{n=0}^∞ ((a)_n / n!) ((a)_{n + K} / (n + K)!) e^(n σ) - (Γ(a))⁻¹ (1 - e^σ)^(-a)|`
+`≤ C / K`. -/
+theorem exists_uniform_bound_tsum_pochhammerCoeff_sub {a σ_plus : ℝ}
+    (ha : 0 < a) (hσ_plus : σ_plus < 0) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ {σ : ℝ}, σ ≤ σ_plus →
+      |(K : ℝ) ^ (1 - a) *
+          (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff a (n + K) *
+            (Real.exp σ) ^ n) -
+        (Real.Gamma a)⁻¹ * (1 - Real.exp σ) ^ (-a)| ≤ C / (K : ℝ) :=
+  exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub ha ha hσ_plus
 
 /-!
 ## 3. Full and Outer `θ`-Integrals of the `t`-Channel Identity Projection

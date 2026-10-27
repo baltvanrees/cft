@@ -471,35 +471,6 @@ theorem abs_integral_sub_le_of_laplaceReal_bound {A M δ : ℝ}
         dsimp [ε, M_ψ]
         ring
 
-/-- Version of `abs_integral_sub_le_of_laplaceReal_bound` assuming `ContDiff ℝ 2 φ`. -/
-theorem abs_integral_sub_le_of_laplaceReal_bound_contDiff {A M δ : ℝ}
-    (hA : 1 < A) (hδ : 0 < δ) (hδM : δ ≤ M)
-    {μ ν : Measure ℝ} (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0)
-    (hμ_minus : Integrable (fun u => Real.exp ((1 - 2 * A) * u)) μ)
-    (hμ_plus : Integrable (fun u => Real.exp ((-1 : ℝ) * u)) μ)
-    (hν_minus : Integrable (fun u => Real.exp ((1 - 2 * A) * u)) ν)
-    (hν_plus : Integrable (fun u => Real.exp ((-1 : ℝ) * u)) ν)
-    (hM_bound : ∀ σ ∈ Icc (1 - 2 * A) (-1),
-      laplaceTransformReal μ σ + laplaceTransformReal ν σ ≤ M)
-    (hδ_bound : ∀ σ ∈ Icc (1 - 2 * A) (-1),
-      |laplaceTransformReal μ σ - laplaceTransformReal ν σ| ≤ δ)
-    (N : ℕ) {φ : ℝ → ℝ} (hφ : ContDiff ℝ 2 φ)
-    (hsupp : ∀ u : ℝ, (N : ℝ) < |u| → φ u = 0)
-    {M_φ : ℝ} (hM_φ : 0 ≤ M_φ)
-    (hφ0 : ∀ u, |φ u| ≤ M_φ) (hφ1 : ∀ u, |deriv φ u| ≤ M_φ)
-    (hφ2 : ∀ u, |deriv (deriv φ) u| ≤ M_φ) :
-    |(∫ u : ℝ, φ u ∂μ) - (∫ u : ℝ, φ u ∂ν)| ≤
-      hermiteConstant N * (A + 1) ^ 2 * Real.exp (A * (N : ℝ)) *
-        (M ^ (1 - midpointHarmonicExp A (2 * π)) *
-          δ ^ (midpointHarmonicExp A (2 * π))) * M_φ := by
-  have hφ_diff : Differentiable ℝ φ := hφ.differentiable (by norm_num)
-  have hφ_succ : ContDiff ℝ (1 + 1) φ := hφ
-  have hφ'_diff : Differentiable ℝ (deriv φ) :=
-    ((contDiff_succ_iff_deriv.mp hφ_succ).2.2).differentiable (by norm_num)
-  exact abs_integral_sub_le_of_laplaceReal_bound hA hδ hδM hν
-    hμ_minus hμ_plus hν_minus hν_plus hM_bound hδ_bound
-    N hφ_diff hφ'_diff hsupp hM_φ hφ0 hφ1 hφ2
-
 /-- For any `0 < γ < α`, there exists `A > 1` large enough that
 `γ ≤ α * midpointHarmonicExp A (2 * π)`. -/
 lemma exists_gt_one_le_mul_midpointHarmonicExp {α γ : ℝ} (hα : 0 < α) (hγα : γ < α) :
@@ -514,15 +485,16 @@ lemma exists_gt_one_le_mul_midpointHarmonicExp {α γ : ℝ} (hα : 0 < α) (hγ
   refine ⟨A, hA1, ?_⟩
   linarith [(div_lt_iff₀ hα).mp hA2]
 
-/-- **Asymptotic Power-Law Laplace-to-`C_c^2` Tauberian Theorem on `ℤ`**:
-Given `0 < γ < α`, `0 < C_0`, `0 < M`, and `N : ℕ`, there exist a strip parameter `A > 1` and a
-constant `C > 0` such that for any `J ≥ 1`, any measures `μ, ν` on `ℝ` with `ν` supported on
-`ℤ` satisfying the Laplace bounds on `[1 - 2A, -1]` with `δ = C_0 * J ^ (-α)`, and any twice
-differentiable test function `φ` supported in `[-N, N]` with `|φ|, |φ'|, |φ''| ≤ M_φ`,
-`|(∫ φ dμ) - (∫ φ dν)| ≤ C * J ^ (-γ) * M_φ`. -/
-theorem exists_const_abs_integral_sub_le_rpow {α γ C_0 M : ℝ}
-    (hγ : 0 < γ) (hγα : γ < α) (hC_0 : 0 < C_0) (hM : 0 < M) (N : ℕ) :
-    ∃ A > 1, ∃ C > 0, ∀ {J : ℝ}, 1 ≤ J →
+/-- **Asymptotic Power-Law Laplace-to-`C_c^2` Tauberian Theorem on `ℤ` for a Fixed Strip `A > 1`**:
+Given `1 < A`, `0 < α`, `γ ≤ α * midpointHarmonicExp A (2 * π)`, `0 < C_0`, `0 < M`, and
+`N : ℕ`, there exists a constant `C > 0` such that for any `J ≥ 1`, any measures `μ, ν` on `ℝ`
+with `ν` supported on `ℤ` satisfying the Laplace bounds on `[1 - 2A, -1]` with
+`δ = C_0 * J ^ (-α)`, and any twice-differentiable test function `φ` supported in `[-N, N]` with
+`|φ|, |φ'|, |φ''| ≤ M_φ`, `|(∫ φ dμ) - (∫ φ dν)| ≤ C * J ^ (-γ) * M_φ`. -/
+theorem exists_const_abs_integral_sub_le_rpow {A α γ C_0 M : ℝ}
+    (hA : 1 < A) (hα : 0 < α) (hθ_ge : γ ≤ α * midpointHarmonicExp A (2 * π))
+    (hC_0 : 0 < C_0) (hM : 0 < M) (N : ℕ) :
+    ∃ C > 0, ∀ {J : ℝ}, 1 ≤ J →
       ∀ {μ ν : Measure ℝ}, ν (univ \ range (Int.cast : ℤ → ℝ)) = 0 →
       Integrable (fun u => Real.exp ((1 - 2 * A) * u)) μ →
       Integrable (fun u => Real.exp ((-1 : ℝ) * u)) μ →
@@ -539,8 +511,6 @@ theorem exists_const_abs_integral_sub_le_rpow {α γ C_0 M : ℝ}
       (∀ u, |φ u| ≤ M_φ) → (∀ u, |deriv φ u| ≤ M_φ) →
       (∀ u, |deriv (deriv φ) u| ≤ M_φ) →
       |(∫ u : ℝ, φ u ∂μ) - (∫ u : ℝ, φ u ∂ν)| ≤ C * J ^ (-γ) * M_φ := by
-  have hα : 0 < α := lt_trans hγ hγα
-  obtain ⟨A, hA, hθ_ge⟩ := exists_gt_one_le_mul_midpointHarmonicExp hα hγα
   let θ := midpointHarmonicExp A (2 * π)
   have hθ_pos : 0 < θ := midpointHarmonicExp_pos hA (by positivity)
   have hθ_lt : θ < 1 := midpointHarmonicExp_lt_one A (2 * π)
@@ -552,7 +522,7 @@ theorem exists_const_abs_integral_sub_le_rpow {α γ C_0 M : ℝ}
     dsimp [C]
     have hN : 0 < hermiteConstant N := hermiteConstant_pos N
     positivity
-  refine ⟨A, hA, C, hC_pos, ?_⟩
+  refine ⟨C, hC_pos, ?_⟩
   intro J hJ μ ν hν hμ_m hμ_p hν_m hν_p hM_bd hδ_bd φ M_φ hφ hφ' hsupp hM_φ hφ0 hφ1
     hφ2
   have hJ_pos : 0 < J := lt_of_lt_of_le zero_lt_one hJ
