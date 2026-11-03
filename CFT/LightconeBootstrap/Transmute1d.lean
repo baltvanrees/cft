@@ -14,8 +14,7 @@ import CFT.LightconeBootstrap.RealLaplaceBound
 /-!
 # 1D Fractional Transmutation of Collinear Conformal Blocks on `UcDisk`
 
-This file formalizes Phase 1 of the $d$-dimensional primary lightcone bootstrap
-(`PLAN_CONFORMAL_BLOCKS.md`): the 1D fractional transmutation operator that collapses any
+This file formalizes the 1D fractional transmutation operator that collapses any
 collinear conformal block `block1d H w` ($H > 1/2$) on `UcDisk` into a single exponential
 monomial `exp (H * w)`.
 

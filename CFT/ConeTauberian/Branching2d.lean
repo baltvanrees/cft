@@ -10,7 +10,8 @@ import CFT.Gegenbauers
 /-!
 # 2D Conformal Blocks, Bilateral Transmutation, and $d \to 2$ Branching Coefficients
 
-This file formalizes Phase 2 of `CFT/ConeTauberian/PLAN.md`:
+This file formalizes 2D conformal blocks, their bilateral 1D transmutation, and the Gegenbauer
+$d \to 2$ branching coefficients:
 1. **2D Conformal Blocks & Bilateral Transmutation ($\mathcal{L}_0 \otimes \mathcal{L}_0$)**:
    - `block2dChiral hl hr wl wr`: the unsymmetrized 2D chiral conformal block product
      `block1d hl wl * block1d hr wr`.

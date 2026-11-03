@@ -9,7 +9,8 @@ import CFT.LightconeBootstrap.MonomialDecomp
 /-!
 # Lightcone Conformal Block Decomposition and Transmuted Monomial Data
 
-This file implements **Phase 2** of `PLAN_CONFORMAL_BLOCKS.md`:
+This file formalizes the action of the 1D fractional transmutation operator on lightcone conformal
+blocks and constructs the associated transmuted monomial four-point data:
 1. **Action of `transmuteOp` ($\mathcal{L}_0$) on `ConformalBlockLightconeLevel` and
    `ConformalBlockLightcone`**:
    Applying `transmuteOp` (`CFT/LightconeBootstrap/Transmute1d.lean`) to each lightcone twist level
@@ -20,7 +21,7 @@ This file implements **Phase 2** of `PLAN_CONFORMAL_BLOCKS.md`:
    **single monomial** `monomialTerm ((Δ - l) / 2) l wl wr` with positive coefficient
    $C_{0, l} \, \operatorname{transmuteWeight}\!\left(\frac{\Delta + l}{2}\right)$
    (`ConformalBlockLightcone.exp_mul_transmuteOp_evalLevel_zero`).
-2. **Option A `LightconeBlockFourPointData` & `toTransmutedMonomialFourPointData`**:
+2. **`LightconeBlockFourPointData` & `toTransmutedMonomialFourPointData`**:
    We package the lightcone-block spectral decomposition of a four-point function into
    `LightconeBlockFourPointData` and construct its transmuted `MonomialFourPointData`
    (`toTransmutedMonomialFourPointData`), proving the integral pairing identities that connect the
@@ -86,9 +87,9 @@ theorem ConformalBlockLightcone.exp_mul_transmuteOp_evalLevel_zero
   push_cast
   ring
 
-/-! ## Section 2: Option A `LightconeBlockFourPointData` & Transmuted `MonomialFourPointData` -/
+/-! ## Section 2: `LightconeBlockFourPointData` & Transmuted `MonomialFourPointData` -/
 
-/-- **Option A Lightcone-Block Four-Point Data** (`PLAN_CONFORMAL_BLOCKS.md`, Stage 2):
+/-- **Lightcone-Block Four-Point Data**:
 packages the 1D lightcone-block spectral measures $\mu^{\text{LC}}_J$ ($J \in \mathbb{Z}$) and the
 $d$-dimensional primary operator measures $\mu^{\text{prim}}_l$ ($l \in \mathbb{N}$ over primary
 left twist $h = (\Delta - l)/2 \in \mathbb{R}$) of a four-point correlation function on

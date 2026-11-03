@@ -234,76 +234,7 @@ lemma integral_shiftedTest_natShiftedMeasure {c : ℕ → ℝ} (hc : ∀ n, 0 �
   rw [integral_sum_measure h_int]
   simp_rw [integral_natAtomMeasure hc _ h_cont, shiftedTest]
 
-/-- Weight `(2 * 4^(2Δ_φ) / Γ(2Δ_φ)) * (2Δ_φ)_n / n!` of the `n`-th double-twist family. -/
-noncomputable def universalCoeff (Δ_phi : ℝ) (n : ℕ) : ℝ :=
-  (2 * (4 : ℝ) ^ (2 * Δ_phi) / Real.Gamma (2 * Δ_phi)) * pochhammerCoeff (2 * Δ_phi) n
-
-lemma universalCoeff_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (n : ℕ) :
-    0 ≤ universalCoeff Δ_phi n := by
-  unfold universalCoeff
-  have hG : 0 < Real.Gamma (2 * Δ_phi) := Real.Gamma_pos_of_pos (by positivity)
-  exact mul_nonneg (by positivity) (pochhammerCoeff_nonneg (by positivity) n)
-
-/-- Universal shifted double-twist measure `∑_{n=0}^∞ universalCoeff Δ_phi n • δ_n` on `ℝ`,
-supported on `ℕ ⊂ ℤ`. -/
-noncomputable def universalShiftedMeasure (Δ_phi : ℝ) : Measure ℝ :=
-  natShiftedMeasure (universalCoeff Δ_phi)
-
-lemma universalShiftedMeasure_compl_intCast_eq_zero (Δ_phi : ℝ) :
-    universalShiftedMeasure Δ_phi (univ \ range (Int.cast : ℤ → ℝ)) = 0 :=
-  natShiftedMeasure_compl_intCast_eq_zero _
-
-lemma hasSum_universalCoeff_mul_exp (Δ_phi : ℝ) {σ : ℝ} (hσ : σ < 0) :
-    HasSum (fun n : ℕ => universalCoeff Δ_phi n * Real.exp (σ * (n : ℝ)))
-      (Real.exp (-Δ_phi * σ) * universalLaplaceReal Δ_phi σ) := by
-  have h_abs : |Real.exp σ| < 1 := by
-    rw [abs_of_pos (Real.exp_pos σ)]
-    exact Real.exp_lt_one_iff.mpr hσ
-  have h_sum := (hasSum_one_sub_rpow_neg (2 * Δ_phi) h_abs).mul_left
-    (2 * (4 : ℝ) ^ (2 * Δ_phi) / Real.Gamma (2 * Δ_phi))
-  have h_target :
-      (2 * (4 : ℝ) ^ (2 * Δ_phi) / Real.Gamma (2 * Δ_phi)) *
-        (1 - Real.exp σ) ^ (- (2 * Δ_phi)) =
-        Real.exp (-Δ_phi * σ) * universalLaplaceReal Δ_phi σ := by
-    dsimp [universalLaplaceReal]
-    have hexp_canc : Real.exp (-Δ_phi * σ) * Real.exp (Δ_phi * σ) = 1 := by
-      rw [← Real.exp_add]
-      have : -Δ_phi * σ + Δ_phi * σ = 0 := by ring
-      rw [this, Real.exp_zero]
-    linear_combination
-      -((2 * (4 : ℝ) ^ (2 * Δ_phi) / Real.Gamma (2 * Δ_phi)) *
-        (1 - Real.exp σ) ^ (- (2 * Δ_phi))) * hexp_canc
-  rw [h_target] at h_sum
-  refine h_sum.congr_fun fun n => ?_
-  dsimp [universalCoeff]
-  rw [← Real.exp_nat_mul]
-  ring_nf
-
-lemma integrable_exp_universalShiftedMeasure {Δ_phi σ : ℝ}
-    (hΔ : 0 < Δ_phi) (hσ : σ < 0) :
-    Integrable (fun u : ℝ => Real.exp (σ * u)) (universalShiftedMeasure Δ_phi) :=
-  integrable_exp_natShiftedMeasure (universalCoeff_nonneg hΔ)
-    (hasSum_universalCoeff_mul_exp Δ_phi hσ)
-
-lemma laplaceTransformReal_universalShiftedMeasure {Δ_phi σ : ℝ}
-    (hΔ : 0 < Δ_phi) (hσ : σ < 0) :
-    laplaceTransformReal (universalShiftedMeasure Δ_phi) σ =
-      Real.exp (-Δ_phi * σ) * universalLaplaceReal Δ_phi σ :=
-  laplaceTransformReal_natShiftedMeasure (universalCoeff_nonneg hΔ)
-    (hasSum_universalCoeff_mul_exp Δ_phi hσ)
-
-lemma integral_shiftedTest_universalShiftedMeasure {Δ_phi : ℝ} (hΔ : 0 < Δ_phi)
-    (N : ℕ) {φ : ℝ → ℝ} (hφ : Continuous φ)
-    (hsupp : ∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) :
-    ∫ u : ℝ, shiftedTest Δ_phi φ u ∂(universalShiftedMeasure Δ_phi) =
-      universalMonomialPairing Δ_phi φ := by
-  unfold universalShiftedMeasure universalMonomialPairing
-  rw [integral_shiftedTest_natShiftedMeasure (universalCoeff_nonneg hΔ) Δ_phi N hφ hsupp]
-  dsimp [universalCoeff, pochhammerCoeff]
-  simp_rw [mul_assoc]
-  rw [tsum_mul_left]
-
-/-! ## 3b. Exact Finite-Spin `t`-Channel Identity Measure on `ℕ ⊂ ℤ` -/
+/-! ## 3. Exact Finite-Spin `t`-Channel Identity Measure and Large-`k` Expansion -/
 
 /-- Exact finite-spin weight of the `n`-th double-twist family at spin `2k`, rescaled by
 `(2k)^(1 - 2Δ_φ)`:
@@ -391,6 +322,204 @@ lemma integral_shiftedTest_identityShiftedMeasure {Δ_phi : ℝ} (hΔ : 0 < Δ_p
   rw [← tsum_mul_left, ← tsum_mul_left]
   refine tsum_congr fun n => ?_
   ring
+
+/-- Termwise $O(K^{-1})$ Stirling bound for shifted Pochhammer coefficients
+$\frac{(b)_{n + K}}{(n + K)!}$. -/
+lemma exists_abs_rpow_mul_pochhammerCoeff_add_sub_inv_gamma_le {b : ℝ} (hb : 0 < b) :
+    let p : ℕ := ⌈|(b - 1) - 1|⌉₊ + 1
+    ∃ C₀ B : ℝ, 0 ≤ C₀ ∧ 0 < B ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ n : ℕ,
+      |(K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹| ≤
+        (C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by
+  intro p
+  obtain ⟨B, hB_pos, hB⟩ := exists_bound_rpow_mul_pochhammerCoeff hb
+  obtain ⟨C₀, hC₀_nonneg, hC₀⟩ := exists_abs_rpow_mul_pochhammerCoeff_sub_inv_gamma_le hb
+  refine ⟨C₀, B, hC₀_nonneg, hB_pos, fun {K} hK n => ?_⟩
+  have hK_pos : (0 : ℝ) < (K : ℝ) := by exact_mod_cast (by omega : 0 < K)
+  have hK_ge1 : (1 : ℝ) ≤ (K : ℝ) := by exact_mod_cast hK
+  let u_nK := ((n + K : ℕ) : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K)
+  have h_id : (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) =
+      u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) := by
+    dsimp [u_nK]
+    have h_cast : ((n + K : ℕ) : ℝ) = (K : ℝ) * (1 + (n : ℝ) / (K : ℝ)) := by
+      push_cast; field_simp; ring
+    have hpos_r : 0 < 1 + (n : ℝ) / (K : ℝ) := by positivity
+    rw [h_cast, Real.mul_rpow hK_pos.le hpos_r.le]
+    have h_canc :
+        (1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) = 1 := by
+      rw [← Real.rpow_add hpos_r, sub_add_sub_cancel, sub_self, Real.rpow_zero]
+    calc
+      (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K)
+        = (K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) *
+            ((1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) *
+              (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1)) := by rw [h_canc, mul_one]
+      _ = (K : ℝ) ^ (1 - b) * (1 + (n : ℝ) / (K : ℝ)) ^ (1 - b) *
+            pochhammerCoeff b (n + K) * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) := by ring
+  rw [h_id]
+  have hu_nonneg : 0 ≤ u_nK :=
+    mul_nonneg (by positivity) (pochhammerCoeff_nonneg hb.le (n + K))
+  have h_b1 : |u_nK - (Real.Gamma b)⁻¹| ≤ C₀ / (K : ℝ) := by
+    have hnK : 1 ≤ n + K := by omega
+    have hnK_ge : (K : ℝ) ≤ ((n + K : ℕ) : ℝ) := by exact_mod_cast (by omega : K ≤ n + K)
+    exact (hC₀ hnK).trans (div_le_div_of_nonneg_left hC₀_nonneg hK_pos hnK_ge)
+  have h_b2 := abs_one_add_div_rpow_sub_one_le (b - 1) n hK_ge1
+  calc
+    |u_nK * (1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - (Real.Gamma b)⁻¹|
+      = |(u_nK - (Real.Gamma b)⁻¹) +
+          u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1)| := by ring_nf
+    _ ≤ |u_nK - (Real.Gamma b)⁻¹| +
+          |u_nK * ((1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1)| := abs_add_le _ _
+    _ = |u_nK - (Real.Gamma b)⁻¹| +
+          u_nK * |(1 + (n : ℝ) / (K : ℝ)) ^ (b - 1) - 1| := by
+        rw [abs_mul, abs_of_nonneg hu_nonneg]
+    _ ≤ C₀ / (K : ℝ) +
+          B * (|b - 1| * (1 + (n : ℝ)) ^ p / (K : ℝ)) :=
+        add_le_add h_b1
+          (mul_le_mul (hB (n + K)) h_b2 (abs_nonneg _) hB_pos.le)
+    _ = (C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) / (K : ℝ) := by ring
+
+/-- **Kinematic Large-$K$ Expansion of Mixed-Binomial Double-Twist Test-Function Pairings**:
+For any $a > 0$, $b > 0$, $\Delta_\phi \in \mathbb{R}$, and support bound $N \in \mathbb{N}$, there
+exists $C_N > 0$ such that for all $K \ge 1$ and all $\varphi : \mathbb{R} \to \mathbb{R}$ supported
+in $[-N, N]$ with $|\varphi(h)| \le M_\varphi$ ($M_\varphi \ge 0$),
+$$\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!}
+    \varphi(\Delta_\phi + n) -
+  \frac{1}{\Gamma(b)} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \varphi(\Delta_\phi + n)\right|
+  \le C_N \, K^{-1} \, M_\varphi.$$ -/
+theorem exists_const_abs_tsum_pochhammerCoeff_mixed_test_sub_le
+    {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (Δ_phi : ℝ) (N : ℕ) :
+    ∃ C > 0, ∀ {K : ℕ}, 1 ≤ K →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) →
+      |(K : ℝ) ^ (1 - b) *
+          (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ))) -
+        (Real.Gamma b)⁻¹ *
+          (∑' n : ℕ, pochhammerCoeff a n * φ (Δ_phi + (n : ℝ)))| ≤
+        C * (K : ℝ)⁻¹ * M_φ := by
+  let p : ℕ := ⌈|(b - 1) - 1|⌉₊ + 1
+  obtain ⟨C₀, B, hC₀_nonneg, hB_pos, h_coeff⟩ :=
+    exists_abs_rpow_mul_pochhammerCoeff_add_sub_inv_gamma_le hb
+  let N_shift : ℕ := N + ⌈|Δ_phi|⌉₊
+  let s : Finset ℕ := Finset.range (N_shift + 1)
+  let w : ℕ → ℝ := fun n =>
+    pochhammerCoeff a n * (C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p)
+  have hw_nonneg : ∀ n : ℕ, 0 ≤ w n := fun n =>
+    mul_nonneg (pochhammerCoeff_nonneg ha.le n)
+      (add_nonneg hC₀_nonneg (mul_nonneg (mul_nonneg hB_pos.le (abs_nonneg _)) (by positivity)))
+  set C_N : ℝ := (∑ n ∈ s, w n) + 1
+  have hC_N_pos : 0 < C_N :=
+    add_pos_of_nonneg_of_pos (Finset.sum_nonneg (fun n _ => hw_nonneg n)) zero_lt_one
+  refine ⟨C_N, hC_N_pos, fun {K} hK {φ} {M_φ} hsupp hM_φ hφ0 => ?_⟩
+  have hK_pos : (0 : ℝ) < (K : ℝ) := by exact_mod_cast (by omega : 0 < K)
+  have h_vanish : ∀ n ∉ s, φ (Δ_phi + (n : ℝ)) = 0 := by
+    intro n hn
+    dsimp [s] at hn
+    rw [Finset.mem_range, not_lt] at hn
+    have h_gt : ((N_shift : ℕ) : ℝ) < |(n : ℝ)| := by
+      rw [abs_of_nonneg (Nat.cast_nonneg n)]
+      exact_mod_cast hn
+    exact shiftedTest_eq_zero_of_support Δ_phi hsupp h_gt
+  have h_tsum1 :
+      (∑' n : ℕ, pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ))) =
+        ∑ n ∈ s, pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ)) :=
+    tsum_eq_sum (fun n hn => by rw [h_vanish n hn, mul_zero])
+  have h_tsum2 :
+      (∑' n : ℕ, pochhammerCoeff a n * φ (Δ_phi + (n : ℝ))) =
+        ∑ n ∈ s, pochhammerCoeff a n * φ (Δ_phi + (n : ℝ)) :=
+    tsum_eq_sum (fun n hn => by rw [h_vanish n hn, mul_zero])
+  rw [h_tsum1, h_tsum2, Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib]
+  calc
+    |∑ n ∈ s,
+        ((K : ℝ) ^ (1 - b) *
+            (pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ))) -
+          (Real.Gamma b)⁻¹ * (pochhammerCoeff a n * φ (Δ_phi + (n : ℝ))))|
+      ≤ ∑ n ∈ s,
+          |(K : ℝ) ^ (1 - b) *
+              (pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ))) -
+            (Real.Gamma b)⁻¹ * (pochhammerCoeff a n * φ (Δ_phi + (n : ℝ)))| :=
+        Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ n ∈ s, w n * (K : ℝ)⁻¹ * M_φ := by
+        refine Finset.sum_le_sum (fun n _ => ?_)
+        have h_factor :
+            (K : ℝ) ^ (1 - b) *
+                (pochhammerCoeff a n * pochhammerCoeff b (n + K) * φ (Δ_phi + (n : ℝ))) -
+              (Real.Gamma b)⁻¹ * (pochhammerCoeff a n * φ (Δ_phi + (n : ℝ))) =
+            pochhammerCoeff a n *
+              ((K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹) *
+              φ (Δ_phi + (n : ℝ)) := by ring
+        rw [h_factor, abs_mul, abs_mul, abs_of_nonneg (pochhammerCoeff_nonneg ha.le n)]
+        have h1 := h_coeff hK n
+        rw [div_eq_mul_inv] at h1
+        have h2 := hφ0 (Δ_phi + (n : ℝ))
+        calc
+          pochhammerCoeff a n *
+              |(K : ℝ) ^ (1 - b) * pochhammerCoeff b (n + K) - (Real.Gamma b)⁻¹| *
+              |φ (Δ_phi + (n : ℝ))|
+            ≤ pochhammerCoeff a n *
+                ((C₀ + B * |b - 1| * (1 + (n : ℝ)) ^ p) * (K : ℝ)⁻¹) * M_φ :=
+              mul_le_mul
+                (mul_le_mul_of_nonneg_left h1 (pochhammerCoeff_nonneg ha.le n))
+                h2 (abs_nonneg _)
+                (mul_nonneg (pochhammerCoeff_nonneg ha.le n)
+                  (mul_nonneg (by positivity) (inv_nonneg.mpr hK_pos.le)))
+          _ = w n * (K : ℝ)⁻¹ * M_φ := by dsimp [w]; ring
+    _ = (∑ n ∈ s, w n) * (K : ℝ)⁻¹ * M_φ := by
+        rw [← Finset.sum_mul, ← Finset.sum_mul]
+    _ ≤ C_N * (K : ℝ)⁻¹ * M_φ := by
+        dsimp [C_N]
+        have : 0 ≤ (K : ℝ)⁻¹ * M_φ := mul_nonneg (inv_nonneg.mpr hK_pos.le) hM_φ
+        nlinarith
+
+/-- **Kinematic Large-$k$ Expansion of `identityMonomialPairing` to `universalMonomialPairing`**:
+For any $\Delta_\phi > 0$ and support bound $N \in \mathbb{N}$, there exists $C_N > 0$ such that
+for all $k \ge 1$ and all $\varphi : \mathbb{R} \to \mathbb{R}$ supported in $[-N, N]$ with
+$|\varphi(h)| \le M_\varphi$ ($M_\varphi \ge 0$),
+$$\left|(2k)^{1 - 2\Delta_\phi} \operatorname{identityMonomialPairing}(\Delta_\phi, 2k, \varphi) -
+  \operatorname{universalMonomialPairing}(\Delta_\phi, \varphi)\right|
+  \le C_N \, (2k)^{-1} \, M_\varphi.$$ -/
+theorem exists_const_abs_identityMonomialPairing_sub_universal_le
+    {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (N : ℕ) :
+    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) →
+      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ -
+        universalMonomialPairing Δ_phi φ| ≤
+        C * (2 * (k : ℝ))⁻¹ * M_φ := by
+  have h2Δ : 0 < 2 * Δ_phi := by positivity
+  obtain ⟨C₀, hC₀_pos, hC₀⟩ :=
+    exists_const_abs_tsum_pochhammerCoeff_mixed_test_sub_le h2Δ h2Δ Δ_phi N
+  set pref : ℝ := 2 * (4 : ℝ) ^ (2 * Δ_phi)
+  have hpref_pos : 0 < pref := by dsimp [pref]; positivity
+  refine ⟨pref * C₀, mul_pos hpref_pos hC₀_pos, fun {k} hk1 {φ} {M_φ} hsupp hM_φ hφ0 => ?_⟩
+  have h2k_ge1 : 1 ≤ 2 * k := by omega
+  have h_sub := hC₀ (K := 2 * k) h2k_ge1 hsupp hM_φ hφ0
+  have h_cast : ((2 * k : ℕ) : ℝ) = 2 * (k : ℝ) := by push_cast; rfl
+  rw [h_cast] at h_sub
+  have h_eq :
+      (2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ -
+        universalMonomialPairing Δ_phi φ =
+      pref *
+        ((2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n *
+              pochhammerCoeff (2 * Δ_phi) (n + 2 * k) * φ (Δ_phi + (n : ℝ))) -
+          (Real.Gamma (2 * Δ_phi))⁻¹ *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n * φ (Δ_phi + (n : ℝ)))) := by
+    dsimp [identityMonomialPairing, universalMonomialPairing, pochhammerCoeff, pref]
+    ring
+  rw [h_eq, abs_mul, abs_of_pos hpref_pos]
+  calc
+    pref *
+        |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n *
+              pochhammerCoeff (2 * Δ_phi) (n + 2 * k) * φ (Δ_phi + (n : ℝ))) -
+          (Real.Gamma (2 * Δ_phi))⁻¹ *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n * φ (Δ_phi + (n : ℝ)))|
+      ≤ pref * (C₀ * (2 * (k : ℝ))⁻¹ * M_φ) :=
+        mul_le_mul_of_nonneg_left h_sub hpref_pos.le
+    _ = (pref * C₀) * (2 * (k : ℝ))⁻¹ * M_φ := by ring
 
 /-! ## 4. Main Quantitative Monomial Lightcone Bootstrap Theorems -/
 
@@ -490,91 +619,15 @@ theorem exists_const_abs_rescaled_pairSpin_sub_le
   rwa [M.integral_shiftedTest_rescaledShiftedMeasure s Δ_phi k hφ.continuous,
     hν_pair k hφ.continuous hsupp] at h_est
 
-/-- **Quantitative Monomial Lightcone Bootstrap Theorem (`MonomialFourPointData` version)**:
+/-- **Main Quantitative Monomial Lightcone Bootstrap Against the Exact `t`-Channel Identity
+(`MonomialFourPointData` version)**:
 Let `M` be a monomial four-point decomposition agreeing with `corr : FourPointData ν Δ_phi`
 (`ν ≥ 0`, `Δ_phi > 1/2`) and having a `t`-channel twist gap `h_gap > 0`.
-For every support bound `N : ℕ` and every target exponent
-`0 < γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1))`,
-there exists a constant `C > 0` such that for all `k ≥ 1` and all twice-differentiable test
-functions `φ : ℝ → ℝ` supported in `[-N, N]` with `|φ|, |φ'|, |φ''| ≤ M_φ`,
-`|(2k)^(1 - 2Δ_φ) M.pairSpin (2k) φ - universalMonomialPairing Δ_phi φ| ≤`
-`C * (2k)^(-γ) * M_φ`. -/
-theorem exists_const_abs_pairSpin_sub_universal_le {ν Δ_phi h_gap γ : ℝ}
-    (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
-    (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
-      M.eval wl wr = corr.correlator_pdisk wl wr)
-    (hgap : M.HasTwistGap h_gap)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
-        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  have hΔ_pos : 0 < Δ_phi := by linarith
-  have hγ_2h : γ < 2 * h_gap := lt_of_lt_of_le hγ_lt (min_le_left _ _)
-  have hγ_rest : γ < min 1 (2 * Δ_phi - 1) := lt_of_lt_of_le hγ_lt (min_le_right _ _)
-  set h' : ℝ := if 2 * (h_gap - Δ_phi) = -1 then (γ / 2 + h_gap) / 2 else h_gap
-  have hh'_pos : 0 < h' := by dsimp [h']; split_ifs <;> linarith
-  have hh'_le : h' ≤ h_gap := by dsimp [h']; split_ifs <;> linarith
-  have hγ_2h' : γ < 2 * h' := by dsimp [h']; split_ifs <;> linarith
-  have hh'_ne : 2 * (h' - Δ_phi) ≠ -1 := by
-    dsimp [h']; split_ifs with h_eq <;> [linarith; exact h_eq]
-  have hgap' : M.HasTwistGap h' := hgap.mono hh'_pos hh'_le
-  set α : ℝ := min (2 * h') (min 1 (2 * Δ_phi - 1))
-  have hγα : γ < α := lt_min hγ_2h' hγ_rest
-  have hα_pos : 0 < α := lt_trans hγ_pos hγα
-  obtain ⟨A, hA, hθ_ge⟩ := exists_gt_one_le_mul_midpointHarmonicExp hα_pos hγα
-  obtain ⟨_, M_raw, hM_raw_pos, C_raw, hC_raw_pos, h_raw⟩ :=
-    M.exists_uniform_laplaceSpinReal_bounds corr hν hΔ hM hgap' hh'_ne
-      (by linarith : 1 - 2 * A ≤ -1) (by norm_num : (-1 : ℝ) < 0)
-  exact M.exists_const_abs_rescaled_pairSpin_sub_le hA hα_pos hθ_ge hM_raw_pos hC_raw_pos N
-    (fun _ => universalShiftedMeasure Δ_phi)
-    (fun _ => universalLaplaceReal Δ_phi)
-    (fun _ => universalMonomialPairing Δ_phi)
-    (fun _ => universalShiftedMeasure_compl_intCast_eq_zero Δ_phi)
-    (fun _ _ hσ => integrable_exp_universalShiftedMeasure hΔ_pos hσ)
-    (fun _ _ hσ => laplaceTransformReal_universalShiftedMeasure hΔ_pos hσ)
-    (fun _ _ hσ => universalLaplaceReal_nonneg hΔ_pos hσ)
-    (fun _ _ hφ hsupp => integral_shiftedTest_universalShiftedMeasure hΔ_pos N hφ hsupp)
-    (fun hk1 _ hσ => h_raw hk1 hσ)
-
-/-- Version of `exists_const_abs_pairSpin_sub_universal_le` assuming `ContDiff ℝ 2 φ`. -/
-theorem exists_const_abs_pairSpin_sub_universal_le_contDiff {ν Δ_phi h_gap γ : ℝ}
-    (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
-    (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
-      M.eval wl wr = corr.correlator_pdisk wl wr)
-    (hgap : M.HasTwistGap h_gap)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      ContDiff ℝ 2 φ →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
-        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  obtain ⟨C, hC_pos, hC⟩ :=
-    M.exists_const_abs_pairSpin_sub_universal_le corr hν hΔ hM hgap hγ_pos hγ_lt N
-  refine ⟨C, hC_pos, fun {k} hk1 {φ} {M_φ} hφ hsupp hM_φ hφ0 hφ1 hφ2 => ?_⟩
-  have hφ_diff : Differentiable ℝ φ := hφ.differentiable (by norm_num)
-  have hφ_succ : ContDiff ℝ (1 + 1) φ := hφ
-  have hφ'_diff : Differentiable ℝ (deriv φ) :=
-    ((contDiff_succ_iff_deriv.mp hφ_succ).2.2).differentiable (by norm_num)
-  exact hC hk1 hφ_diff hφ'_diff hsupp hM_φ hφ0 hφ1 hφ2
-
-/-- **Quantitative Monomial Lightcone Bootstrap Against the Exact `t`-Channel Identity**:
 Retaining the exact finite-spin `t`-channel identity binomial coefficients in
-`identityMonomialPairing Δ_phi (2k) φ` includes all `1 / (2k)^m` subleading `t`-channel identity
-corrections on the left-hand side, removing the `1` cap from the exponent and yielding
+`identityMonomialPairing Δ_phi (2k) φ` isolates the non-universal dynamical corrections with
+**zero $O(k^{-1})$ error** and yields the exponent range
 `0 < γ < min (2 * h_gap) (2 * Δ_phi - 1)`:
-`|(2k)^(1 - 2Δ_φ) (M.pairSpin (2k) φ - identityMonomialPairing Δ_phi (2k) φ)| ≤`
+`|(2k)^(1 - 2Δ_φ) M.pairSpin (2k) φ - (2k)^(1 - 2Δ_φ) identityMonomialPairing Δ_phi (2k) φ| ≤`
 `C * (2k)^(-γ) * M_φ`. -/
 theorem exists_const_abs_pairSpin_sub_identity_le {ν Δ_phi h_gap γ : ℝ}
     (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
@@ -648,6 +701,90 @@ theorem exists_const_abs_pairSpin_sub_identity_le_contDiff {ν Δ_phi h_gap γ :
     ((contDiff_succ_iff_deriv.mp hφ_succ).2.2).differentiable (by norm_num)
   exact hC hk1 hφ_diff hφ'_diff hsupp hM_φ hφ0 hφ1 hφ2
 
+/-- **Quantitative Monomial Lightcone Bootstrap Against the Expanded Universal Sum
+(`MonomialFourPointData` version)**:
+Combining the $O(k^{-1})$-free theorem `exists_const_abs_pairSpin_sub_identity_le` with the
+kinematic large-$k$ expansion `exists_const_abs_identityMonomialPairing_sub_universal_le`
+(`(2k)^(1 - 2Δ_φ) identityMonomialPairing Δ_phi (2k) φ = universalMonomialPairing Δ_phi φ + O(k⁻¹)`)
+yields the bound against `universalMonomialPairing Δ_phi φ` for every target exponent
+`0 < γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1))`. -/
+theorem exists_const_abs_pairSpin_sub_universal_le {ν Δ_phi h_gap γ : ℝ}
+    (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
+    (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
+      M.eval wl wr = corr.correlator_pdisk wl wr)
+    (hgap : M.HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
+    (N : ℕ) :
+    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
+      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
+      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
+        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
+  have hΔ_pos : 0 < Δ_phi := by linarith
+  have hγ_lt_id : γ < min (2 * h_gap) (2 * Δ_phi - 1) :=
+    lt_of_lt_of_le hγ_lt (min_le_min le_rfl (min_le_right 1 (2 * Δ_phi - 1)))
+  have hγ_le_one : γ ≤ 1 :=
+    ((lt_of_lt_of_le hγ_lt (min_le_right _ _)).trans_le (min_le_left 1 (2 * Δ_phi - 1))).le
+  obtain ⟨C₁, hC₁_pos, hC₁⟩ :=
+    M.exists_const_abs_pairSpin_sub_identity_le corr hν hΔ hM hgap hγ_pos hγ_lt_id N
+  obtain ⟨C₂, hC₂_pos, hC₂⟩ :=
+    exists_const_abs_identityMonomialPairing_sub_universal_le hΔ_pos N
+  refine ⟨C₁ + C₂, add_pos hC₁_pos hC₂_pos,
+    fun {k} hk1 {φ} {M_φ} hφ hφ' hsupp hM_φ hφ0 hφ1 hφ2 => ?_⟩
+  have h2k_ge1 : (1 : ℝ) ≤ 2 * (k : ℝ) := by
+    have : (1 : ℝ) ≤ (k : ℝ) := by exact_mod_cast hk1
+    linarith
+  have hr_one : (2 * (k : ℝ))⁻¹ ≤ (2 * (k : ℝ)) ^ (-γ) := by
+    rw [← Real.rpow_neg_one]
+    exact Real.rpow_le_rpow_of_exponent_le h2k_ge1 (by linarith)
+  have h_b1 := hC₁ hk1 hφ hφ' hsupp hM_φ hφ0 hφ1 hφ2
+  have h_b2 := (hC₂ hk1 hsupp hM_φ hφ0).trans
+    (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hr_one hC₂_pos.le) hM_φ)
+  calc
+    |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
+        universalMonomialPairing Δ_phi φ|
+      = |((2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
+            (2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ) +
+          ((2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ -
+            universalMonomialPairing Δ_phi φ)| := by ring_nf
+    _ ≤ |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
+            (2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ| +
+          |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * identityMonomialPairing Δ_phi (2 * k) φ -
+            universalMonomialPairing Δ_phi φ| := abs_add_le _ _
+    _ ≤ C₁ * (2 * (k : ℝ)) ^ (-γ) * M_φ + C₂ * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
+        add_le_add h_b1 h_b2
+    _ = (C₁ + C₂) * (2 * (k : ℝ)) ^ (-γ) * M_φ := by ring
+
+/-- Version of `exists_const_abs_pairSpin_sub_universal_le` assuming `ContDiff ℝ 2 φ`. -/
+theorem exists_const_abs_pairSpin_sub_universal_le_contDiff {ν Δ_phi h_gap γ : ℝ}
+    (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
+    (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
+      M.eval wl wr = corr.correlator_pdisk wl wr)
+    (hgap : M.HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
+    (N : ℕ) :
+    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      ContDiff ℝ 2 φ →
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
+      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
+      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) * M.pairSpin (2 * (k : ℤ)) φ -
+        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
+  obtain ⟨C, hC_pos, hC⟩ :=
+    M.exists_const_abs_pairSpin_sub_universal_le corr hν hΔ hM hgap hγ_pos hγ_lt N
+  refine ⟨C, hC_pos, fun {k} hk1 {φ} {M_φ} hφ hsupp hM_φ hφ0 hφ1 hφ2 => ?_⟩
+  have hφ_diff : Differentiable ℝ φ := hφ.differentiable (by norm_num)
+  have hφ_succ : ContDiff ℝ (1 + 1) φ := hφ
+  have hφ'_diff : Differentiable ℝ (deriv φ) :=
+    ((contDiff_succ_iff_deriv.mp hφ_succ).2.2).differentiable (by norm_num)
+  exact hC hk1 hφ_diff hφ'_diff hsupp hM_φ hφ0 hφ1 hφ2
+
 end MonomialFourPointData
 
 end CFT.LightconeBootstrap
@@ -658,39 +795,13 @@ namespace FourPointData
 
 variable {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
 
-/-- **Quantitative Monomial Lightcone Bootstrap Theorem (`FourPointData` version)**:
+/-- **Main Quantitative Monomial Lightcone Bootstrap Against the Exact `t`-Channel Identity
+(`FourPointData` version)**:
 For any reflection-positive CFT (`FourPointData ν Δ_phi` with `ν ≥ 0, Δ_phi > 1/2`) whose
 canonical monomial decomposition `corr.toMonomialFourPointData hν` has a twist gap `h_gap > 0`,
-and for every support bound `N : ℕ` and target exponent
-`0 < γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1))`,
-there exists `C > 0` such that for all `k ≥ 1` and all `C^2` test functions `φ` supported in
-`[-N, N]` with `|φ|, |φ'|, |φ''| ≤ M_φ`,
-`|(2k)^(1 - 2Δ_φ) (corr.toMonomialFourPointData hν).pairSpin (2k) φ -`
-`universalMonomialPairing Δ_phi φ| ≤ C * (2k)^(-γ) * M_φ`. -/
-theorem exists_const_abs_pairSpin_sub_universal_le {h_gap γ : ℝ}
-    (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
-    (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      ContDiff ℝ 2 φ →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) *
-          (corr.toMonomialFourPointData hν).pairSpin (2 * (k : ℤ)) φ -
-        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
-  (corr.toMonomialFourPointData hν).exists_const_abs_pairSpin_sub_universal_le_contDiff
-    corr hν hΔ (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
-    hgap hγ_pos hγ_lt N
-
-/-- **Quantitative Monomial Lightcone Bootstrap Against the Exact `t`-Channel Identity
-(`FourPointData` version)**:
-Retaining the exact finite-spin `t`-channel identity binomial coefficients in
-`identityMonomialPairing Δ_phi (2k) φ` includes all `1 / (2k)^m` subleading `t`-channel identity
-corrections on the left-hand side and yields the sharper exponent range
+retaining the exact finite-spin `t`-channel identity binomial coefficients in
+`identityMonomialPairing Δ_phi (2k) φ` isolates the non-universal dynamical corrections with
+**zero $O(k^{-1})$ error** and yields the exponent range
 `0 < γ < min (2 * h_gap) (2 * Δ_phi - 1)`. -/
 theorem exists_const_abs_pairSpin_sub_identity_le {h_gap γ : ℝ}
     (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
@@ -709,6 +820,30 @@ theorem exists_const_abs_pairSpin_sub_identity_le {h_gap γ : ℝ}
         (2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) *
           identityMonomialPairing Δ_phi (2 * k) φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
   (corr.toMonomialFourPointData hν).exists_const_abs_pairSpin_sub_identity_le_contDiff
+    corr hν hΔ (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
+    hgap hγ_pos hγ_lt N
+
+/-- **Quantitative Monomial Lightcone Bootstrap Against the Expanded Universal Sum
+(`FourPointData` version)**:
+Combining `exists_const_abs_pairSpin_sub_identity_le` with the $O(k^{-1})$ large-$k$ expansion of
+`identityMonomialPairing Δ_phi (2k) φ` yields the bound against `universalMonomialPairing Δ_phi φ`
+for every target exponent `0 < γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1))`. -/
+theorem exists_const_abs_pairSpin_sub_universal_le {h_gap γ : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
+    (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
+    (N : ℕ) :
+    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      ContDiff ℝ 2 φ →
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
+      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
+      |(2 * (k : ℝ)) ^ (1 - 2 * Δ_phi) *
+          (corr.toMonomialFourPointData hν).pairSpin (2 * (k : ℤ)) φ -
+        universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
+  (corr.toMonomialFourPointData hν).exists_const_abs_pairSpin_sub_universal_le_contDiff
     corr hν hΔ (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
     hgap hγ_pos hγ_lt N
 

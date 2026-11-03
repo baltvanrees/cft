@@ -76,7 +76,7 @@ noncomputable def evalTermPdisk (ν Δ : ℝ) (wl wr : ℂ) : ℂ :=
       Complex.exp ((((Δ + (n : ℝ) - (j : ℝ)) / 2 : ℝ) : ℂ) * wr) *
       gegenbauer.geg_two_var_sum (ν : ℂ) (Complex.exp wl) (Complex.exp wr) j
 
-/-- On the Euclidean section $w_r = \bar{w}$, `evalTermPdisk` agrees with the Euclidean
+/-- On the Euclidean section $w_r = \bar{w_l}$, `evalTermPdisk` agrees with the Euclidean
 function `evalTerm` at $\rho = e^w$. This demonstrates equivalence at each
 descendant level separately. -/
 theorem evalTermPdisk_conj {ν : ℝ} (hν : 0 ≤ ν) (Δ : ℝ) (w : ℂ) :
@@ -188,7 +188,7 @@ via a sum over descendant levels $n \in \mathbb{N}$. -/
 noncomputable def evalPdisk (wl wr : ℂ) : ℂ :=
   ∑' n : ℕ, (B.level n).evalTermPdisk ν Δ wl wr
 
-/-- On the Euclidean section $w_r = \bar{w}$, `B.evalPdisk` agrees with the Euclidean block
+/-- On the Euclidean section $w_r = \bar{w_l}$, `B.evalPdisk` agrees with the Euclidean block
 `B.eval` at $\rho = e^w$. A simple theorem to prove, given that we already have agreement at every
 descendant level. -/
 theorem evalPdisk_conj_eq_eval (hν : 0 ≤ ν) (w : ℂ) :

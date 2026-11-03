@@ -10,14 +10,14 @@ import CFT.ConeTauberian.Branching2d
 /-!
 # Quantitative High-Energy Tauberian Asymptotics for $d$-Dimensional Primary Operators
 
-This file implements **Phase 4** of `CFT/ConeTauberian/PLAN.md`, combining the quantitative
+This file combines the quantitative
 two-variable Fourier-Laplace Tauberian theorem (`CFT/Analysis/Karamata2d.lean`), the
 Erdélyi–Kober fractional integral and continuum primary density
 (`CFT/ConeTauberian/ErdelyiKoberInversion.lean`), and the 2D block bilateral transmutation and
 branching bounds (`CFT/ConeTauberian/Branching2d.lean`) to establish the three main theorems of
 the module:
 
-1. **Theorem 1A — Quantitative Non-Universal Bound Against the Exact $t$-Channel Identity
+1. **Quantitative Non-Universal Bound Against the Exact $t$-Channel Identity
    (`exists_const_abs_transmuted2d_sub_identity_le`, `tendsto_transmuted2d_sub_identity`)**:
    For **all** $\Delta_\phi > 0$ and **all** $h_{\text{gap}} > 0$, comparing the rescaled 2D
    bilaterally transmuted OPE measure $\mu^{\text{trans}}_\Delta$ against the exact universal
@@ -27,17 +27,17 @@ the module:
    $2 h_{\text{gap}}$** (with no $\Delta^{-1}$ Stirling barrier and no $\Delta^{-2\Delta_\phi}$
    outer-contour barrier).
 
-2. **Theorem 1B — Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap Against the
+2. **Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap Against the
    Continuum Density $\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)$
    (`exists_const_abs_primaryCone_sub_le`, `tendsto_primaryConePairing`)**:
-   Combining Theorem 1A with the universal $O(\Delta^{-1})$ Stirling and Erdélyi–Kober branching
-   reduction yields the quantitative $O(\Delta^{-\gamma})$ bound for the unweighted primary OPE
-   measure $d\mu_{\text{OPE}}(\Delta', \ell)$ paired with a smooth compactly supported test
-   function $\chi(\Delta'/\Delta, \ell/\Delta')$, with exponent
+   Combining the non-universal bound with the universal $O(\Delta^{-1})$ Stirling and Erdélyi–Kober
+   branching reduction yields the quantitative $O(\Delta^{-\gamma})$ bound for the unweighted
+   primary OPE measure $d\mu_{\text{OPE}}(\Delta', \ell)$ paired with a smooth compactly supported
+   test function $\chi(\Delta'/\Delta, \ell/\Delta')$, with exponent
    $\gamma = \min\bigl(\frac{2 h_{\text{gap}}}{p_{\text{deg}} + 1},\, 1\bigr) > 0$.
 
-3. **Corollary 2 — Cumulative Spin-Summed Primary Asymptotics
-   (`continuumPrimaryPairing_indicator_cylinder`, `tendsto_cumulativePrimaryWeight`)**:
+3. **Cumulative Spin-Summed Primary Asymptotics
+   (`continuumPrimaryPairing_unitCylinderIndicator`, `tendsto_cumulativePrimaryWeight`)**:
    For $\nu > 0$ and $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$, the continuum primary density
    $\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)$ is integrable on the full unit cylinder
    $(0, 1)^2$ with integral $\mathcal{C}^{\text{prim}}_\nu(\Delta_\phi)$, and sandwiching the
@@ -53,7 +53,7 @@ namespace CFT.ConeTauberian
 
 /-! ## Section 1: `ConeBlockFourPointData` & Bilateral Transmuted Crossing Gap -/
 
-/-- **Cone-Bootstrap Four-Point Spectral Data (`PLAN.md`, Stage 4)**:
+/-- **Cone-Bootstrap Four-Point Spectral Data**:
 packages the $d$-dimensional unweighted primary OPE spectral measure `μ_OPE` on $\mathbb{R} \times
 \mathbb{N}$, the rescaled 2D bilaterally transmuted OPE measure `μ_trans2d Δ` on
 $(u_l, u_r) = (h'/\Delta, \bar{h}'/\Delta) \in \mathbb{R}^2$ (normalized by
@@ -77,7 +77,7 @@ namespace ConeBlockFourPointData
 
 variable {ν Δ_phi : ℝ} (D : ConeBlockFourPointData ν Δ_phi)
 
-/-- **Bilateral Transmuted Crossing & Twist-Gap Hypothesis (`PLAN.md`, Stage 4)**:
+/-- **Bilateral Transmuted Crossing & Twist-Gap Hypothesis**:
 At complex rescaled arguments $w_l = \frac{-A + i t_l}{\Delta}$ and
 $w_r = \frac{-A + i t_r}{\Delta}$ with $(t_l, t_r) \in [-R, R]^2$, the bilateral Fourier-Laplace
 transforms of `D.μ_trans2d Δ` and the exact universal $t$-channel identity measure `D.μ_id2d Δ`
@@ -110,10 +110,10 @@ structure HasBilateralCrossingGap (A p_deg : ℝ) : Prop where
           C_0 * R ^ p_deg * Δ ^ (- (2 * D.h_gap))
 
 /-!
-## Section 2: Theorem 1A — Quantitative Non-Universal Bound Against Exact $t$-Channel Identity
+## Section 2: Quantitative Non-Universal Bound Against Exact $t$-Channel Identity
 -/
 
-/-- **Theorem 1A — Quantitative Non-Universal 2D Transmuted Bound (`PLAN.md`, Theorem 1A)**:
+/-- **Quantitative Non-Universal 2D Transmuted Bound**:
 For **all** $\Delta_\phi > 0$ and **all** $h_{\text{gap}} > 0$, comparing the rescaled 2D
 transmuted OPE measure `D.μ_trans2d Δ` against the exact universal $t$-channel identity measure
 `D.μ_id2d Δ` yields a power-law error bound $O(\Delta^{-\gamma})$ with exponent
@@ -142,7 +142,7 @@ theorem exists_const_abs_transmuted2d_sub_identity_le
   exact h_taub hΔ (hcross.integrable_trans2d hΔ) (hcross.integrable_id2d hΔ)
     (h_lap hΔ).1 ((h_lap hΔ).2 hR_pos)
 
-/-- Asymptotic convergence corollary of Theorem 1A: as $\Delta \to \infty$, the difference
+/-- Asymptotic convergence corollary: as $\Delta \to \infty$, the difference
 between the rescaled 2D transmuted OPE pairing and the exact universal $t$-channel identity
 pairing tends to $0$. -/
 theorem tendsto_transmuted2d_sub_identity
@@ -165,7 +165,7 @@ theorem tendsto_transmuted2d_sub_identity
   exact h_bd hΔ
 
 /-!
-## Section 3: Theorem 1B — Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap
+## Section 3: Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap
 -/
 
 /-- The rescaled unweighted $d$-dimensional primary OPE pairing for a two-variable test function
@@ -185,7 +185,7 @@ noncomputable def continuumPrimaryPairing (ν Δ_phi : ℝ) (χ : ℝ × ℝ →
     χ (u, ξ) * primaryConeDensity ν Δ_phi u ξ
 
 /-- **Universal $O(\Delta^{-1})$ Branching & Stirling Reduction Hypothesis for a Test Function
-$\chi(u, \xi)$ (`PLAN.md`, Stage 4)**:
+$\chi(u, \xi)$**:
 For a compactly supported smooth test function $\chi$ on $(0, \infty) \times (0, 1)$, there exists
 a 2D test function $\psi : \mathbb{R} \times \mathbb{R} \to \mathbb{R}$ (obtained via the inverse
 Erdélyi–Kober transform of $\chi$ and division by $\operatorname{transmuteWeight}$) whose tilted
@@ -205,10 +205,10 @@ structure HasUniversalBranchingReduction (A : ℝ) (χ : ℝ × ℝ → ℝ) : P
         |(∫ p : ℝ × ℝ, ψ p ∂(D.μ_id2d Δ)) - continuumPrimaryPairing ν Δ_phi χ| ≤
           C_univ * Δ ^ (-1 : ℝ)
 
-/-- **Theorem 1B — Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap
-(`PLAN.md`, Theorem 1B)**:
-Combining Theorem 1A (the pure $2 h_{\text{gap}}$ non-universal bound) with the universal
-$O(\Delta^{-1})$ Stirling and Erdélyi–Kober branching reduction yields, with
+/-- **Quantitative $O(\Delta^{-\gamma})$ Smoothed Primary Bootstrap**:
+Combining `exists_const_abs_transmuted2d_sub_identity_le` (the pure $2 h_{\text{gap}}$
+non-universal bound) with the universal $O(\Delta^{-1})$ Stirling and Erdélyi–Kober branching
+reduction yields, with
 $$\gamma := \min\!\left(\frac{2 h_{\text{gap}}}{p_{\text{deg}} + 1},\; 1\right) > 0,$$
 an explicit $O(\Delta^{-\gamma})$ bound between the rescaled unweighted primary OPE pairing and the
 continuum primary spectral density pairing for all $\Delta \ge 1$. -/
@@ -256,7 +256,7 @@ theorem exists_const_abs_primaryCone_sub_le
     mul_le_mul_of_nonneg_left hr1 hC_ψ_pos.le
   linarith
 
-/-- **Asymptotic Smoothed Primary Bootstrap (`PLAN.md`, Theorem 1B)**:
+/-- **Asymptotic Smoothed Primary Bootstrap**:
 as $\Delta \to \infty$, the rescaled unweighted primary OPE pairing converges to the continuum
 primary spectral density pairing:
 $$\lim_{\Delta \to \infty} \Delta^{2\nu - 4\Delta_\phi}
@@ -279,7 +279,7 @@ theorem tendsto_primaryConePairing
   exact h_bd hΔ
 
 /-!
-## Section 4: Corollary 2 — Cumulative Spin-Summed Primary Asymptotics
+## Section 4: Cumulative Spin-Summed Primary Asymptotics
 -/
 
 /-- The indicator function of the open unit cylinder $(u, \xi) \in (0, 1) \times (0, 1)$. -/
@@ -314,7 +314,7 @@ $$\operatorname{cumulativePrimaryWeight}(D, \Delta) :=
 noncomputable def cumulativePrimaryWeight (Δ : ℝ) : ℝ :=
   ∫ p : ℝ × ℕ, (Ioc (0 : ℝ) 1).indicator (fun _ => (1 : ℝ)) (p.1 / Δ) ∂D.μ_OPE
 
-/-- **Corollary 2 — Cumulative Spin-Summed Primary Asymptotics (`PLAN.md`, Corollary 2)**:
+/-- **Cumulative Spin-Summed Primary Asymptotics**:
 For $\nu > 0$ and $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$, if the rescaled cumulative primary
 weight $\Delta^{2\nu - 4\Delta_\phi} \operatorname{cumulativePrimaryWeight}(D, \Delta)$ can be
 sandwiched from below and above by smoothed test functions $\chi_-, \chi_+$ satisfying

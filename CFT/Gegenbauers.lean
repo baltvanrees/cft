@@ -21,13 +21,14 @@ $$
 for $n ∈ ℕ$ as elements of $ℂ[x]$, using their known recursion relation.
 For CFTs in d dimensions, the parameter ν = d/2 - 1.
 
-We then move on to an important property relevant for conformal blocks: the construction of the
+We also prove an important property relevant for conformal blocks: the construction of the
 two-variable functions
 $$
 (ρ_1 ρ_2)^n C_n^{(ν)}\big( (ρ1 / ρ2 + ρ2 / ρ1) / 2 \big)
 $$
-We explicitly construct these in terms of a finite series expansion, and then prove that this
-expansion agrees with the expression in terms of Gegenbauers.
+We explicitly construct these in terms of a finite series expansion with known coefficients.
+We then prove that this expansion agrees with the expression in terms of Gegenbauers using the
+recursion relation.
 -/
 
 open Polynomial

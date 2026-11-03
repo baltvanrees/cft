@@ -7,171 +7,184 @@
 \usepackage{hyperref}
 
 \setlist[enumerate]{nosep, topsep=3pt}
+\setlist[itemize]{nosep, topsep=3pt}
 
 \newtheorem{theorem}{Theorem}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{conjecture}{Conjecture}
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
 
-\title{\vspace{-1.5cm}\textbf{Quantitative Large-Spin Asymptotics in the Monomial Lightcone Bootstrap}\vspace{-0.6cm}}
+\title{\vspace{-1.6cm}\textbf{\large Formalized Lightcone and High-Energy Tauberian Theorems\\for Conformal Four-Point Functions}\vspace{-0.7cm}}
 \author{}
 \date{}
 
 \begin{document}
 \maketitle
-\vspace{-1.2cm}
+\vspace{-1.3cm}
 
-\section{Setup and Definitions}
-Four-point functions are typically as analytic functions of the pair $(\rho, \bar \rho)$ which lives in the punctured polydisk $(\mathbb D \setminus \{0\})^2$. Since correlation functions have a branch cut aalong the negative real axes, we pass to the universal cover by writing $(\rho, \bar \rho) = (e^{w_l}, e^{w_r})$. The new variables $(w_l, w_r) \in \mathbb{H}_-^2$, with $\mathbb{H}_- := \{w \in \mathbb{C} : \operatorname{Re}(w) < 0\}$ denote the open left half-plane (or universal cover of the disk). The relation to the more familiar cross ratios $(z, \bar z)$ is then
+This note summarizes the main physically relevant lightcone and high-energy Tauberian theorems for conformal four-point functions formalized in Lean~4 in this repository, together with all axiomatic and structural assumptions on which they rest.
+
+\section{Base Euclidean Axioms and Polydisk Continuation}
+
+We consider the four-point correlation function of identical real scalar primary operators $\phi$ of scaling dimension $\Delta_\phi > 0$ in spacetime dimension $d = 2\nu + 2 \ge 2$ ($\nu = \frac{d-2}{2} \ge 0$). In radial coordinates $(\rho, \bar{\rho}) \in (\mathbb{D} \setminus \{0\})^2$, we pass to the universal cover by writing $(\rho_l, \rho_r) = (e^{w_l}, e^{w_r})$ with $(w_l, w_r) \in \mathbb{H}_-^2$, where $\mathbb{H}_- := \{w \in \mathbb{C} : \operatorname{Re} w < 0\}$. The cross-ratio map $z : \mathbb{H}_- \to \mathbb{C}$ and its inverse radial map on the twice-cut plane $\mathcal{C} := \mathbb{C} \setminus \bigl((-\infty, 0] \cup [1, \infty)\bigr)$ are
 \begin{equation}
   z(w) := \frac{4 e^w}{(1 + e^w)^2}, \qquad
   \rho(z) := \frac{z}{\bigl(1 + \sqrt{1 - z}\bigr)^2}.
 \end{equation}
+On the first-sheet strip $\mathcal{S}_\pi := \{(w_l, w_r) \in \mathbb{H}_-^2 : \operatorname{Im} w_l, \operatorname{Im} w_r \in (-\pi, \pi)\}$, the $t$-channel crossing map $z \mapsto 1 - z$ lifts to $w \mapsto w' := \log \rho(1 - z(w)) \in \mathbb{H}_-$, with crossing factor $\mathcal{C}_{\Delta_\phi}(w) := 4^{\Delta_\phi} e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi}$.
 
-\begin{definition}[Monomial Four-Point Function]
-A \emph{monomial four-point datum} consists of a family of non-negative Borel measures $\{\mu_J\}_{J \in \mathbb{Z}}$ on $\mathbb{R}$ satisfying:
+\begin{assumption}[Base Euclidean OPE and Crossing Axioms]
+\label{assump:base}
+A reflection-positive, crossing-symmetric four-point function with twist gap $h_{\mathrm{gap}} > 0$ consists of:
 \begin{enumerate}
-  \item \emph{Unitarity support}: $\mu_J(\{h \in \mathbb{R} : h < 0 \text{ or } h + J < 0\}) = 0$ for all $J \in \mathbb{Z}$;
-  \item \emph{Bose symmetry}: $\mu_J = 0$ for all odd $J \in 2\mathbb{Z} + 1$;
-  \item \emph{Absolute convergence}: for all $\sigma_l < 0$ and $\sigma_r < 0$, the real monomial integrals $e^{h \sigma_l + (h + J)\sigma_r}$ are $\mu_J$-integrable and
-  \begin{equation}
-    \mathcal{G}(\sigma_l, \sigma_r) := \sum_{J \in \mathbb{Z}} \int_{\mathbb{R}} e^{h \sigma_l + (h + J)\sigma_r} \, d\mu_J(h) < \infty.
-  \end{equation}
+  \item \emph{Positive unitary OPE measure}: a non-negative Borel measure $d\mu_{\mathrm{OPE}}(\Delta, \ell)$ on $\mathbb{R} \times \mathbb{N}$ supported on unitary twists $\tau = \Delta - \ell \ge 0$ and even spins $\ell \in 2\mathbb{N}$, decomposing into a unit vacuum atom at $(\Delta, \ell) = (0, 0)$ plus a non-identity measure supported on half-twist $h := \frac{\Delta - \ell}{2} \ge h_{\mathrm{gap}} > 0$;
+  \item \emph{Euclidean conformal blocks}: for each $(\Delta, \ell)$, a block $G_{\Delta, \ell}(r e^{i\theta}) = \sum_{n=0}^\infty r^{\Delta + n} \sum_{j} A_{n, j}(\Delta, \ell) \, C_j^{(\nu)}(\cos\theta)$ with measurable non-negative descendant coefficients $A_{n, j}(\Delta, \ell) \ge 0$ (normalized by $A_{0, \ell} = 1$, vanishing for odd $n$, and supported on $j \in \{\ell + n, \ell + n - 2, \dots, \max(\ell - n, (\ell + n) \bmod 2)\}$) that is radially summable on $r \in (0, 1)$;\footnote{The non-negativity of $A_{n, j}(\Delta, \ell)$ and radial summability of $G_{\Delta, \ell}$ are axiomatized directly in \texttt{Blocks.lean} rather than derived from the quadratic Casimir differential equation.}
+  \item \emph{Euclidean OPE convergence and crossing symmetry}: the OPE integral $\mathcal{G}_{\mathrm{eucl}}(\rho) := \int G_{\Delta, \ell}(\rho) \, d\mu_{\mathrm{OPE}}(\Delta, \ell)$ converges absolutely on $0 < |\rho| < 1$ and satisfies $|z|^{-2\Delta_\phi} \mathcal{G}_{\mathrm{eucl}}(\rho(z)) = |1 - z|^{-2\Delta_\phi} \mathcal{G}_{\mathrm{eucl}}(\rho(1 - z))$ for all $z \in \mathcal{C}$.
 \end{enumerate}
-For $(w_l, w_r) \in \mathbb{H}_-^2$ and $w \in \mathbb{H}_-$, the holomorphic four-point function $\mathcal{G} : \mathbb{H}_-^2 \to \mathbb{C}$ and the spin-$J$ Laplace transforms $L_J : \mathbb{H}_- \to \mathbb{C}$ are defined by
-\begin{equation}
-  \mathcal{G}(w_l, w_r) := \sum_{J \in \mathbb{Z}} e^{J w_r} L_J(w_l + w_r), \qquad
-  L_J(w) := \int_{\mathbb{R}} e^{h w} \, d\mu_J(h).
-\end{equation}
-\end{definition}
+\end{assumption}
 
-On the $t$-channel strip $\mathcal{S}_\pi := \{(w_l, w_r) \in \mathbb{H}_-^2 : \operatorname{Im}(w_l), \operatorname{Im}(w_r) \in (-\pi, \pi)\}$, the crossing transformation maps $w \in \mathbb{H}_-$ with $\operatorname{Im}(w) \in (-\pi, \pi)$ to $w' := \log \rho(1 - z(w)) \in \mathbb{H}_-$. For external scalar scaling dimension $\Delta_\phi > 0$, define the single-variable crossing factor and the $t$-channel identity contribution by
+Under Assumption~\ref{assump:base} alone (formalized with zero \texttt{sorry}'s in \texttt{Corr\_pdisk.lean}), expanding $C_j^{(\nu)}(\cos\theta)$ into $(\rho_l, \rho_r) = (e^{w_l}, e^{w_r})$ monomials with non-negative coefficients $c_{j, a}^{(\nu)} = \frac{(\nu)_a (\nu)_{j - a}}{a! (j - a)!} \ge 0$ proves that $\mathcal{G}_{\mathrm{eucl}}$ continues to a jointly holomorphic function $\mathcal{G} : \mathbb{H}_-^2 \to \mathbb{C}$ satisfying the two-variable crossing relation on $\mathcal{S}_\pi$:
 \begin{equation}
-  \mathcal{C}_{\Delta_\phi}(w) := 4^{\Delta_\phi} e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi}, \qquad
-  \mathcal{G}_{\mathrm{id}}(w_l, w_r) := \mathcal{C}_{\Delta_\phi}(w_l) \, \mathcal{C}_{\Delta_\phi}(w_r).
-\end{equation}
-
-\begin{definition}[Crossing Symmetry and Twist Gap]
-A monomial four-point datum $\{\mu_J\}_{J \in \mathbb{Z}}$ with external dimension $\Delta_\phi > 0$ is \emph{crossing-symmetric} on $\mathcal{S}_\pi$ if
-\begin{equation}
-  \label{eq:crossing-sym}
+  \label{eq:two-var-crossing}
   \mathcal{G}(w_l, w_r) = \mathcal{C}_{\Delta_\phi}(w_l) \, \mathcal{C}_{\Delta_\phi}(w_r) \, \mathcal{G}(w_l', w_r') \qquad \forall (w_l, w_r) \in \mathcal{S}_\pi.
 \end{equation}
-It has a \emph{twist gap} $h_{\mathrm{gap}} > 0$ above the vacuum ($h = J = 0$) if $\{\mu_J\}_{J \in \mathbb{Z}}$ decomposes as $\mu_0 = \delta_0 + \tilde{\mu}_0$ and $\mu_J = \tilde{\mu}_J$ ($J \ne 0$) for a monomial four-point datum $\{\tilde{\mu}_J\}_{J \in \mathbb{Z}}$ satisfying $\tilde{\mu}_J(\{h \in \mathbb{R} : h < h_{\mathrm{gap}} \text{ or } h + J < h_{\mathrm{gap}}\}) = 0$ for all $J \in \mathbb{Z}$.
-\end{definition}
 
-\begin{theorem}[Monomial Decomposition and Crossing Symmetry of Conformal Four-Point Functions]
-\label{thm:monomial-decomp}
-Every reflection-positive, Euclidean crossing-symmetric conformal four-point correlation function of identical scalars of dimension $\Delta_\phi > 0$ in $d \ge 2$ dimensions ($\nu = (d-2)/2 \ge 0$) canonically defines a monomial four-point datum $\{\mu_J\}_{J \in \mathbb{Z}}$---obtained by pushing forward the conformal-block OPE measure $\mu(\Delta, l)$ weighted by $A_{n, j}(\Delta, l) \, c_{j, a}^{(\nu)}$ along $h(\Delta, l) = \frac{\Delta + n - j}{2} + a$ and summing over all $(n, j, a)$ with $0 \le a \le j$ and $j - 2a = J$---whose evaluation $\mathcal{G}(w_l, w_r)$ coincides with the analytically continued $s$-channel four-point function on $\mathbb{H}_-^2$ and satisfies the two-variable crossing symmetry relation~\eqref{eq:crossing-sym} on $\mathcal{S}_\pi$.
+\section{Quantitative Monomial Lightcone Bootstrap (\texorpdfstring{$\ell \to \infty$}{l -> infty})}
+
+Expanding each conformal block $G_{\Delta, \ell}(w_l, w_r)$ into powers $e^{h w_l + (h + J) w_r}$ pushes $d\mu_{\mathrm{OPE}}(\Delta, \ell)$ forward to a family of non-negative Borel measures $\{\mu_J\}_{J \in \mathbb{Z}}$ on $[0, \infty)$ supported on even spins $J = 2k$ (\texttt{MonomialDecomp.lean}, zero \texttt{sorry}'s), so that
+\begin{equation}
+  \mathcal{G}(w_l, w_r) = \sum_{k=0}^\infty e^{2k w_r} \int_{[0, \infty)} e^{h(w_l + w_r)} \, d\mu_{2k}(h).
+\end{equation}
+
+\begin{theorem}[Quantitative Monomial Lightcone Bootstrap --- \texttt{QuantitativeLargeSpin.lean}]
+\label{thm:monomial-bootstrap}
+Suppose Assumption~\ref{assump:base} holds with $\nu \ge 0$, external dimension $\Delta_\phi > 1/2$, and twist gap $h_{\mathrm{gap}} > 0$. Fix $N \in \mathbb{N}$ and any target exponent $0 < \gamma < \min\bigl(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1\bigr)$. Then there exists $C_N > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
+\begin{equation}
+  \label{eq:monomial-bootstrap}
+  \left|(2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
+    - (2k)^{1 - 2\Delta_\phi} \, 2 \cdot 4^{2\Delta_\phi} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} \, \varphi(\Delta_\phi + n)\right|
+  \le C_N \, (2k)^{-\gamma} \, M_\varphi.
+\end{equation}
 \end{theorem}
 
-\section{Tauberian Analysis on the Integer Lattice}
+\paragraph{Proof sketch and large-$k$ expansion of the universal part.}
+By Bose symmetry ($\mu_J = 0$ for odd $J$), the real-axis Laplace transform $L_{2k}(\sigma) := \int e^{h\sigma} d\mu_{2k}(h)$ is recovered for $\sigma < 0$ by a folded Fourier integral over $\theta \in [-\pi/2, \pi/2]$ along $w_l = \sigma - \sigma_r - i\theta$, $w_r = \sigma_r + i\theta$, which stays strictly inside $\mathcal{S}_\pi$. Setting $\sigma_r = -1/(2k)$ and inserting~\eqref{eq:two-var-crossing} shows that on any compact interval $[\sigma_-, \sigma_+] \subset (-\infty, 0)$, the exact spin-$2k$ Laplace transform of the $t$-channel identity dominates $L_{2k}(\sigma)$ up to the purely non-universal error $O((2k)^{-\alpha})$ with $\alpha = \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1)$ (from the $t$-channel non-identity twist gap and the outer contour $[-\pi, -\pi/2] \cup [\pi/2, \pi]$). Applying Nevanlinna's Two-Constants Theorem on a wide vertical strip $\operatorname{Re} w \in [1 - 2A, -1]$ propagates this real-axis Laplace agreement to complex frequencies $\operatorname{Im} w \in [-2\pi, 2\pi]$ with harmonic-measure exponent $\vartheta_A = \frac{2}{\pi}\arctan(1/\sinh(\frac{\pi^2}{A-1})) \to 1$ as $A \to \infty$, and Fej\'er--Hermite interpolation on the lattice $\Delta_\phi + \mathbb{Z}$ upgrades bounded-frequency Fourier agreement to $C_c^2$ test functions. Theorem~\ref{thm:monomial-bootstrap} cleanly separates the non-universal $O((2k)^{-\gamma})$ dynamical corrections from the universal $t$-channel identity sum: expanding the universal finite-spin factor $(2k)^{1 - 2\Delta_\phi}\frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} = \frac{1}{\Gamma(2\Delta_\phi)} + O(k^{-1})$ to leading order at large $k$ (\texttt{exists\_const\_abs\_identityMonomialPairing\_sub\_universal\_le}) simplifies the subtracted sum in~\eqref{eq:monomial-bootstrap} to $\frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n)$ plus a kinematic $O(k^{-1})$ truncation error, yielding exponent $0 < \gamma < \min(2 h_{\mathrm{gap}},\, 1,\, 2\Delta_\phi - 1)$ (\texttt{exists\_const\_abs\_pairSpin\_sub\_universal\_le}). Both theorems are proven with zero \texttt{sorry}'s and no assumptions beyond Assumption~\ref{assump:base}.
 
-\begin{proposition}[Fej\'er--Hermite Lattice Measure Estimate]
-\label{prop:hermite-measure}
-For every $N \in \mathbb{N}$, define
-\begin{equation}
-  C_N := (2N + 1)\Bigl(1 + \frac{1}{\pi}\Bigr) + \frac{1}{4}\Bigl(1 + (2N + 1)\Bigl(\frac{2\pi^2}{3} + \frac{4\pi}{3}\Bigr)\Bigr).
-\end{equation}
-Let $\mu, \nu$ be finite positive Borel measures on $\mathbb{R}$ with $\nu(\mathbb{R} \setminus \mathbb{Z}) = 0$, and suppose that for some $\varepsilon \ge 0$,
-\begin{equation}
-  \left|\int_{\mathbb{R}} e^{i t u} \, d(\mu - \nu)(u)\right| \le \varepsilon \qquad \forall t \in [0, 2\pi].
-\end{equation}
-Then for every $\psi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{u \in \mathbb{R}} \max\{|\psi(u)|, |\psi'(u)|, |\psi''(u)|\} \le M_\psi$,
-\begin{equation}
-  \left|\int_{\mathbb{R}} \psi(u) \, d\mu(u) - \int_{\mathbb{R}} \psi(u) \, d\nu(u)\right| \le C_N \, \varepsilon \, M_\psi.
-\end{equation}
-\end{proposition}
+\section{Quantitative Primary Lightcone Bootstrap for All \texorpdfstring{$\Delta_\phi > 0$}{Delta\_phi > 0}}
 
-\begin{proposition}[Nevanlinna's Two-Constants Theorem on a Vertical Strip]
-\label{prop:two-constants}
-Let $\sigma_- < \sigma_+$ and define the strip harmonic measure of the real segment $[\sigma_-, \sigma_+]$ by $\omega(\sigma, 0) := 1$ and
+In the monomial expansion of Section~2, each primary operator of spin $\ell$ and twist $h = \frac{\Delta - \ell}{2}$ is dressed by its tower of $SL(2, \mathbb{R})$ lightcone descendants, and the $\Delta_\phi > 1/2$ restriction arises because the $t$-channel identity $(1 - e^{w_r})^{-2\Delta_\phi}$ has spin-$2k$ Fourier projection of order $(2k)^{2\Delta_\phi - 1}$, which only dominates the $O(1)$ outer contour when $\Delta_\phi > 1/2$. To extract the $d$-dimensional primary operator measures $\mu^{\mathrm{prim}}_\ell$ directly and eliminate the $\Delta_\phi > 1/2$ barrier, we act on the right coordinate $w_r \in \mathbb{H}_-$ with the 1D fractional transmutation operator $\mathcal{L}_0 f(w_r) := \frac{1}{\sqrt{\pi}}(1 - e^{w_r})\partial_{w_r}\bigl[(1 - e^{w_r})\partial_{w_r} - \tfrac{1}{2}(1 + e^{w_r})\bigr] \int_0^1 x^{-1/2}(1-x)^{-1/2}(1 - x e^{2 w_r})^{-1/2} f(w_r + \log x)\, dx$ (\texttt{Transmute1d.lean}). Carrying the derivatives inside the integral and integrating by parts twice on $x \in (0, 1)$ gives the regularised inner-derivative representation (\texttt{transmuteOpInner} in \texttt{TransmutedEndpointBounds.lean}):
 \begin{equation}
-  \omega(\sigma, t) := \frac{2}{\pi} \arctan\!\left(\frac{\sin\bigl(\pi(\sigma - \sigma_-)/(\sigma_+ - \sigma_-)\bigr)}{\sinh\bigl(\pi |t|/(\sigma_+ - \sigma_-)\bigr)}\right) \qquad (t \ne 0).
+  \label{eq:L0-def}
+  (\mathcal{L}_0 f)(w_r) = \frac{1}{\sqrt{\pi}} \int_0^1 x^{-1/2}(1 - x)^{-1/2}\bigl(1 - x e^{2 w_r}\bigr)^{-1/2} \, \mathcal{D}_{\mathrm{inner}}(w_r, x, f) \, dx,
 \end{equation}
-If $E : \mathbb{C} \to \mathbb{C}$ is holomorphic on $\{s \in \mathbb{C} : \operatorname{Re}(s) \in (\sigma_-, \sigma_+)\}$, continuous and bounded by $M$ on $\{s \in \mathbb{C} : \operatorname{Re}(s) \in [\sigma_-, \sigma_+]\}$, and satisfies $|E(\sigma)| \le \delta$ for all $\sigma \in [\sigma_-, \sigma_+]$ with $0 < \delta \le M$, then
+where $\mathcal{D}_{\mathrm{inner}}(w_r, x, f) := (1 - e^{w_r})^2 \bigl[\frac{1 + x e^{w_r}}{1 - x e^{w_r}} f''(w_r + \log x) + \frac{2 x e^{w_r}}{(1 - x e^{w_r})^2} f'(w_r + \log x)\bigr] - \frac{1}{2}(1 + e^{w_r})^2 f'(w_r + \log x)$.
+We prove in \texttt{TransmutedEndpointBounds.lean} (zero \texttt{sorry}'s) that $\mathcal{L}_0$ annihilates the $s$-channel vacuum $k_0 = 1$ (\texttt{transmuteOpInner\_const}) and maps every 1D collinear block $k_{\bar{h}}(e^{w_r}) := e^{\bar{h} w_r} \, {}_2F_1\bigl(\bar{h}, \tfrac{1}{2}; \bar{h} + \tfrac{1}{2}; e^{2 w_r}\bigr)$ for all $\bar{h} > 0$ identically to a single exponential monomial (\texttt{transmuteOpInner\_block1d}):
 \begin{equation}
-  \bigl|E(\sigma + i t)\bigr| \le M^{1 - \omega(\sigma, t)} \, \delta^{\omega(\sigma, t)} \qquad \forall \sigma \in [\sigma_-, \sigma_+], \; \forall t \in \mathbb{R}.
+  \label{eq:L0-block1d}
+  \mathcal{L}_0\bigl[k_{\bar{h}}\bigr](w_r) = w_0(\bar{h}) \, e^{\bar{h} w_r}, \qquad
+  w_0(\bar{h}) := \Bigl(\bar{h} - \frac{1}{2}\Bigr) \frac{\Gamma(\bar{h} + 1/2)}{\Gamma(\bar{h})} \quad (\bar{h} > 0).
 \end{equation}
-In particular, for $A > 1$, $T > 0$, $[\sigma_-, \sigma_+] = [1 - 2A, -1]$, and $\vartheta(A, T) := \frac{2}{\pi}\arctan\bigl(1/\sinh(\frac{\pi T}{2(A-1)})\bigr) \in (0, 1)$, we have $\lim_{A \to \infty} \vartheta(A, T) = 1$ and $|E(-A + i t)| \le M^{1 - \vartheta(A, T)} \delta^{\vartheta(A, T)}$ for all $t \in [-T, T]$.
-\end{proposition}
-
-\begin{theorem}[Quantitative Laplace-to-$C_c^2$ Tauberian Theorem on $\mathbb{Z}$]
-\label{thm:laplace-tauberian}
-Let $A > 1$, $0 < \delta \le M$, and $\vartheta_A := \vartheta(A, 2\pi) = \frac{2}{\pi}\arctan\bigl(1/\sinh(\frac{\pi^2}{A-1})\bigr)$. Let $\mu, \nu$ be positive Borel measures on $\mathbb{R}$ with $\nu(\mathbb{R} \setminus \mathbb{Z}) = 0$ such that $e^{(1 - 2A)u}$ and $e^{-u}$ are integrable with respect to both $\mu$ and $\nu$, and for all $\sigma \in [1 - 2A, -1]$,
-\begin{equation}
-  \int_{\mathbb{R}} e^{\sigma u} \, d\mu(u) + \int_{\mathbb{R}} e^{\sigma u} \, d\nu(u) \le M, \qquad
-  \left|\int_{\mathbb{R}} e^{\sigma u} \, d\mu(u) - \int_{\mathbb{R}} e^{\sigma u} \, d\nu(u)\right| \le \delta.
-\end{equation}
-Then for every $N \in \mathbb{N}$ and every $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{u \in \mathbb{R}} \max\{|\varphi(u)|, |\varphi'(u)|, |\varphi''(u)|\} \le M_\varphi$,
-\begin{equation}
-  \left|\int_{\mathbb{R}} \varphi(u) \, d\mu(u) - \int_{\mathbb{R}} \varphi(u) \, d\nu(u)\right|
-  \le C_N (A + 1)^2 e^{A N} M^{1 - \vartheta_A} \delta^{\vartheta_A} M_\varphi.
-\end{equation}
-Consequently, for any $0 < \gamma < \alpha$, choosing $A > 1$ with $\alpha \vartheta_A \ge \gamma$ upgrades any power-law Laplace error bound $\delta = C_0 J^{-\alpha}$ ($J \ge 1$) to a power-law $C_c^2$ pairing bound $C J^{-\gamma} M_\varphi$.
-\end{theorem}
-
-\section{Uniform Real-Axis Laplace Bounds and Quantitative Lightcone Bootstrap}
-
-\begin{proposition}[$t$-Channel Twist-Gap Remainder Bound and Folded Spin Projection]
-\label{prop:gap-and-proj}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 0$ and twist gap $h_{\mathrm{gap}} > 0$.
-\begin{enumerate}
-  \item For any $a, b < 0$, set $\sigma_{l,0} := \log(1 - \frac{\sqrt{2}}{4} e^{a}) < 0$ and $\sigma_{r,0} := \log(1 - \frac{\sqrt{2}}{4} e^{b}) < 0$. Then for all $(w_l, w_r) \in \mathbb{H}_-^2$ satisfying $\operatorname{Im}(w_l), \operatorname{Im}(w_r) \in [-\pi/2, \pi/2]$ and $\operatorname{Re}(w_l) \le a$, $\operatorname{Re}(w_r) \le b$,
-  \begin{equation}
-    \bigl|\mathcal{G}(w_l, w_r) - \mathcal{G}_{\mathrm{id}}(w_l, w_r)\bigr|
-    \le 16^{\Delta_\phi} (1 - e^a)^{-2\Delta_\phi} e^{-h_{\mathrm{gap}} \sigma_{r,0}} \bigl(\mathcal{G}(\sigma_{l,0}, \sigma_{r,0}) - 1\bigr) \, |1 - e^{w_r}|^{2(h_{\mathrm{gap}} - \Delta_\phi)}.
-  \end{equation}
-  \item For every even spin $J = 2k \in 2\mathbb{Z}$ and every $(w_l, w_r) \in \mathbb{H}_-^2$,
-  \begin{equation}
-    L_{2k}(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \, e^{-2k (w_r + i\theta)} \, \mathcal{G}(w_l - i\theta, w_r + i\theta).
-  \end{equation}
-\end{enumerate}
-\end{proposition}
-
-For $\Delta_\phi > 0$, even spin $J = 2k$ ($k \in \mathbb{N}$), $\sigma < 0$, and $\varphi : \mathbb{R} \to \mathbb{R}$, define the exact finite-spin $t$-channel identity Laplace transform $L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma)$ and monomial pairing $\mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi)$, as well as their universal $k \to \infty$ limits $L_{\mathrm{univ}}(\Delta_\phi; \sigma)$ and $\mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi)$, by
+Expanding the $t$-channel identity factor into 1D collinear blocks via $\mathcal{C}_{\Delta_\phi}(w_r) = \sum_{m=0}^\infty c_m(\Delta_\phi) \, k_{\Delta_\phi + m}(e^{w_r})$ with $c_m(\Delta_\phi) := 4^{\Delta_\phi} \frac{(2\Delta_\phi)_m (\Delta_\phi)_m}{m! (2\Delta_\phi + m - 1)_m}$ and applying~\eqref{eq:L0-block1d} termwise (\texttt{TransmutedCrossing.lean}) yields the exact 3-term transformed reference $S_0(w_r) = \frac{4^{\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} \sum_{m=0}^\infty \mathfrak{m}_m(\Delta_\phi) \, e^{(\Delta_\phi + m) w_r}$ (\texttt{crossFactorExactTransmuted} in \texttt{ExactTransmutedRef.lean}):
 \begin{align}
-  L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma) &:= 2 \cdot 4^{2\Delta_\phi} e^{\Delta_\phi \sigma} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} \, e^{n \sigma}, &
-  L_{\mathrm{univ}}(\Delta_\phi; \sigma) &:= \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \, e^{\Delta_\phi \sigma} (1 - e^\sigma)^{-2\Delta_\phi}, \\
-  \mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi) &:= 2 \cdot 4^{2\Delta_\phi} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \frac{(2\Delta_\phi)_{n + 2k}}{(n + 2k)!} \, \varphi(\Delta_\phi + n), &
-  \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi) &:= \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(2\Delta_\phi)} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n).
+  \label{eq:S0-def}
+  S_0(w_r) &:= \frac{4^{\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} e^{\Delta_\phi w_r} \bigl(1 - e^{w_r}\bigr)^{-(2\Delta_\phi + 1)} \left[1 - (1 - e^{w_r}) + \frac{\Delta_\phi - 1/2}{4\Delta_\phi}(1 - e^{w_r})^2\right], \\
+  \mathfrak{m}_m(\Delta_\phi) &:= \frac{(2\Delta_\phi + 1)_m}{m!} - \frac{(2\Delta_\phi)_m}{m!} + \frac{\Delta_\phi - 1/2}{4\Delta_\phi} \frac{(2\Delta_\phi - 1)_m}{m!} = \frac{(\Delta_\phi + m - 1/2)^2}{2\Delta_\phi \, m} \frac{(2\Delta_\phi)_{m-1}}{(m-1)!} > 0 \quad (m \ge 1),
 \end{align}
+with $\mathfrak{m}_0(\Delta_\phi) = \frac{\Delta_\phi - 1/2}{4\Delta_\phi}$.
 
-\begin{proposition}[Uniform Real-Axis Laplace Bounds on Compact Negative Intervals]
-\label{prop:uniform-laplace}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be a crossing-symmetric monomial four-point datum with external dimension $\Delta_\phi > 1/2$ and twist gap $h_{\mathrm{gap}} > 0$ such that $2(h_{\mathrm{gap}} - \Delta_\phi) \ne -1$, and let $[\sigma_-, \sigma_+] \subset (-\infty, 0)$ be a compact interval.
-\begin{enumerate}
-  \item \emph{(Comparison with the exact finite-spin $t$-channel identity)} Set $\alpha_{\mathrm{id}} := \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1) > 0$. There exist constants $M_{\mathrm{bd}}, C_{\mathrm{bd}} > 0$ such that for all integers $k \ge 1$ and all $\sigma \in [\sigma_-, \sigma_+]$,
-  \begin{align}
-    (2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) + (2k)^{1 - 2\Delta_\phi} L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma) &\le M_{\mathrm{bd}}, \\
-    \Bigl|(2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) - (2k)^{1 - 2\Delta_\phi} L_{\mathrm{id}, 2k}(\Delta_\phi; \sigma)\Bigr| &\le C_{\mathrm{bd}} \, (2k)^{-\alpha_{\mathrm{id}}}.
-  \end{align}
-  \item \emph{(Comparison with the asymptotic universal limit)} Set $\alpha_{\mathrm{univ}} := \min(2 h_{\mathrm{gap}},\, 1,\, 2\Delta_\phi - 1) > 0$. There exist constants $M_{\mathrm{bd}}', C_{\mathrm{bd}}' > 0$ such that for all integers $k \ge 1$ and all $\sigma \in [\sigma_-, \sigma_+]$,
-  \begin{align}
-    (2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) + L_{\mathrm{univ}}(\Delta_\phi; \sigma) &\le M_{\mathrm{bd}}', \\
-    \Bigl|(2k)^{1 - 2\Delta_\phi} L_{2k}(\sigma) - L_{\mathrm{univ}}(\Delta_\phi; \sigma)\Bigr| &\le C_{\mathrm{bd}}' \, (2k)^{-\alpha_{\mathrm{univ}}}.
-  \end{align}
-\end{enumerate}
-\end{proposition}
+\begin{assumption}[Collinear Block Decomposition --- \texttt{LightconeBlockDecomp.lean}, \texttt{TransmutedCrossing.lean}]
+\label{assump:lightcone-blocks}
+Each $d$-dimensional conformal block $G_{\Delta, \ell}(w_l, w_r)$ decomposes at left-moving twist levels $h + m = \frac{\Delta - \ell}{2} + m$ ($m \in \mathbb{N}$) into finite non-negative linear combinations of $m + 1$ collinear blocks $e^{(h + m) w_l} k_{h + \ell + j}(e^{w_r})$ with $j = m - 2s$ ($0 \le s \le m$), where the leading twist level $m = 0$ is a single 1D block $C_{0, \ell} \, e^{h w_l} k_{h + \ell}(e^{w_r})$ with $C_{0, \ell} = \frac{(\nu)_\ell}{\ell!} > 0$ (\texttt{exists\_conformalBlockLightcone} in \texttt{Blocks\_pdisk.lean}). Pushing $d\mu_{\mathrm{OPE}}(\Delta, \ell)$ forward through this expansion defines non-negative 1D lightcone-block spectral measures $\{\mu^{\mathrm{LC}}_J\}_{J \in 2\mathbb{N}}$ on $[h_{\mathrm{gap}}, \infty)$ that coincide with the $d$-dimensional primary measures $C_{0, J} \, \mu^{\mathrm{prim}}_J$ on $(-\infty, h_{\mathrm{gap}} + 1)$ and expand the correlator as
+\begin{equation}
+  \label{eq:collinear-decomp}
+  \mathcal{G}(w_l, w_r) = 1 + \sum_{k=0}^\infty \int_{[h_{\mathrm{gap}}, \infty)} e^{h w_l} k_{h + 2k}\bigl(e^{w_r}\bigr) \, d\mu^{\mathrm{LC}}_{2k}(h).
+\end{equation}
+\end{assumption}
+By Fubini and dominated convergence on $s \in (0, 1)$, we prove in \texttt{TransmutedCrossing.lean} (zero \texttt{sorry}'s, \texttt{transmuteOp\-Inner\_evalCollinear} and \texttt{transmuteOp\-Inner\_gffBlockSeries}) that $\mathcal{L}_0$ commutes with both the $s$-channel sum and integral in~\eqref{eq:collinear-decomp} and the 1D GFF block series of $\mathcal{C}_{\Delta_\phi}(w_r)$, giving $\mathcal{L}_0[\mathcal{C}_{\Delta_\phi}](w_r) = S_0(w_r)$ and $\mathcal{L}_0[\mathcal{G}(w_l, \cdot)](w_r) = \sum_{k=0}^\infty e^{2k w_r} \!\int_{[h_{\mathrm{gap}}, \infty)} w_0(h + 2k) e^{h(w_l + w_r)} d\mu^{\mathrm{LC}}_{2k}(h)$ (\texttt{of\_collinear\_eval\_eq}).
 
-\begin{theorem}[Quantitative Monomial Lightcone Bootstrap]
-\label{thm:quantitative-large-spin}
-Let $\{\mu_J\}_{J \in \mathbb{Z}}$ be the monomial four-point datum of a reflection-positive conformal four-point function in $d \ge 2$ dimensions with external dimension $\Delta_\phi > 1/2$ and twist gap $h_{\mathrm{gap}} > 0$, and let $N \in \mathbb{N}$.
-\begin{enumerate}
-  \item \emph{(Against the exact finite-spin $t$-channel identity)} For every target exponent $0 < \gamma < \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi - 1)$, there exists a constant $C > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
-  \begin{equation}
-    \left|(2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
-      - (2k)^{1 - 2\Delta_\phi} \, \mathcal{P}_{\mathrm{id}, 2k}(\Delta_\phi; \varphi)\right|
-    \le C \, (2k)^{-\gamma} \, M_\varphi.
-  \end{equation}
-  \item \emph{(Against the asymptotic universal double-twist limit)} For every target exponent $0 < \gamma < \min(2 h_{\mathrm{gap}},\, 1,\, 2\Delta_\phi - 1)$, there exists a constant $C' > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
-  \begin{equation}
-    \left|(2k)^{1 - 2\Delta_\phi} \int_{\mathbb{R}} \varphi(h) \, d\mu_{2k}(h)
-      - \mathcal{P}_{\mathrm{univ}}(\Delta_\phi; \varphi)\right|
-    \le C' \, (2k)^{-\gamma} \, M_\varphi.
-  \end{equation}
-\end{enumerate}
+\begin{theorem}[Quantitative 1D Collinear Lightcone Bootstrap for All \texorpdfstring{$\Delta_\phi > 0$}{Delta\_phi > 0} --- \texttt{TransmutedCrossing.lean}, \texttt{ExactTransmutedRef.lean}]
+\label{thm:primary-bootstrap}
+Suppose Assumptions~\ref{assump:base} and~\ref{assump:lightcone-blocks} hold for $\nu \ge 0$, external dimension $\Delta_\phi > 0$, and twist gap $h_{\mathrm{gap}} > 0$. Fix $N \in \mathbb{N}$ and any target exponent $0 < \gamma < \min\bigl(2 h_{\mathrm{gap}},\, 2\Delta_\phi\bigr)$. Then there exists $C_N > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
+\begin{multline}
+  \label{eq:primary-bootstrap}
+  \Biggl|(2k)^{-2\Delta_\phi} \int_{\mathbb{R}} w_0(h + 2k) \, \varphi(h) \, d\mu^{\mathrm{LC}}_{2k}(h) \\
+    - (2k)^{-2\Delta_\phi} \frac{2 \cdot 4^{2\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \mathfrak{m}_{n + 2k}(\Delta_\phi) \, \varphi(\Delta_\phi + n)\Biggr|
+  \le C_N \, (2k)^{-\gamma} \, M_\varphi.
+\end{multline}
 \end{theorem}
+
+\paragraph{Proof sketch and large-$k$ expansion of the universal part.}
+Along the folded contour $w_r(\theta) = -1/(2k) + i\theta$, $w_l(\theta) = \sigma + 1/(2k) - i\theta$ ($\theta \in [-\pi/2, \pi/2]$), two-variable crossing~\eqref{eq:two-var-crossing} expresses the untransmuted remainder as $R_\theta(z) := \mathcal{G}(w_l(\theta), z) - \mathcal{C}_{\Delta_\phi}(w_l(\theta))\mathcal{C}_{\Delta_\phi}(z) = \mathcal{C}_{\Delta_\phi}(w_l(\theta))\mathcal{C}_{\Delta_\phi}(z)\bigl(\mathcal{G}(w_l'(\theta), z') - 1\bigr)$ (\texttt{TransmutedCrossing.lean}). On the $s$-channel portion $x \in (0, 1/2]$, $\operatorname{Re}(w_r(\theta) + \log x) < -1/2$, so Cauchy's estimate gives uniform derivative bounds $\|R_\theta^{(j)}(w_r(\theta) + \log x)\| \le M_j$ ($j = 1, 2$). On the $t$-channel portion $x \in (1/2, 1)$, $\operatorname{Re} z' \le \sigma_{r, 0} < 0$ stays uniformly inside $\mathbb{H}_-$, so Cauchy's estimate on a fixed-radius disk around $z'$ combined with the explicit derivatives of $\mathcal{C}_{\Delta_\phi}(z)$ and $z'(z) = 2\log\frac{1 - e^{z/2}}{1 + e^{z/2}}$ gives $\|R_\theta^{(j)}(w_r(\theta) + \log x)\| \le C_j \bigl(\|1 - e^{w_r(\theta)}\| + 1 - x\bigr)^{2(h' - \Delta_\phi) - j}$ for any effective gap $0 < h' \le h_{\mathrm{gap}}$. The factor $(1 - e^{w_r})^2$ in $\mathcal{D}_{\mathrm{inner}}$ cancels two inverse powers of $\|1 - x e^{w_r}\| \ge \frac{1}{3}(\|1 - e^{w_r}\| + 1 - x)$, and integrating the resulting Beta tail $(1 - x)^{-1/2}(\|1 - e^{w_r}\| + 1 - x)^{2(h' - \Delta_\phi) - 3/2}$ over $x \in (1/2, 1)$ and $\theta \in [-\pi/2, \pi/2]$ bounds the folded integral by $O\bigl((2k)^{-2 h'} + (2k)^{-2\Delta_\phi}\bigr)$ (\texttt{Transmuted\-Endpoint\-Bounds.lean}). Choosing $h' = \frac{1}{2}(\gamma/2 + \min(h_{\mathrm{gap}}, \Delta_\phi)) < \Delta_\phi$ avoids logarithmic resonances at $2(h' - \Delta_\phi) \in \{0, 1\}$, while 2-step integration by parts on $[-\pi, -\pi/2] \cup [\pi/2, \pi]$ bounds the outer-contour discrepancy of $S_0(w_r)$ by $O\bigl((2k)^{-2\Delta_\phi}\bigr)$ (\texttt{ExactTransmutedRef.lean}). Expanding $\mathfrak{m}_{n + 2k}(\Delta_\phi) = \frac{(2\Delta_\phi + 1)_{n + 2k}}{(n + 2k)!} + O(k^{-1}) = \frac{(2k)^{2\Delta_\phi}}{\Gamma(2\Delta_\phi + 1)} + O(k^{-1})$ at large $k$ reduces the subtracted sum in~\eqref{eq:primary-bootstrap} to either the 1-term binomial sum $\frac{(2\Delta_\phi + 1)_{n + 2k}}{(n + 2k)!}$ or the leading Gamma limit $\frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!} \, \varphi(\Delta_\phi + n) + O(k^{-1})$. When $\operatorname{supp}\varphi \subset [-N, N] \cap (-\infty, h_{\mathrm{gap}} + 1)$, only the $m = 0$ level contributes and the left-hand integral in~\eqref{eq:primary-bootstrap} equals $C_{0, 2k} \int_{\mathbb{R}} w_0(h + 2k) \, \varphi(h) \, d\mu^{\mathrm{prim}}_{2k}(h)$ (\texttt{exists\_const\_abs\_primary\_sub\_exactIdentity\_le\_of\_agreesWithCorrelator}).
+
+\begin{assumption}[Normalized Subleading Conformal Block Coefficients --- \texttt{PrimaryAllTwists.lean}]
+\label{assump:collinear-transfer}
+At left-moving twist level $m \ge 1$ and collinear spin shift $j = m - 2s$ ($0 \le s \le m$), a $d$-dimensional primary of twist $h$ and spin $\ell = 2(k + s)$ contributes $B_{m, m - 2s}(h, 2(k + s)) \, e^{(h + m)w_l} k_{h + m + 2k}(e^{w_r})$ to the 1D collinear spin-$2k$ channel, where the cutoff-normalized conformal block ratios ($B_0 := \min(h_{\mathrm{gap}}, \Delta_\phi) > 0$, $\chi \in C^\infty(\mathbb{R})$ with $\chi \equiv 1$ on $[B_0, \infty)$ and $\chi \equiv 0$ on $(-\infty, B_0/2]$)
+\begin{equation}
+  \label{eq:normalized-block-coeffs}
+  \mathcal{R}_{m, s}(k, h) := \chi(h) \frac{B_{m, m - 2s}(h, 2(k + s))}{C_{0, 2(k + s)}}
+\end{equation}
+are $C^2$ in $h$ with $\sup_{k \ge 1} \sup_{|h| \le N} \max_{0 \le r \le 2} |\partial_h^r \mathcal{R}_{m, s}(k, h)| < \infty$ for each fixed $(m, s, N)$ (\texttt{Normalized\-Collinear\-Block\-Coeffs}).\footnote{The existence of $\mathcal{R}_{m, s}$ and its finite triangular decomposition (\texttt{exists\_normalized\-Collinear\-Block\-Coeffs} and \texttt{exists\_collinear\-Triangular\-Decomp\_of\_normalized\-Block\-Coeffs} in \texttt{PrimaryAllTwists.lean}), together with \texttt{exists\_conformalBlockLightcone} in \texttt{Blocks\_pdisk.lean}, are kinematic properties of $d$-dimensional conformal blocks stated with \texttt{sorry}; all analytical and Tauberian deductions from them are proven with zero \texttt{sorry}'s.}
+\end{assumption}
+Multiplying $\mathcal{R}_{m, s}(k, h)$ by the explicit rational ratio of transmutation weights yields the transmuted transfer kernel
+\begin{equation}
+  \label{eq:transfer-kernel}
+  \mathcal{K}_{m, s}(k, h) := \left(\frac{k + s}{k}\right)^{2\Delta_\phi} \frac{w_0(h + m + 2k)}{w_0(h + 2(k + s))} \, \mathcal{R}_{m, s}(k, h),
+\end{equation}
+which we prove in \texttt{PrimaryAllTwists.lean} (zero \texttt{sorry}'s, \texttt{toCollinearTransferKernel}) is automatically $C^2$ in $h$ with $\sup_{k \ge 1} \sup_{|h| \le N} \max_{0 \le r \le 2} |\partial_h^r \mathcal{K}_{m, s}(k, h)| < \infty$ for each $(m, s, N)$.
+
+\begin{theorem}[All-Twist $d$-Dimensional Primary Lightcone Bootstrap --- \texttt{PrimaryAllTwists.lean}]
+\label{thm:all-twist-primary}
+Suppose Assumptions~\ref{assump:base}, \ref{assump:lightcone-blocks}, and~\ref{assump:collinear-transfer} hold for $\nu \ge 0$, $\Delta_\phi > 0$, and $h_{\mathrm{gap}} > 0$, and define the universal finite-spin Generalized Free Field (GFF) $d$-dimensional primary coefficients $c^{\mathrm{GFF, prim}}_n(\Delta_\phi, k)$ recursively over $n \in \mathbb{N}$ by
+\begin{multline}
+  \label{eq:gff-prim-rec}
+  c^{\mathrm{GFF, prim}}_n(\Delta_\phi, k) := (2k)^{-2\Delta_\phi} \frac{2 \cdot 4^{2\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} \frac{(2\Delta_\phi)_n}{n!} \, \mathfrak{m}_{n + 2k}(\Delta_\phi) \\
+  - \sum_{m=1}^{n} \sum_{s=0}^{m} \mathcal{K}_{m, s}(k, \Delta_\phi + n - m) \, c^{\mathrm{GFF, prim}}_{n - m}(\Delta_\phi, k + s).
+\end{multline}
+Fix $N \in \mathbb{N}$ and any $0 < \gamma < \min\bigl(2 h_{\mathrm{gap}},\, 2\Delta_\phi\bigr)$. Then there exists $C_N > 0$ such that for all integers $k \ge 1$ and all $\varphi \in C^2(\mathbb{R})$ supported in $[-N, N]$ with $\sup_{h \in \mathbb{R}} \max\{|\varphi(h)|, |\varphi'(h)|, |\varphi''(h)|\} \le M_\varphi$,
+\begin{equation}
+  \label{eq:all-twist-primary}
+  \Biggl|(2k)^{-2\Delta_\phi} C_{0, 2k} \int_{\mathbb{R}} w_0(h + 2k) \, \varphi(h) \, d\mu^{\mathrm{prim}}_{2k}(h)
+    - \sum_{n=0}^{\infty} c^{\mathrm{GFF, prim}}_n(\Delta_\phi, k) \, \varphi(\Delta_\phi + n)\Biggr|
+  \le C_N \, (2k)^{-\gamma} \, M_\varphi.
+\end{equation}
+\end{theorem}
+
+\paragraph{Proof sketch.}
+For any test function $\varphi$ vanishing on $[B_0 + M + 1, \infty)$ ($M \in \mathbb{N}$), decomposing $\mu^{\mathrm{LC}}_{2k}$ by left-moving twist level $m \ge 0$ expresses the normalized primary pairing $\mathcal{P}_k(\varphi) := (2k)^{-2\Delta_\phi} C_{0, 2k} \int w_0(h + 2k) \varphi(h) \, d\mu^{\mathrm{prim}}_{2k}(h)$ as the finite triangular system $\mathcal{P}_k(\varphi) = \mathcal{L}_k(\varphi) - \sum_{m=1}^{M} \sum_{s=0}^{m} \mathcal{P}_{k + s}(\psi_{m, s, k})$, where $\psi_{m, s, k}(h) := \mathcal{K}_{m, s}(k, h)\varphi(h + m)$ vanishes outside $[-N, N]$ and on $[B_0 + M, \infty)$, with $C^2$ norm bounded uniformly in $k$ by $4 B_{m, s, N} M_\varphi$. By~\eqref{eq:gff-prim-rec}, the GFF sum $\sum_{n=0}^\infty c^{\mathrm{GFF, prim}}_n(\Delta_\phi, k)\varphi(\Delta_\phi + n)$ satisfies the identical triangular relation with $\mathcal{L}_k(\varphi)$ replaced by the subtracted sum of Theorem~\ref{thm:primary-bootstrap} (\texttt{gffPrimaryPairing\_eq\_exactIdentity\_sub\_sum}). Induction on $M \in \mathbb{N}$ using Theorem~\ref{thm:primary-bootstrap} and $(2(k + s))^{-\gamma} \le (2k)^{-\gamma}$ ($s \ge 0$) establishes~\eqref{eq:all-twist-primary} on $[-N, N] \cap (-\infty, B_0 + M + 1)$ for every $M$, and setting $M = N$ covers all of $[-N, N]$; dividing $\varphi(h)$ by $w_0(h + 2k)/(2k)^{1/2}$ similarly yields the unweighted primary pairing bound (\texttt{PrimaryAllTwists.lean}).
+
+\section{Quantitative High-Energy Primary Asymptotics (\texorpdfstring{$\Delta \to \infty$}{Delta -> infty})}
+
+Whereas Sections~2 and~3 analyze the large-spin lightcone limit ($\ell \to \infty$ at fixed twist $h$, governed by $w_l \to -\infty, w_r \to 0^-$), the module \texttt{ConeTauberian/} analyzes the bulk high-energy limit $\Delta \to \infty$ as a joint distribution in the rescaled scaling dimension $u = \Delta'/\Delta \in (0, \infty)$ and spin-to-dimension ratio $\xi = \ell/\Delta' \in (0, 1)$, governed by $(w_l, w_r) \to (0, 0)$. Applying $\mathcal{L}_0$ in both coordinates $(w_l, w_r)$ (\texttt{Branching2d.lean}, zero \texttt{sorry}'s) maps every 2D conformal block $G^{(2\mathrm{d})}_{\Delta', j}(w_l, w_r) := \frac{1}{1 + \delta_{j, 0}}\bigl[k_{(\Delta'-j)/2}(e^{w_l}) k_{(\Delta'+j)/2}(e^{w_r}) + (w_l \leftrightarrow w_r)\bigr]$ to a pure symmetrized exponential weighted by $w_0(\frac{\Delta'-j}{2}) w_0(\frac{\Delta'+j}{2})$.
+
+\begin{assumption}[Bilateral Transmuted Crossing and $d \to 2$ Branching Reduction --- \texttt{ConeAsymptotics.lean}]
+\label{assump:cone}
+Let $d = 2\nu + 2 \ge 3$ ($\nu > 0$) and let $\mu^{\mathrm{trans}, 2\mathrm{d}}_\Delta$ and $\mu^{\mathrm{id, trans}, 2\mathrm{d}}_\Delta$ denote the rescaled 2D bilaterally transmuted OPE and $t$-channel identity measures on $(u_l, u_r) = (h'/\Delta, \bar{h}'/\Delta) \in (0, \infty)^2$, normalized by $\Delta^{-2 - 4\Delta_\phi}$.
+\begin{enumerate}
+  \item \emph{Bilateral transmuted crossing bound}: For some $A > 0$ and polynomial growth exponent $p_{\mathrm{deg}} \ge 0$, at complex rescaled points $w_{l,r} = (-A + i t_{l,r})/\Delta$ with $(t_l, t_r) \in [-R, R]^2$, the 2D Fourier--Laplace transforms of $\mu^{\mathrm{trans}, 2\mathrm{d}}_\Delta$ and $\mu^{\mathrm{id, trans}, 2\mathrm{d}}_\Delta$ are uniformly bounded at $t_l = t_r = 0$ and agree on $[-R, R]^2$ up to the non-identity $t$-channel remainder $O\bigl(R^{p_{\mathrm{deg}}} \Delta^{-2 h_{\mathrm{gap}}}\bigr)$ for all $\Delta \ge 1$.
+  \item \emph{Universal $O(\Delta^{-1})$ $d \to 2$ branching and Stirling reduction}: For a smooth test function $\chi(u, \xi)$ compactly supported in $(0, \infty) \times (0, 1)$, applying the inverse Erd\'elyi--Kober fractional integral in $\xi$ and dividing by $w_0(h') w_0(\bar{h}')$ produces a 2D test function $\psi(u_l, u_r)$ with integrable Fourier decay such that both the discrete $d \to 2$ conformal-block branching error between $\Delta^{2\nu - 4\Delta_\phi} \int \chi(\Delta'/\Delta, \ell/\Delta') \, d\mu_{\mathrm{OPE}}(\Delta', \ell)$ and $\int \psi \, d\mu^{\mathrm{trans}, 2\mathrm{d}}_\Delta$, and the universal Stirling error between $\int \psi \, d\mu^{\mathrm{id, trans}, 2\mathrm{d}}_\Delta$ and the continuum integral~\eqref{eq:cone-bootstrap}, are $O(\Delta^{-1})$.\footnote{The underlying $O(\Delta^{-1})$ Stirling bounds for the Gegenbauer branching coefficients $b_m^{(\nu)}(\ell)$ and transmutation weights $w_0$, as well as the exact Erd\'elyi--Kober Beta integral identity mapping $\rho^{\mathrm{prim}}_{\nu, \Delta_\phi}$ to the 2D effective density, are proven with zero \texttt{sorry}'s in \texttt{Branching2d.lean} and \texttt{ErdelyiKoberInversion.lean}.}
+\end{enumerate}
+\end{assumption}
+
+\begin{theorem}[Quantitative High-Energy Primary Cone Bootstrap --- \texttt{ConeAsymptotics.lean}]
+\label{thm:cone-bootstrap}
+Let $\nu > 0$, $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$, and $h_{\mathrm{gap}} > 0$, and define the continuum primary spectral density on $(u, \xi) \in (0, \infty) \times (0, 1)$ by
+\begin{equation}
+  \rho^{\mathrm{prim}}_{\nu, \Delta_\phi}(u, \xi) := c_{\nu, \Delta_\phi} \, u^{4\Delta_\phi - 2\nu - 1} \, \xi^{2\nu} \bigl(1 - \xi^2\bigr)^{2\Delta_\phi - \nu - 3/2}, \qquad
+  c_{\nu, \Delta_\phi} := \frac{2^{2\nu + 1} \, \Gamma(\nu) \, \Gamma(2\Delta_\phi - 1/2)}{\Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi - \nu - 1/2)}.
+\end{equation}
+Under Assumption~\ref{assump:cone} for a test function $\chi$ compactly supported in $(0, \infty) \times (0, 1)$, set $\gamma := \min\bigl(\frac{2 h_{\mathrm{gap}}}{p_{\mathrm{deg}} + 1},\, 1\bigr) > 0$. Then there exists $C_\chi > 0$ such that for all $\Delta \ge 1$,
+\begin{equation}
+  \label{eq:cone-bootstrap}
+  \left|\Delta^{2\nu - 4\Delta_\phi} \int \chi\!\left(\frac{\Delta'}{\Delta},\, \frac{\ell}{\Delta'}\right) d\mu_{\mathrm{OPE}}(\Delta', \ell)
+    - \int_0^\infty \int_0^1 \chi(u, \xi) \, \rho^{\mathrm{prim}}_{\nu, \Delta_\phi}(u, \xi) \, d\xi \, du\right|
+  \le C_\chi \, \Delta^{-\gamma}.
+\end{equation}
+\end{theorem}
+
+\paragraph{Proof sketch and related results.}
+Because $w_{l,r} = (-A + i t_{l,r})/\Delta \to 0$ as $\Delta \to \infty$ for all $|t_{l,r}| \le R = \Delta^\gamma$, the evaluation stays inside the $t$-channel OPE convergence neighborhood without any outer contour. A bandlimited 2D Fourier--Laplace Tauberian theorem (\texttt{Karamata2d.lean}, zero \texttt{sorry}'s) with frequency cutoff $R = \Delta^{2 h_{\mathrm{gap}} / (p_{\mathrm{deg}} + 1)}$ first establishes a pure $O\bigl(\Delta^{-2 h_{\mathrm{gap}}/(p_{\mathrm{deg}} + 1)}\bigr)$ bound between $\int \psi \, d\mu^{\mathrm{trans}, 2\mathrm{d}}_\Delta$ and $\int \psi \, d\mu^{\mathrm{id, trans}, 2\mathrm{d}}_\Delta$ valid for all $\Delta_\phi > 0$. In the continuum limit, the $d \to 2$ conformal-block branching coefficients $b_m^{(\nu)}(\ell)$ converge to the Erd\'elyi--Kober fractional integral kernel $\mathcal{K}_\nu(\xi, \xi') = \frac{2^{2-2\nu}}{\Gamma(\nu)^2}\xi^{1-2\nu}(\xi^2 - (\xi')^2)^{\nu-1}\mathbf{1}_{\xi' < \xi}$, which is inverted via Euler's Beta integral (\texttt{ErdelyiKoberInversion.lean}) to yield $\rho^{\mathrm{prim}}_{\nu, \Delta_\phi}(u, \xi)$ up to the universal $O(\Delta^{-1})$ Stirling error. Finally, sandwiching the indicator of the unit cylinder $(u, \xi) \in (0, 1] \times (0, 1)$ by smooth test functions yields the cumulative spin-summed primary asymptotic as $\Delta \to \infty$:
+\begin{equation}
+  \int_{0 < \Delta' \le \Delta} d\mu_{\mathrm{OPE}}(\Delta', \ell) \;\underset{\Delta \to \infty}{\sim}\;
+  \frac{2^{2\nu - 1} \, \Gamma(\nu) \, \Gamma(\nu + 1/2) \, \Gamma(2\Delta_\phi - 1/2)}{(2\Delta_\phi - \nu) \, \Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi)} \, \Delta^{4\Delta_\phi - 2\nu}.
+\end{equation}
 
 \end{document}

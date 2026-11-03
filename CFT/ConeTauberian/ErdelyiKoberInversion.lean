@@ -9,7 +9,8 @@ import Mathlib.MeasureTheory.Function.JacobianOneDim
 /-!
 # Erdélyi–Kober Fractional Integral and Continuum Primary Spectral Density
 
-This file implements **Phase 1** of `CFT/ConeTauberian/PLAN.md`:
+This file formalizes the Erdélyi–Kober fractional integral and the continuum primary spectral
+density for the high-energy cone bootstrap:
 1. **General Real Beta Integral & Change-of-Variable Identities on `Ioo`:
    (`integral_rpow_mul_one_sub_rpow`, `integral_Ioo_aff_sub`, `integral_Ioo_sq_sub`)**:
    We establish the general real Euler Beta integral on `(0, 1)`:
@@ -449,7 +450,7 @@ theorem integral_primaryConeDensity_xi {ν Δ_phi u : ℝ}
   field_simp
   ring
 
-/-- **Full Cylinder Integral of `primaryConeDensity` (`PLAN.md`, Corollary 2)**:
+/-- **Full Cylinder Integral of `primaryConeDensity`**:
 for $\nu > 0$ and $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$,
 $$\int_0^1 \left(\int_0^1 \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) \, d\xi\right) du
   = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi).$$ -/
