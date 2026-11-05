@@ -5,6 +5,8 @@ Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.RingTheory.Polynomial.Pochhammer
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Normed
@@ -138,3 +140,78 @@ lemma summable_block1d {h : ℝ} (hh : 0 ≤ h) {w : ℂ} (hw : w.re < 0) :
     ring_nf
   rw [h_pow]
   exact mul_le_of_le_one_left (by positivity) (block1dCoeff_le_one hh n)
+
+/-!
+## 1D Generalized Free Field (GFF) Conformal Block Expansion
+
+The 1D $t$-channel identity crossing factor
+$$
+4^{\Delta_\phi} e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi}
+$$
+decomposes on the left half-plane $\operatorname{Re}(w) < 0$ into a non-negative series of 1D
+conformal blocks $k_{\Delta_\phi + m}(e^w)$ with explicit hypergeometric coefficients
+`gffBlockCoeff Δ_phi m`.
+-/
+
+/-- The 1D GFF collinear block coefficients $c_m(\Delta_\phi)$ in the expansion of the $t$-channel
+identity factor into 1D conformal blocks $k_{\Delta_\phi + m}(e^w)$. -/
+noncomputable def gffBlockCoeff (Δ_phi : ℝ) : ℕ → ℝ
+  | 0 => (4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)
+  | m + 1 =>
+      ((4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)) *
+        (4 : ℝ) ^ (m + 1) * (realPochhammer Δ_phi (m + 1)) ^ 2 /
+          (((m + 1).factorial : ℝ) * realPochhammer (2 * Δ_phi + (m : ℝ)) (m + 1))
+
+@[simp]
+lemma gffBlockCoeff_zero (Δ_phi : ℝ) :
+    gffBlockCoeff Δ_phi 0 = (4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π) :=
+  rfl
+
+@[simp]
+lemma gffBlockCoeff_succ (Δ_phi : ℝ) (m : ℕ) :
+    gffBlockCoeff Δ_phi (m + 1) =
+      ((4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)) *
+        (4 : ℝ) ^ (m + 1) * (realPochhammer Δ_phi (m + 1)) ^ 2 /
+          (((m + 1).factorial : ℝ) * realPochhammer (2 * Δ_phi + (m : ℝ)) (m + 1)) :=
+  rfl
+
+/-- Strict positivity of `gffBlockCoeff Δ_phi m` for all $\Delta_\phi > 0$ and
+$m \in \mathbb{N}$. -/
+theorem gffBlockCoeff_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (m : ℕ) :
+    0 < gffBlockCoeff Δ_phi m := by
+  cases m with
+  | zero =>
+    rw [gffBlockCoeff_zero]
+    positivity
+  | succ k =>
+    rw [gffBlockCoeff_succ]
+    have h1 : 0 < realPochhammer Δ_phi (k + 1) := realPochhammer_pos hΔ (k + 1)
+    have h2 : 0 < realPochhammer (2 * Δ_phi + (k : ℝ)) (k + 1) :=
+      realPochhammer_pos (by positivity) (k + 1)
+    have h3 : (0 : ℝ) < ((k + 1).factorial : ℝ) :=
+      Nat.cast_pos.mpr (Nat.factorial_pos (k + 1))
+    positivity
+
+lemma gffBlockCoeff_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (m : ℕ) :
+    0 ≤ gffBlockCoeff Δ_phi m :=
+  (gffBlockCoeff_pos hΔ m).le
+
+/-- The 1D GFF collinear block series
+$$
+\operatorname{gffBlockSeries}(\Delta_\phi, z) :=
+  \sum_{m=0}^{\infty} c_m(\Delta_\phi) \, \operatorname{block1d}(\Delta_\phi + m, z).
+$$ -/
+noncomputable def gffBlockSeries (Δ_phi : ℝ) (z : ℂ) : ℂ :=
+  ∑' m : ℕ, (gffBlockCoeff Δ_phi m : ℂ) * block1d (Δ_phi + (m : ℝ)) z
+
+/-- 1D GFF conformal block decomposition of the $t$-channel identity crossing factor on the left
+half-plane $\operatorname{Re}(w) < 0$:
+$$
+4^{\Delta_\phi} e^{\Delta_\phi w} (1 - e^w)^{-2\Delta_\phi} =
+  \sum_{m=0}^{\infty} c_m(\Delta_\phi) \, k_{\Delta_\phi + m}(e^w).
+$$ -/
+theorem gffBlockSeries_eq_crossFactor {Δ_phi : ℝ} (_hΔ : 0 < Δ_phi) {w : ℂ} (_hw : w.re < 0) :
+    (4 : ℂ) ^ (Δ_phi : ℂ) * Complex.exp ((Δ_phi : ℂ) * w) *
+      (1 - Complex.exp w) ^ (- (2 * Δ_phi : ℂ)) =
+    gffBlockSeries Δ_phi w := by
+  sorry

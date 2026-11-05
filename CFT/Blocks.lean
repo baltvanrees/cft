@@ -5,6 +5,7 @@ Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 import CFT.Gegenbauers
 
 /-!
@@ -26,7 +27,7 @@ In this file the idea is that $ρ ∈ ℂ$ so we work in Euclidean signature. Th
 independent complex $(ρ, \bar ρ)$ in the polydisk is done in `Blocks_pdisk.lean`.
 -/
 
-open Real Complex Topology Set Metric Polynomial
+open Real Complex Topology Set Metric Polynomial MeasureTheory
 
 /-- The Gegenbauer polynomial $C_j^\nu(x)$ are defined as complex polynomials in
 `Gegenbauers.lean`. This function evaluates them for real arguments on the real numbers.
@@ -90,6 +91,9 @@ structure ConformalBlock (ν Δ : ℝ) (l : ℕ) where
   levels $n$, reflecting
   $G_{\Delta}^{(l)}(-\rho) = (-1)^l G_{\Delta}^{(l)}(\rho)$. -/
   A_odd_level : ∀ n : ℕ, Odd n → ∀ j : ℕ, (level n).A j = 0
+  /-- For the identity operator ($\Delta = 0, l = 0$), all descendant levels $n \ge 1$ vanish,
+  reflecting $G_{0}^{(0)}(\rho) = 1$. -/
+  A_identity : Δ = 0 → l = 0 → ∀ n : ℕ, n ≠ 0 → ∀ j : ℕ, (level n).A j = 0
   /-- Radial summability of the block expansion on the unit disk $ρ \in (0, 1)$, so
   $\cos \arg ρ = 1$. -/
   summable_radial : ∀ r ∈ Ioo (0 : ℝ) 1,
@@ -105,9 +109,28 @@ def A (n j : ℕ) : ℝ :=
 
 /-- Evaluation of the Euclidean conformal block $G_{\Delta}^{(l)}(\rho)$ as an infinite sum over $n$
 and a finite sum over $j \in S(l,n)$ which are the `descendantSpins`:
-$$G_{\Delta}^{(l)}(\rho) = \sum_{n=0}^{\infty} \|\rho\|^{\Delta + n}
-  \sum_{j \in S(l, n)} A_{n, j} C_j^\nu(\cos \theta).$$ -/
+$$
+G_{\Delta}^{(l)}(\rho) = \sum_{n=0}^{\infty} \|\rho\|^{\Delta + n}
+  \sum_{j \in S(l, n)} A_{n, j} C_j^\nu(\cos \theta).
+$$ -/
 noncomputable def eval (ρ : ℂ) : ℝ :=
   ∑' n : ℕ, (B.level n).evalTerm ν Δ ρ
 
 end ConformalBlock
+
+/-- Existence of the Euclidean conformal block $G_{\Delta}^{(l)}$ in spacetime dimension
+$d = 2\nu + 2$ determined by the quadratic conformal Casimir recursion. -/
+theorem exists_conformalBlock (ν Δ : ℝ) (l : ℕ) :
+    Nonempty (ConformalBlock ν Δ l) := by
+  sorry
+
+/-- Canonical Euclidean conformal block $G_{\Delta}^{(l)}$ in spacetime dimension $d = 2\nu + 2$
+determined by the quadratic conformal Casimir equation. -/
+noncomputable def conformalBlock (ν Δ : ℝ) (l : ℕ) : ConformalBlock ν Δ l :=
+  (exists_conformalBlock ν Δ l).some
+
+/-- Measurability of the conformal block expansion coefficients $A_{n, j}(\nu, \Delta, l)$ across
+the primary spectrum $(\Delta, l) \in \mathbb{R} \times \mathbb{N}$. -/
+theorem measurable_conformalBlock_A (ν : ℝ) (n j : ℕ) :
+    Measurable (fun p : ℝ × ℕ => ((conformalBlock ν p.1 p.2).level n).A j) := by
+  sorry

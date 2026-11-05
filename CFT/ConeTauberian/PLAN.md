@@ -101,10 +101,11 @@ CFT/ConeTauberian/
   ├── Branching2d.lean                (Stage 2: 2D blocks, bilateral transmutation L_0 ⊗ L_0,
   │                                    d → 2 branching coefficients b_m^{(ν)}(l), and uniform
   │                                    O(1/Δ) Stirling convergence to the Erdélyi–Kober kernel K_ν)
-  └── ConeAsymptotics.lean            (Stage 4: ConeBlockFourPointData, Theorem 1A (pure 2 h_gap
-                                       bound against exact t-channel identity), Theorem 1B (min(2 h_gap, 1)
-                                       bound against continuum density ρ^{prim}_{ν, Δ_φ}), and
-                                       Corollary 2 (cumulative spin-summed primary asymptotics))
+  └── ConeAsymptotics.lean            (Stage 4: FourPointData.transmutedMeasure2d, Theorem 1A
+                                       (pure 2 h_gap bound against exact t-channel identity),
+                                       Theorem 1B (min(2 h_gap, 1) bound against continuum density
+                                       ρ^{prim}_{ν, Δ_φ}), and Corollary 2 (cumulative spin-summed
+                                       primary asymptotics))
 ```
 
 ---
@@ -142,10 +143,10 @@ CFT/ConeTauberian/
   - Prove the non-asymptotic 2D Tauberian bound `abs_integral_sub_le_of_laplace2d_bound` and the quantitative $O(\Delta^{-\gamma})$ power-law 2D Tauberian theorem `exists_const_abs_integral_sub_le_rpow_2d` with optimal frequency cutoff $R = \Delta^\gamma$, $\gamma = \alpha / (p_{\text{deg}} + 1) > 0$.
 
 ### Phase 4: Main Quantitative & Cumulative Primary Theorems (`ConeAsymptotics.lean`)
-- [x] **Step 4.1 (`ConeBlockFourPointData` & Bilateral Transmuted Crossing Bound)**:
-  - Package the $d$-dimensional primary measure `μ_OPE`, rescaled 2D transmuted measure `μ_trans2d Δ`, exact rescaled 2D transmuted $t$-channel identity measure `μ_id2d Δ`, and pure $O(\Delta^{-2 h_{\text{gap}}})$ bilateral transmuted crossing bound into `ConeBlockFourPointData` and `HasBilateralCrossingGap`.
+- [x] **Step 4.1 (`FourPointData.transmutedMeasure2d` & Bilateral Transmuted Crossing Bound)**:
+  - Define the rescaled 2D bilaterally transmuted measure `corr.transmutedMeasure2d Δ` and exact rescaled 2D transmuted $t$-channel identity measure `transmutedIdentityMeasure2d Δ_phi Δ`, and state the pure $O(\Delta^{-2 h_{\text{gap}}})$ bilateral transmuted crossing bound (`FourPointData.exists_laplace2d_sub_identity_bound`).
 - [x] **Step 4.2 (Theorem 1A & Theorem 1B — Quantitative Non-Universal ($2 h_{\text{gap}}$) & Continuum ($\min(2 h_{\text{gap}}, 1)$) Primary Bootstrap)**:
-  - Apply `Karamata2d.lean` directly to prove **Theorem 1A** (`exists_const_abs_transmuted2d_sub_identity_le`, `tendsto_transmuted2d_sub_identity`) with exponent controlled **purely by $2 h_{\text{gap}}$** for all $\Delta_\phi > 0$ and $h_{\text{gap}} > 0$.
-  - Combine Theorem 1A with `HasUniversalBranchingReduction` and `ErdelyiKoberInversion.lean` (`integral_branchingKernel_mul_primaryConeDensity`) to prove **Theorem 1B** (`exists_const_abs_primaryCone_sub_le`, `tendsto_primaryConePairing`) with exponent controlled by $\min\bigl(\frac{2 h_{\text{gap}}}{p_{\text{deg}} + 1},\, 1\bigr)$.
+  - Apply `Karamata2d.lean` directly to prove **Theorem 1A** (`FourPointData.exists_const_abs_transmuted2d_sub_identity_le`, `FourPointData.tendsto_transmuted2d_sub_identity`) with exponent controlled **purely by $2 h_{\text{gap}}$** for all $\Delta_\phi > 0$ and $h_{\text{gap}} > 0$.
+  - Combine Theorem 1A with `FourPointData.exists_universal_branching_reduction` and `ErdelyiKoberInversion.lean` (`integral_branching_mul_primaryConeDensity`) to prove **Theorem 1B** (`FourPointData.exists_const_abs_primaryCone_sub_le`, `FourPointData.tendsto_primaryConePairing`) with exponent controlled by $\min\bigl(\frac{2 h_{\text{gap}}}{4\Delta_\phi + 1},\, 1\bigr)$.
 - [x] **Step 4.3 (Corollary 2 — Cumulative Spin-Summed Primary Asymptotics)**:
-  - Prove `continuumPrimaryPairing_unitCylinderIndicator` and apply `tendsto_of_le_of_ge_approx` to deduce the unweighted cumulative primary asymptotic (`tendsto_cumulativePrimaryWeight`) for $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$.
+  - Prove `continuumPrimaryPairing_unitCylinderIndicator` and apply `tendsto_of_le_of_ge_approx` to deduce the unweighted cumulative primary asymptotic (`FourPointData.tendsto_cumulativePrimaryWeight`) for $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$.

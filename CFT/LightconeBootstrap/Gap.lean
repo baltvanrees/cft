@@ -32,7 +32,7 @@ monomial lightcone bootstrap:
 -/
 
 open Real Complex Topology Set Metric MeasureTheory
-open scoped ComplexConjugate
+open scoped ComplexConjugate ENNReal
 
 namespace CFT.LightconeBootstrap
 
@@ -63,9 +63,11 @@ noncomputable def crossFactor (Δ_phi : ℝ) (w : ℂ) : ℂ :=
     (1 - Complex.exp w) ^ (- (2 * Δ_phi : ℂ))
 
 /-- The $t$-channel identity contribution in universal-cover coordinates $(w_l, w_r)$:
-$$\mathcal{G}_{\text{id}}(w_l, w_r) =
+$$
+\mathcal{G}_{\text{id}}(w_l, w_r) =
   \operatorname{crossFactor}(\Delta_\phi, w_l) \cdot
-  \operatorname{crossFactor}(\Delta_\phi, w_r).$$ -/
+  \operatorname{crossFactor}(\Delta_\phi, w_r).
+$$ -/
 noncomputable def crossIdentity (Δ_phi : ℝ) (wl wr : ℂ) : ℂ :=
   crossFactor Δ_phi wl * crossFactor Δ_phi wr
 
@@ -446,8 +448,10 @@ theorem rho_one_sub_zOfW {w : ℂ} (hw : w ∈ UcDisk) (him : w.im ∈ Ioo (-π)
 
 /-- Uniform upper bound on $\operatorname{Re}(\operatorname{crossW}(w))$ when
 $a \le \operatorname{Re}(w) < 0$ and $\operatorname{Im}(w) \in [-\pi/2, \pi/2]$:
-$$\operatorname{Re}(\operatorname{crossW}(w)) \le
-  \log\left(1 - \frac{\sqrt{2}}{4} e^{a/2}\right) < 0.$$ -/
+$$
+\operatorname{Re}(\operatorname{crossW}(w)) \le
+  \log\left(1 - \frac{\sqrt{2}}{4} e^{a/2}\right) < 0.
+$$ -/
 theorem re_crossW_le_of_re_ge {a : ℝ} {w : ℂ}
     (hw : w ∈ UcDisk) (hwa : a ≤ w.re) (him : w.im ∈ Icc (-π / 2) (π / 2)) :
     (crossW w).re ≤ Real.log (1 - Real.sqrt 2 / 4 * Real.exp (a / 2)) := by
@@ -508,8 +512,10 @@ theorem re_crossW_le_of_re_ge {a : ℝ} {w : ℂ}
   rwa [Real.exp_log h_rhs_pos]
 
 /-- Exact modulus of `crossFactor Δ_phi w` for $w \in \operatorname{UcDisk}$:
-$$\|\operatorname{crossFactor}(\Delta_\phi, w)\| =
-  4^{\Delta_\phi} e^{\Delta_\phi \operatorname{Re}(w)} \|1 - e^w\|^{-2\Delta_\phi}.$$ -/
+$$
+\|\operatorname{crossFactor}(\Delta_\phi, w)\| =
+  4^{\Delta_\phi} e^{\Delta_\phi \operatorname{Re}(w)} \|1 - e^w\|^{-2\Delta_\phi}.
+$$ -/
 theorem norm_crossFactor_eq (Δ_phi : ℝ) {w : ℂ} (hw : w ∈ UcDisk) :
     ‖crossFactor Δ_phi w‖ =
       (4 : ℝ) ^ Δ_phi * Real.exp (Δ_phi * w.re) * ‖1 - Complex.exp w‖ ^ (-2 * Δ_phi) := by
@@ -556,9 +562,11 @@ theorem norm_crossFactor_le_of_re_le {Δ_phi a : ℝ} (hΔ : 0 < Δ_phi) (ha : a
 
 /-- Combined bound on the right-moving crossing factor and twist-gap exponential on the half-strip
 $\operatorname{Im}(w) \in [-\pi/2, \pi/2]$:
-$$\operatorname{norm}(\operatorname{crossFactor}(\Delta_\phi, w)) \,
+$$
+\operatorname{norm}(\operatorname{crossFactor}(\Delta_\phi, w)) \,
   e^{h_{\text{gap}} \operatorname{Re}(\operatorname{crossW}(w))}
-  \le 4^{\Delta_\phi} \|1 - e^w\|^{2 (h_{\text{gap}} - \Delta_\phi)}.$$ -/
+  \le 4^{\Delta_\phi} \|1 - e^w\|^{2 (h_{\text{gap}} - \Delta_\phi)}.
+$$ -/
 theorem norm_crossFactor_mul_exp_re_crossW_le {Δ_phi h_gap : ℝ}
     (hΔ : 0 < Δ_phi) (hh : 0 < h_gap)
     {w : ℂ} (hw : w ∈ UcDisk) (him : w.im ∈ Icc (-π / 2) (π / 2)) :
@@ -623,9 +631,11 @@ theorem HasLowerTwist.mono {M : MonomialFourPointData} {h_gap h' : ℝ}
 
 /-- Spin-by-spin exponential decay for a monomial decomposition with lower twist
 $h_{\text{gap}} > 0$: for $\sigma_l < 0$ and $\sigma_r \le \sigma_{r, 0} < 0$,
-$$\operatorname{evalSpinReal}_J(\sigma_l, \sigma_r) \le
+$$
+\operatorname{evalSpinReal}_J(\sigma_l, \sigma_r) \le
   e^{h_{\text{gap}} (\sigma_r - \sigma_{r, 0})}
-  \operatorname{evalSpinReal}_J(\sigma_l, \sigma_{r, 0}).$$ -/
+  \operatorname{evalSpinReal}_J(\sigma_l, \sigma_{r, 0}).
+$$ -/
 theorem evalSpinReal_le_of_hasLowerTwist {h_gap : ℝ} (hlow : M.HasLowerTwist h_gap)
     {σl σr σr0 : ℝ} (hσl : σl < 0) (hσr : σr < 0) (hσr0 : σr0 < 0) (hσr_le : σr ≤ σr0)
     (J : ℤ) :
@@ -665,13 +675,13 @@ theorem norm_eval_le_of_hasLowerTwist {h_gap : ℝ} (hlow : M.HasLowerTwist h_ga
       rw [tsum_mul_left]; rfl
 
 /-- A monomial four-point decomposition `M` has a **twist gap** $h_{\text{gap}} > 0$ above the
-identity operator `1` if `M` decomposes as `1` plus a non-identity remainder
-`rem : MonomialFourPointData` satisfying `rem.HasLowerTwist h_gap`. -/
+identity operator `1` if `M` decomposes on $\operatorname{UcPdisk}$ as `1` plus a non-identity
+remainder `rem : MonomialFourPointData` satisfying `rem.HasLowerTwist h_gap`. -/
 def HasTwistGap (h_gap : ℝ) : Prop :=
   ∃ rem : MonomialFourPointData,
     rem.HasLowerTwist h_gap ∧
-    (∀ wl wr : ℂ, M.eval wl wr = 1 + rem.eval wl wr) ∧
-    (∀ σl σr : ℝ, M.evalReal σl σr = 1 + rem.evalReal σl σr)
+    (∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk → M.eval wl wr = 1 + rem.eval wl wr) ∧
+    (∀ {σl σr : ℝ}, σl < 0 → σr < 0 → M.evalReal σl σr = 1 + rem.evalReal σl σr)
 
 /-- Monotonicity of `HasTwistGap`: any smaller positive gap $0 < h' \le h_{\text{gap}}$ is also a
 valid twist gap. -/
@@ -681,12 +691,13 @@ theorem HasTwistGap.mono {M : MonomialFourPointData} {h_gap h' : ℝ}
   rcases hgap with ⟨rem, hlow, heval, hevalReal⟩
   exact ⟨rem, hlow.mono hh'_pos hh', heval, hevalReal⟩
 
-/-- Non-negativity of $\mathcal{G}_{\text{mon}}(\sigma_l, \sigma_r) - 1$ when `M` has a
-twist gap. -/
-theorem evalReal_sub_one_nonneg {h_gap : ℝ} (hgap : M.HasTwistGap h_gap) (σl σr : ℝ) :
+/-- Non-negativity of $\mathcal{G}_{\text{mon}}(\sigma_l, \sigma_r) - 1$ for
+$\sigma_l < 0, \sigma_r < 0$ when `M` has a twist gap. -/
+theorem evalReal_sub_one_nonneg {h_gap : ℝ} (hgap : M.HasTwistGap h_gap)
+    {σl σr : ℝ} (hσl : σl < 0) (hσr : σr < 0) :
     0 ≤ M.evalReal σl σr - 1 := by
   rcases hgap with ⟨rem, _, _, hevalReal⟩
-  have h_eq : M.evalReal σl σr - 1 = rem.evalReal σl σr := by rw [hevalReal]; ring
+  have h_eq : M.evalReal σl σr - 1 = rem.evalReal σl σr := by rw [hevalReal hσl hσr]; ring
   rw [h_eq]
   exact rem.evalReal_nonneg σl σr
 
@@ -694,19 +705,102 @@ theorem evalReal_sub_one_nonneg {h_gap : ℝ} (hgap : M.HasTwistGap h_gap) (σl 
 as $\operatorname{Re}(w_r) \to -\infty$ in a theory with a twist gap $h_{\text{gap}} > 0$:
 for any reference point $\sigma_{r, 0} < 0$ and $(w_l, w_r) \in \operatorname{UcPdisk}$ with
 $\operatorname{Re}(w_r) \le \sigma_{r, 0}$,
-$$\|\mathcal{G}_{\text{mon}}(w_l, w_r) - 1\| \le
+$$
+\|\mathcal{G}_{\text{mon}}(w_l, w_r) - 1\| \le
   e^{h_{\text{gap}} (\operatorname{Re}(w_r) - \sigma_{r, 0})} \,
-  \bigl(\mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \sigma_{r, 0}) - 1\bigr).$$ -/
+  \bigl(\mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \sigma_{r, 0}) - 1\bigr).
+$$ -/
 theorem norm_eval_sub_one_le {h_gap : ℝ} (hgap : M.HasTwistGap h_gap)
     {σr0 : ℝ} (hσr0 : σr0 < 0) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) (hwr_le : wr.re ≤ σr0) :
     ‖M.eval wl wr - 1‖ ≤
       Real.exp (h_gap * (wr.re - σr0)) * (M.evalReal wl.re σr0 - 1) := by
   rcases hgap with ⟨rem, hlow, heval, hevalReal⟩
-  have h1 : M.eval wl wr - 1 = rem.eval wl wr := by rw [heval]; ring
-  have h2 : M.evalReal wl.re σr0 - 1 = rem.evalReal wl.re σr0 := by rw [hevalReal]; ring
+  have h1 : M.eval wl wr - 1 = rem.eval wl wr := by rw [heval hwl hwr]; ring
+  have h2 : M.evalReal wl.re σr0 - 1 = rem.evalReal wl.re σr0 := by rw [hevalReal hwl hσr0]; ring
   rw [h1, h2]
   exact rem.norm_eval_le_of_hasLowerTwist hlow hσr0 hwl hwr hwr_le
+
+/-- The non-identity `MonomialFourPointData` obtained from `M` by removing the identity atom
+$\{0\}$ at spin $J = 0$. -/
+noncomputable def nonIdentity : MonomialFourPointData where
+  mu J := if J = 0 then (M.mu 0).restrict {(0 : ℝ)}ᶜ else M.mu J
+  support_unitary J := by
+    split_ifs with hJ
+    · subst hJ
+      exact nonpos_iff_eq_zero.mp
+        (le_trans (Measure.restrict_le_self _) (le_of_eq (M.support_unitary 0)))
+    · exact M.support_unitary J
+  support_odd_spin J hJ := by
+    have hJ0 : J ≠ 0 := by rintro rfl; exact Int.not_odd_zero hJ
+    simp [hJ0, M.support_odd_spin J hJ]
+  integrable_real hσl hσr J := by
+    split_ifs with hJ
+    · subst hJ; exact (M.integrable_real hσl hσr 0).restrict
+    · exact M.integrable_real hσl hσr J
+  summable_real hσl hσr := by
+    refine (M.summable_real hσl hσr).of_nonneg_of_le
+      (fun J => integral_nonneg fun h => monomialTermReal_nonneg h J _ _) (fun J => ?_)
+    split_ifs with hJ
+    · subst hJ
+      exact integral_mono_measure Measure.restrict_le_self
+        (Filter.Eventually.of_forall fun h => monomialTermReal_nonneg h 0 _ _)
+        (M.integrable_real hσl hσr 0)
+    · exact le_rfl
+
+/-- When the spin-$0$ monomial measure has unit mass at $h = 0$, `M.eval wl wr` splits on
+$\operatorname{UcPdisk}$ as `1 + M.nonIdentity.eval wl wr`. -/
+theorem eval_eq_one_add_nonIdentity (hmu0 : M.mu 0 {(0 : ℝ)} = 1)
+    {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
+    M.eval wl wr = 1 + M.nonIdentity.eval wl wr := by
+  have h_spin (J : ℤ) :
+      M.evalSpin J wl wr =
+        (if J = 0 then (1 : ℂ) else 0) + M.nonIdentity.evalSpin J wl wr := by
+    dsimp [evalSpin, nonIdentity]
+    split_ifs with hJ
+    · subst hJ
+      rw [← integral_add_compl (measurableSet_singleton (0 : ℝ))
+        (M.integrable_monomialTerm hwl hwr 0)]
+      congr 1
+      have h_congr :
+          (∫ h in {(0 : ℝ)}, monomialTerm h 0 wl wr ∂(M.mu 0)) =
+            ∫ _ in {(0 : ℝ)}, (1 : ℂ) ∂(M.mu 0) := by
+        refine setIntegral_congr_fun (measurableSet_singleton (0 : ℝ)) fun h hh => ?_
+        rw [mem_singleton_iff.mp hh]
+        simp [monomialTerm]
+      rw [h_congr, setIntegral_const, Measure.real, hmu0, ENNReal.toReal_one, one_smul]
+    · ring
+  dsimp [eval]
+  simp_rw [h_spin]
+  exact ((hasSum_ite_eq (0 : ℤ) (1 : ℂ)).add
+    (M.nonIdentity.summable_evalSpin hwl hwr).hasSum).tsum_eq
+
+/-- When the spin-$0$ monomial measure has unit mass at $h = 0$, `M.evalReal σl σr` splits for
+$\sigma_l < 0, \sigma_r < 0$ as `1 + M.nonIdentity.evalReal σl σr`. -/
+theorem evalReal_eq_one_add_nonIdentity (hmu0 : M.mu 0 {(0 : ℝ)} = 1)
+    {σl σr : ℝ} (hσl : σl < 0) (hσr : σr < 0) :
+    M.evalReal σl σr = 1 + M.nonIdentity.evalReal σl σr := by
+  have h_spin (J : ℤ) :
+      M.evalSpinReal J σl σr =
+        (if J = 0 then (1 : ℝ) else 0) + M.nonIdentity.evalSpinReal J σl σr := by
+    dsimp [evalSpinReal, nonIdentity]
+    split_ifs with hJ
+    · subst hJ
+      rw [← integral_add_compl (measurableSet_singleton (0 : ℝ))
+        (M.integrable_real hσl hσr 0)]
+      congr 1
+      have h_congr :
+          (∫ h in {(0 : ℝ)}, monomialTermReal h 0 σl σr ∂(M.mu 0)) =
+            ∫ _ in {(0 : ℝ)}, (1 : ℝ) ∂(M.mu 0) := by
+        refine setIntegral_congr_fun (measurableSet_singleton (0 : ℝ)) fun h hh => ?_
+        rw [mem_singleton_iff.mp hh]
+        simp [monomialTermReal]
+      rw [h_congr, setIntegral_const, Measure.real, hmu0, ENNReal.toReal_one, smul_eq_mul, mul_one]
+    · ring
+  dsimp [evalReal]
+  simp_rw [h_spin]
+  exact ((hasSum_ite_eq (0 : ℤ) (1 : ℝ)).add
+    (M.nonIdentity.summable_real hσl hσr).hasSum).tsum_eq
 
 /-- Two-variable $t$-channel crossing symmetry expressed in universal-cover coordinates
 $(w_l, w_r)$ on the fundamental strip
@@ -749,11 +843,13 @@ theorem eval_eq_cross {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi) (hν : 
 crossing symmetry for external dimension $\Delta_\phi$, whenever
 $\operatorname{Re}(\operatorname{crossW}(w_r)) \le \sigma_{r, 0} < 0$, the difference between the
 full correlator and the $t$-channel identity contribution is bounded by:
-$$\|\mathcal{G}_{\text{mon}}(w_l, w_r) - \mathcal{G}_{\text{id}}(w_l, w_r)\| \le
+$$
+\|\mathcal{G}_{\text{mon}}(w_l, w_r) - \mathcal{G}_{\text{id}}(w_l, w_r)\| \le
   \|\mathcal{G}_{\text{id}}(w_l, w_r)\| \,
   e^{h_{\text{gap}} (\operatorname{Re}(w_r^{\text{cross}}) - \sigma_{r, 0})} \,
   \bigl(\mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l^{\text{cross}}),
-  \sigma_{r, 0}) - 1\bigr).$$ -/
+  \sigma_{r, 0}) - 1\bigr).
+$$ -/
 theorem norm_eval_sub_crossIdentity_le {ν Δ_phi h_gap : ℝ}
     (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν)
     (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
@@ -805,3 +901,198 @@ theorem norm_eval_sub_crossIdentity_le_of_re_le {ν Δ_phi h_gap : ℝ}
 end MonomialFourPointData
 
 end CFT.LightconeBootstrap
+
+open CFT.LightconeBootstrap
+
+namespace FourPointData
+
+variable {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
+
+lemma monomialIdxCoeff_zero_zero (ν : ℝ) :
+    monomialIdxCoeff ν (0, 0, 0) ((0 : ℝ), (0 : ℕ)) = 1 := by
+  dsimp [monomialIdxCoeff, gegenbauer.geg_two_var_coeff, gegenbauer.ph, gegenbauer.fact]
+  rw [(conformalBlock ν 0 0).norm_primary]
+  simp
+
+lemma monomialIdxCoeff_eq_zero_of_id (ν : ℝ) {q : MonomialIdx} (hq : q ≠ (0, 0, 0)) :
+    monomialIdxCoeff ν q ((0 : ℝ), (0 : ℕ)) = 0 := by
+  dsimp [monomialIdxCoeff]
+  split_ifs with ha
+  · by_cases hq1 : q.1 = 0
+    · have hq21 : q.2.1 ≠ 0 := by
+        intro hq21_zero
+        apply hq
+        rcases q with ⟨n, j, a⟩
+        dsimp at hq1 hq21_zero ha
+        have ha0 : a = 0 := by omega
+        subst hq1 hq21_zero ha0
+        rfl
+      have hj_not_mem : q.2.1 ∉ descendantSpins 0 q.1 := by
+        rw [hq1, mem_descendantSpins]
+        omega
+      rw [((conformalBlock ν 0 0).level q.1).A_support q.2.1 hj_not_mem, zero_mul]
+    · rw [(conformalBlock ν 0 0).A_identity rfl rfl q.1 hq1 q.2.1, zero_mul]
+  · rfl
+
+/-- If `corr.mu_measure {(0, 0)} = 1`, then the spin-$0$ monomial measure has unit mass at
+$h = 0$: `corr.monomialMeasure 0 {0} = 1`. -/
+lemma monomialMeasure_zero_singleton_zero (h_id : corr.mu_measure {((0 : ℝ), (0 : ℕ))} = 1) :
+    corr.monomialMeasure 0 {(0 : ℝ)} = 1 := by
+  dsimp [monomialMeasure]
+  rw [Measure.sum_apply _ (measurableSet_singleton (0 : ℝ))]
+  have h_q_zero :
+      corr.monomialAtomMeasure (0, 0, 0) {(0 : ℝ)} =
+        corr.mu_measure {((0 : ℝ), (0 : ℕ))} := by
+    dsimp [monomialAtomMeasure]
+    have h_meas0 : MeasurableSet (monomialIdxWeight (0, 0, 0) ⁻¹' {(0 : ℝ)}) :=
+      measurable_monomialIdxWeight (0, 0, 0) (measurableSet_singleton (0 : ℝ))
+    rw [Measure.map_apply (measurable_monomialIdxWeight (0, 0, 0))
+      (measurableSet_singleton (0 : ℝ)),
+      withDensity_apply _ h_meas0]
+    have h_ind :
+        ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure,
+          Set.indicator (monomialIdxWeight (0, 0, 0) ⁻¹' {(0 : ℝ)})
+            (fun p => ENNReal.ofReal (monomialIdxCoeff ν (0, 0, 0) p)) p =
+          Set.indicator {((0 : ℝ), (0 : ℕ))} (fun _ => (1 : ℝ≥0∞)) p := by
+      filter_upwards [corr.ae_unitary] with p hp
+      by_cases hp0 : p = ((0 : ℝ), (0 : ℕ))
+      · subst hp0
+        have hw0 : monomialIdxWeight (0, 0, 0) ((0 : ℝ), (0 : ℕ)) = 0 := by
+          dsimp [monomialIdxWeight]; ring
+        rw [Set.indicator_of_mem (by simpa using hw0), Set.indicator_of_mem rfl,
+          monomialIdxCoeff_zero_zero ν, ENNReal.ofReal_one]
+      · rw [Set.indicator_of_notMem (s := {((0 : ℝ), (0 : ℕ))}) hp0]
+        by_cases hw : monomialIdxWeight (0, 0, 0) p = 0
+        · have hp1_zero : p.1 = 0 := by
+            dsimp [monomialIdxWeight] at hw
+            linarith
+          have hp2_zero : p.2 = 0 := by
+            have hp2_nonneg : (0 : ℝ) ≤ (p.2 : ℝ) := Nat.cast_nonneg _
+            have : (p.2 : ℝ) = 0 := by linarith
+            exact_mod_cast this
+          exact (hp0 (Prod.ext hp1_zero hp2_zero)).elim
+        · exact Set.indicator_of_notMem hw _
+    rw [← lintegral_indicator h_meas0, lintegral_congr_ae h_ind,
+      lintegral_indicator (measurableSet_singleton _), setLIntegral_const, one_mul]
+  have h_q_other (q : MonomialIdx) (hq_ne : q ≠ (0, 0, 0)) (hq_spin : monomialIdxSpin q = 0) :
+      corr.monomialAtomMeasure q {(0 : ℝ)} = 0 := by
+    dsimp [monomialAtomMeasure]
+    have h_meas_q : MeasurableSet (monomialIdxWeight q ⁻¹' {(0 : ℝ)}) :=
+      measurable_monomialIdxWeight q (measurableSet_singleton (0 : ℝ))
+    rw [Measure.map_apply (measurable_monomialIdxWeight q) (measurableSet_singleton (0 : ℝ)),
+      withDensity_apply _ h_meas_q,
+      setLIntegral_eq_zero_iff h_meas_q (measurable_monomialIdxCoeff ν q).ennreal_ofReal]
+    filter_upwards [corr.ae_unitary] with p hp h_mem
+    have h_w_zero : monomialIdxWeight q p = 0 := h_mem
+    have hj_eq : (q.2.1 : ℝ) = 2 * (q.2.2 : ℝ) := by
+      have : (q.2.1 : ℤ) - 2 * (q.2.2 : ℤ) = 0 := hq_spin
+      exact_mod_cast sub_eq_zero.mp this
+    have h_sum_zero : (p.1 + (q.1 : ℝ)) / 2 = 0 := by
+      dsimp [monomialIdxWeight] at h_w_zero
+      linarith
+    have hp2_nonneg : (0 : ℝ) ≤ (p.2 : ℝ) := Nat.cast_nonneg _
+    have hq1_nonneg : (0 : ℝ) ≤ (q.1 : ℝ) := Nat.cast_nonneg _
+    have hp1_zero : p.1 = 0 := by linarith
+    have hp2_zero : p.2 = 0 := by
+      have : (p.2 : ℝ) = 0 := by linarith
+      exact_mod_cast this
+    have hp_eq : p = ((0 : ℝ), (0 : ℕ)) := Prod.ext hp1_zero hp2_zero
+    rw [hp_eq, monomialIdxCoeff_eq_zero_of_id ν hq_ne, ENNReal.ofReal_zero]
+  rw [tsum_eq_single (0, 0, 0) (fun q hq => by
+    split_ifs with h_spin
+    · exact h_q_other q hq h_spin
+    · rfl)]
+  have h_spin0 : monomialIdxSpin (0, 0, 0) = 0 := rfl
+  simp [h_spin0, h_q_zero, h_id]
+
+/-- An intrinsic primary-spectrum twist gap `corr.HasTwistGap h_gap` lifts to a monomial twist gap
+`(corr.toMonomialFourPointData hν).HasTwistGap h_gap`. -/
+theorem HasTwistGap.toMonomialFourPointData {corr : FourPointData ν Δ_phi} (hν : 0 ≤ ν)
+    {h_gap : ℝ} (hgap : corr.HasTwistGap h_gap) :
+    (corr.toMonomialFourPointData hν).HasTwistGap h_gap := by
+  have hmu0 : (corr.toMonomialFourPointData hν).mu 0 {(0 : ℝ)} = 1 :=
+    corr.monomialMeasure_zero_singleton_zero hgap.mu_identity
+  refine ⟨(corr.toMonomialFourPointData hν).nonIdentity, ⟨hgap.h_gap_pos, fun J => ?_⟩,
+    (corr.toMonomialFourPointData hν).eval_eq_one_add_nonIdentity hmu0,
+    (corr.toMonomialFourPointData hν).evalReal_eq_one_add_nonIdentity hmu0⟩
+  let S : Set ℝ := { h : ℝ | h < h_gap ∨ h + (J : ℝ) < h_gap }
+  have hS : MeasurableSet S :=
+    (measurableSet_lt measurable_id measurable_const).union
+      (measurableSet_lt (measurable_id.add measurable_const) measurable_const)
+  let T : Set ℝ := if J = 0 then S ∩ {(0 : ℝ)}ᶜ else S
+  have hT : MeasurableSet T := by
+    dsimp [T]
+    split_ifs
+    · exact hS.inter (measurableSet_singleton (0 : ℝ)).compl
+    · exact hS
+  have h_apply : (corr.toMonomialFourPointData hν).nonIdentity.mu J S =
+      corr.monomialMeasure J T := by
+    dsimp [MonomialFourPointData.nonIdentity, FourPointData.toMonomialFourPointData, T]
+    split_ifs with hJ
+    · subst hJ
+      exact Measure.restrict_apply hS
+    · rfl
+  change (corr.toMonomialFourPointData hν).nonIdentity.mu J S = 0
+  rw [h_apply]
+  dsimp [monomialMeasure]
+  rw [Measure.sum_apply _ hT, ENNReal.tsum_eq_zero]
+  intro q
+  split_ifs with hqJ
+  · dsimp [monomialAtomMeasure]
+    rw [Measure.map_apply (measurable_monomialIdxWeight q) hT,
+      withDensity_apply _ ((measurable_monomialIdxWeight q) hT),
+      setLIntegral_eq_zero_iff ((measurable_monomialIdxWeight q) hT)
+        ((measurable_monomialIdxCoeff ν q).ennreal_ofReal)]
+    have h_ae_gap :
+        ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure,
+          p ∉ { p : ℝ × ℕ | p ≠ ((0 : ℝ), (0 : ℕ)) ∧ (p.1 - (p.2 : ℝ)) / 2 < h_gap } :=
+      compl_mem_ae_iff.mpr hgap.support_gap
+    filter_upwards [corr.ae_unitary, h_ae_gap] with p hp_unit hp_gap h_mem
+    rw [ENNReal.ofReal_eq_zero]
+    refine le_of_eq ?_
+    by_cases hp0 : p = ((0 : ℝ), (0 : ℕ))
+    · subst hp0
+      by_cases hq0 : q = (0, 0, 0)
+      · subst hq0
+        have hJ0 : J = 0 := hqJ.symm
+        have hw0 : monomialIdxWeight (0, 0, 0) ((0 : ℝ), (0 : ℕ)) = 0 := by
+          dsimp [monomialIdxWeight]; ring
+        have h_in_T : (0 : ℝ) ∈ T := by rwa [← hw0]
+        dsimp [T] at h_in_T
+        simp only [hJ0, ↓reduceIte] at h_in_T
+        exact (h_in_T.2 rfl).elim
+      · exact monomialIdxCoeff_eq_zero_of_id ν hq0
+    · have hp_ge : h_gap ≤ (p.1 - (p.2 : ℝ)) / 2 :=
+        not_lt.mp fun h_lt => hp_gap ⟨hp0, h_lt⟩
+      have h_in_S : monomialIdxWeight q p ∈ S := by
+        dsimp [T] at h_mem
+        split_ifs at h_mem with hJ0
+        · exact h_mem.1
+        · exact h_mem
+      by_contra h_ne
+      dsimp [monomialIdxCoeff] at h_ne
+      split_ifs at h_ne with ha
+      · have hj_mem : q.2.1 ∈ descendantSpins p.2 q.1 := by
+          by_contra hj
+          apply h_ne
+          rw [((conformalBlock ν p.1 p.2).level q.1).A_support q.2.1 hj, zero_mul]
+        have hj_le : (q.2.1 : ℝ) ≤ (p.2 : ℝ) + (q.1 : ℝ) := by
+          exact_mod_cast (mem_descendantSpins.mp hj_mem).2.1
+        have ha_le : (q.2.2 : ℝ) ≤ (q.2.1 : ℝ) := by exact_mod_cast ha
+        have ha_nonneg : (0 : ℝ) ≤ (q.2.2 : ℝ) := Nat.cast_nonneg _
+        have hq1_nonneg : (0 : ℝ) ≤ (q.1 : ℝ) := Nat.cast_nonneg _
+        have hp2_nonneg : (0 : ℝ) ≤ (p.2 : ℝ) := Nat.cast_nonneg _
+        have hJ_real : (J : ℝ) = (q.2.1 : ℝ) - 2 * (q.2.2 : ℝ) := by
+          rw [← hqJ]
+          dsimp [monomialIdxSpin]
+          push_cast
+          ring
+        rcases h_in_S with h_lt | h_lt
+        · dsimp [monomialIdxWeight] at h_lt
+          linarith
+        · dsimp [monomialIdxWeight] at h_lt
+          linarith
+      · exact h_ne rfl
+  · simp
+
+end FourPointData

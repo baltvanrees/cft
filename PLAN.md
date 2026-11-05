@@ -25,6 +25,9 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean     Analysis/Dom
                               │
                               ▼
                      LightconeBootstrap/ ◄─── Analysis/{HermiteMeasure,TwoConstants,LaplaceTauberian}.lean
+                              │
+                              ▼
+                     ConeTauberian/      ◄─── Analysis/Karamata2d.lean
 ```
 
 ---
@@ -43,11 +46,11 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean     Analysis/Dom
 - [x] Proves non-negativity of the coefficients $c_{j, a}^\nu \ge 0$ for $\nu \ge 0$ (`geg_two_var_coeff_is_nonneg_real`, `geg_two_var_coeff_nonneg`) and the triangle inequality bound on the polydisk (`norm_geg_two_var_sum_le`).
 - [x] Connects the Euclidean angular factor $\|\rho\|^j C_j^\nu(\cos(\arg \rho))$ to the two-variable sum on the Euclidean section $(\rho_l, \rho_r) = (\rho, \bar{\rho})$ (`geg_two_var_conj`).
 
-### Step 2: `CFT/Blocks.lean` — **Structures Done; Properties & Casimir To Do**
+### Step 2: `CFT/Blocks.lean` — **Structures & Canonical `conformalBlock` Done; Casimir Proof To Do**
 - [x] Defines `descendantSpins l n : Finset ℕ` for the allowed spins $j$ at level $n$:
   $$j \in \{l + n, l + n - 2, \dots, \max(l - n, (l + n) \bmod 2)\}.$$
-- [x] Defines `ConformalBlockLevel l n` (finite sum $\sum_{j \in \text{descendantSpins}(l, n)} A_{n, j} C_j^\nu(\cos\theta)$ with $A_{n, j} \ge 0$, absorbing the $1/C_j^\nu(1)$ normalization into $A_{n, j}$) and `ConformalBlock ν Δ l` (infinite sum over $n \in \mathbb{N}$ in $\rho \in \mathbb{C}$ with primary normalization $A_{0, l} = 1$, vanishing odd descendant levels `A_odd_level`, and radial summability at $\theta = 0$ for $r \in (0, 1)$).
-- [ ] *(Later)*: Formalize the quadratic Casimir recursion relation for $A_{n, j}$ and deduce `summable_radial`.
+- [x] Defines `ConformalBlockLevel l n` (finite sum $\sum_{j \in \text{descendantSpins}(l, n)} A_{n, j} C_j^\nu(\cos\theta)$ with $A_{n, j} \ge 0$, absorbing the $1/C_j^\nu(1)$ normalization into $A_{n, j}$) and `ConformalBlock ν Δ l` (infinite sum over $n \in \mathbb{N}$ in $\rho \in \mathbb{C}$ with primary normalization $A_{0, l} = 1$, vanishing odd descendant levels `A_odd_level`, and radial summability at $\theta = 0$ for $r \in (0, 1)$), as well as the canonical conformal block `conformalBlock (ν Δ : ℝ) (l : ℕ) : ConformalBlock ν Δ l` (`exists_conformalBlock`).
+- [ ] *(Later)*: Formalize the quadratic Casimir recursion relation for $A_{n, j}$ and discharge `exists_conformalBlock` and `measurable_conformalBlock_A`.
 
 ### Step 3A: `CFT/Blocks_1d.lean` — **Done**
 - [x] Defines the 1D (collinear / $SL(2, \mathbb{R})$) conformal block $k_h(e^w)$ of conformal weight $h$ in the coordinate $w \in \operatorname{UcDisk}$ (`block1dCoeff`, `block1d`):
@@ -64,10 +67,9 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean     Analysis/Dom
 - [x] Proves `ConformalBlockLevel.evalTermPdisk_conj`, `ConformalBlock.evalPdisk_conj_eq_eval`, `ConformalBlock.evalPdisk_logRho_conj`, `ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm_of_re_le`, `ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm`, `ConformalBlock.norm_evalPdisk_le_eval_of_re_le`, `ConformalBlock.norm_evalPdisk_le_eval`, `ConformalBlockLevel.differentiable_evalTermPdisk`, and joint holomorphy on $\operatorname{UcPdisk}$ (`ConformalBlock.differentiableOn_evalPdisk` — **0 `sorry`s**).
 - [ ] *(Later)*: Prove `ConformalBlock.exists_conformalBlockLightcone` equating `B.evalPdisk wl wr` with `L.eval wl wr` on $\operatorname{UcPdisk}$.
 
-### Step 4: `CFT/Corr.lean` — **Done (0 `sorry`s)**
-- [x] Defines `eval_correlator_eucl` and `FourPointData ν Δ_phi`:
+### Step 4: `CFT/Corr.lean` — **Done**
+- [x] Defines `measurable_conformalBlock_A`, `eval_correlator_eucl`, and `FourPointData ν Δ_phi`:
   - Spectrum measure `mu_measure : Measure (ℝ × ℕ)` supported on unitary twist $\Delta - l \ge 0$ (`support_unitary`) and even spins $l$ (`support_even_spin`),
-  - Family of `ConformalBlock ν Δ l`s with measurable expansion coefficients `measurable_A`,
   - Euclidean OPE convergence (`converges_correlator_eucl`) for $0 < \|\rho\| < 1$,
   - Euclidean crossing symmetry (`crossing_correlator_eucl`) on $z \in \text{CutPlane}$.
 
@@ -83,9 +85,21 @@ CutPlane.lean          Gegenbauers.lean          Blocks_1d.lean     Analysis/Dom
   - `HermiteMeasure.lean`: Fejér kernel $K(u)$, Fejér–Hermite interpolant $H_\psi$, and non-asymptotic $C_c^2$ lattice measure estimate from bounded-frequency Fourier agreement on $[-2\pi, 2\pi]$ (**100% `sorry`-free**).
   - `TwoConstants.lean`: Explicit half-strip harmonic measure $\omega(\sigma, t)$ and Nevanlinna's Two-Constants Theorem on a vertical strip (`norm_le_two_constants_vertical_strip`, `norm_le_midpoint_two_constants` — **100% `sorry`-free**).
   - `LaplaceTauberian.lean`: Single-pair non-asymptotic and power-law Laplace-to-$C_c^2$ Tauberian theorems via exponential tilting (**100% `sorry`-free**).
-- [x] **Quantitative Monomial Lightcone Bootstrap (`CFT/LightconeBootstrap/`)**:
+  - `Karamata2d.lean`: Bandlimited 2D Fourier–Laplace Tauberian theorem on $(0, \infty)^2$ via rescaled Fejér convolution (**100% `sorry`-free**).
+- [x] **Quantitative Monomial, Collinear, and All-Twist Primary Lightcone Bootstrap (`CFT/LightconeBootstrap/`)**:
   - `MonomialDecomp.lean`: Monomial decomposition `MonomialFourPointData`, canonical pushforward `FourPointData.toMonomialFourPointData` with evaluation identity `FourPointData.toMonomialFourPointData_eval`, folded spin-$J$ Fourier projection on $[-\pi/2, \pi/2]$ (`laplaceSpinReal_eq_fourierProjSpin`), and test-function pairing `pairSpin` (**100% `sorry`-free**).
   - `Gap.lean`: Twist gap (`HasLowerTwist`, `HasTwistGap`) and two-variable $t$-channel crossing in universal-cover coordinates (`norm_eval_sub_crossIdentity_le` — **100% `sorry`-free**).
   - `RealLaplaceBound.lean`: Uniform real-axis Laplace error bounds on compact negative intervals $[\sigma_-, \sigma_+] \subset (-\infty, 0)$ against both the exact finite-spin $t$-channel identity Laplace transform `identityLaplaceReal` ($\alpha = \min(2 h_{\text{gap}},\, 2\Delta_\phi - 1)$, `exists_uniform_laplaceSpinReal_sub_identity_bounds`) and the asymptotic universal double-twist Laplace transform `universalLaplaceReal` ($\alpha = \min(2 h_{\text{gap}},\, 1,\, 2\Delta_\phi - 1)$, `exists_uniform_laplaceSpinReal_bounds` — **100% `sorry`-free**).
   - `QuantitativeLargeSpin.lean`: Main quantitative large-spin theorems for $\varphi \in C_c^2(I)$ at even spin $J = 2k$ against the exact finite-spin $t$-channel identity pairing (`exists_const_abs_pairSpin_sub_identity_le`, `exists_const_abs_pairSpin_sub_identity_le_contDiff`, and `FourPointData.exists_const_abs_pairSpin_sub_identity_le`) and against the asymptotic $J \to \infty$ universal pairing (`exists_const_abs_pairSpin_sub_universal_le`, `exists_const_abs_pairSpin_sub_universal_le_contDiff`, and `FourPointData.exists_const_abs_pairSpin_sub_universal_le` — **100% `sorry`-free**).
+  - `Transmute1d.lean`: 1D fractional transmutation operators (`transmuteCore`, `transmuteOp`) mapping 1D conformal blocks $k_H(e^w)$ to pure exponentials (`transmuteOp_block1d` — **100% `sorry`-free**).
+  - `LightconeBlockDecomp.lean`: Single-measure `LightconeBlockFourPointData`, its transmuted `MonomialFourPointData` (`toTransmutedMonomialFourPointData`, `pairSpin_toTransmutedMonomialFourPointData`), and canonical pushforwards `FourPointData.primaryTwistMeasure`, `FourPointData.lightconeMeasure`, and `FourPointData.toLightconeBlockFourPointData` (**100% `sorry`-free**).
+  - `TransmutedRealLaplace.lean`: Transmuted universal and 1-term $t$-channel identity Laplace transforms (`transmutedUniversalLaplaceReal`, `transmutedIdentityLaplaceReal`) and their $O(K^{-1})$ proximity (**100% `sorry`-free**).
+  - `TransmutedEndpointBounds.lean`: Inner-derivative transmutation operator (`transmuteOpInner`), its action on all 1D conformal blocks $H \ge 0$ (`transmuteOpInner_block1d`), and low-$x$ / high-$x$ endpoint cancellation and folded-contour bounds (`norm_folded_integral_transmuteOpInner_le` — **100% `sorry`-free**).
+  - `ExactTransmutedRef.lean`: Exact 3-term inner-transmuted reference (`exactTransmutedPochhammer`, `crossIdentityExactTransmuted`, `exactTransmutedIdentityPairing`), outer-contour bounds, effective-gap monotonicity (`LightconeBlockFourPointData.withGap`), and `exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing` (**100% `sorry`-free**).
+  - `TransmutedCrossing.lean`: Termwise inner transmutation of the 1D GFF block series (`hasSum_gffBlockCoeff_mul_transmuteOpInner_block1d`), Fubini commutation of `transmuteOpInner` with the $s$-channel sum and integral (`transmuteOpInner_evalCollinear`), untransmuted $t$-channel remainder derivative bounds, and the unconditional 1D collinear block bootstrap theorems directly on `FourPointData` (`FourPointData.exists_const_abs_lightcone_sub_exactIdentity_le`, `FourPointData.exists_const_abs_lightcone_sub_identity_le`, `FourPointData.exists_const_abs_lightcone_sub_universal_le`).
+  - `PrimaryAllTwists.lean`: Normalized subleading collinear block coefficients (`normalizedCollinearBlockCoeff`), collinear transfer functions (`collinearTransferRatio`, `collinearTransferFn`), recursive GFF $d$-dimensional primary coefficients (`gffPrimaryCoeff`, `gffPrimaryPairing`), and finite triangular inversion deriving the $d$-dimensional primary large-spin bootstrap across all bounded twists $h \in [-N, N]$ directly on `FourPointData` (`FourPointData.exists_const_abs_primary_allTwists_sub_gffPrimary_le`, `FourPointData.exists_const_abs_primary_unweighted_allTwists_le`).
+- [x] **Quantitative High-Energy Primary Cone Tauberian Bootstrap (`CFT/ConeTauberian/`)**:
+  - `ErdelyiKoberInversion.lean`: Continuum primary spectral density `primaryConeDensity`, Weyl / Erdélyi–Kober fractional integral representation (`primaryConeDensity_eq_weylIntegralRight`), exact $d \to 2$ branching integral (`integral_branchingKernel_mul_primaryConeDensity`), and unit-cylinder Beta evaluation (`integral_primaryConeDensity_cylinder` — **100% `sorry`-free**).
+  - `Branching2d.lean`: 2D conformal blocks (`block2d`), bilateral transmutation (`transmuteOp2d_block2d`), Gegenbauer-to-2D branching coefficients (`gegSpinCoeff`, `branchingSpinCoeff`), and uniform $O(\Delta^{-1})$ Stirling convergence (**100% `sorry`-free**).
+  - `ConeAsymptotics.lean`: Quantitative 2D transmuted crossing bound (`FourPointData.exists_const_abs_transmuted2d_sub_identity_le`), smoothed high-energy primary cone bootstrap (`FourPointData.exists_const_abs_primaryCone_sub_le`), and cumulative spin-summed primary asymptotics (`FourPointData.tendsto_cumulativePrimaryWeight`).
 

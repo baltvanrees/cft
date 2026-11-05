@@ -515,9 +515,10 @@ lemma differentiableOn_rho_comp_sub_one : DifferentiableOn ℂ (fun z => rho (1 
 /-!
 ## The universal cover of the punctured $ρ$ disk
 
-Under $\rho = e^w$, the left half-plane $\operatorname{UcDisk} = \{w \in \mathbb{C} \mid
-\operatorname{Re}(w) < 0\}$ is the universal cover of the punctured unit disk $0 < \|\rho\| < 1$,
-and $\operatorname{UcPdisk} = \operatorname{UcDisk} \times \operatorname{UcDisk}$ is the universal
+Under $\rho = e^w$, the left half-plane
+$\operatorname{UcDisk} = \{w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\}$ is the universal cover
+of the punctured unit disk $0 < \|\rho\| < 1$, and
+$\operatorname{UcPdisk} = \operatorname{UcDisk} \times \operatorname{UcDisk}$ is the universal
 cover of the punctured unit polydisk.
 -/
 

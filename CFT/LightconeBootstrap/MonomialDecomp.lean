@@ -13,16 +13,20 @@ import CFT.Corr_pdisk
 # Monomial Decomposition and Folded Spin-$J$ Fourier Projection on `UcPdisk`
 
 This file defines the monomial expansion of a four-point correlation function on the universal cover
-of the punctured polydisk $\operatorname{UcPdisk} = \{\operatorname{Re}(w_l) < 0,
-\operatorname{Re}(w_r) < 0\}$:
-$$\mathcal{G}_{\text{mon}}(w_l, w_r) =
-  \sum_{J \in \mathbb{Z}} \int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h),$$
+of the punctured polydisk
+$\operatorname{UcPdisk} = \{\operatorname{Re}(w_l) < 0, \operatorname{Re}(w_r) < 0\}$:
+$$
+\mathcal{G}_{\text{mon}}(w_l, w_r) =
+  \sum_{J \in \mathbb{Z}} \int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h),
+$$
 where $\mu_J$ is the non-negative spectral measure at spin $J = \bar{h} - h \in \mathbb{Z}$.
 
 We prove:
 1. **Factorization (`evalSpin_eq_exp_mul_laplace`)**:
-   $$\int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) =
-     e^{J w_r} \int_{\mathbb{R}} e^{h (w_l + w_r)} \, d\mu_J(h).$$
+$$
+\int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) =
+  e^{J w_r} \int_{\mathbb{R}} e^{h (w_l + w_r)} \, d\mu_J(h).
+$$
 2. **Even-spin $\pi$-periodicity (`eval_shift_pi`)**:
    Because $\mu_J = 0$ for odd $J$, $\mathcal{G}_{\text{mon}}$ is invariant under opposite
    imaginary shifts by $\pi$:
@@ -30,14 +34,18 @@ We prove:
 3. **The $s$-channel positivity bound (`norm_eval_le_evalReal`)**:
    Increasing $|\operatorname{Im}(w_l)|$ or $|\operatorname{Im}(w_r)|$ never increases the modulus
    of the correlator:
-   $$\|\mathcal{G}_{\text{mon}}(w_l, w_r)\| \le
-     \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \operatorname{Re}(w_r)).$$
+$$
+\|\mathcal{G}_{\text{mon}}(w_l, w_r)\| \le
+  \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \operatorname{Re}(w_r)).
+$$
 4. **Folded Spin-$J$ Fourier Projection (`laplaceSpin_eq_fourierProjSpin`,
    `laplaceSpinReal_eq_fourierProjSpin`)**:
    For even spin $J \in 2\mathbb{Z}$, the spin-$J$ Laplace transform $L_J(w_l + w_r)$ is given by
    the folded integral on $[-\pi/2, \pi/2]$:
-   $$L_J(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
-     e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).$$
+$$
+L_J(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
+  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).
+$$
 5. **Canonical construction for `FourPointData` (`FourPointData.toMonomialFourPointData`,
    `FourPointData.toMonomialFourPointData_eval`)**:
    Every `FourPointData` with $\nu \ge 0$ maps canonically to a `MonomialFourPointData` whose
@@ -108,8 +116,10 @@ lemma monomialTerm_shift_pi_of_even (h : ℝ) {J : ℤ} (hJ : Even J) (wl wr : �
   rw [h_split, Complex.exp_add, Complex.exp_int_mul_two_pi_mul_I, mul_one]
 
 /-- Orthogonality of integer Fourier modes on $[-\pi, \pi]$:
-$$\int_{-\pi}^{\pi} e^{i n \theta} \, d\theta =
-  \begin{cases} 2\pi & n = 0, \\ 0 & n \ne 0. \end{cases}$$ -/
+$$
+\int_{-\pi}^{\pi} e^{i n \theta} \, d\theta =
+  \begin{cases} 2\pi & n = 0, \\ 0 & n \ne 0. \end{cases}
+$$ -/
 lemma integral_exp_int_mul_I (n : ℤ) :
     (∫ θ in (-π)..π, Complex.exp ((n : ℂ) * (θ : ℂ) * I)) =
       if n = 0 then (2 * π : ℂ) else 0 := by
@@ -188,8 +198,10 @@ noncomputable def evalSpinReal (J : ℤ) (σl σr : ℝ) : ℝ :=
   ∫ h : ℝ, monomialTermReal h J σl σr ∂(M.mu J)
 
 /-- Full monomial evaluation on $(w_l, w_r) \in \operatorname{UcPdisk}$:
-$$\mathcal{G}_{\text{mon}}(w_l, w_r) = \sum_{J \in \mathbb{Z}}
-  \int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h).$$ -/
+$$
+\mathcal{G}_{\text{mon}}(w_l, w_r) = \sum_{J \in \mathbb{Z}}
+  \int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h).
+$$ -/
 noncomputable def eval (wl wr : ℂ) : ℂ :=
   ∑' J : ℤ, M.evalSpin J wl wr
 
@@ -203,8 +215,10 @@ noncomputable def pairSpin (J : ℤ) (φ : ℝ → ℝ) : ℝ :=
   ∫ h : ℝ, φ h ∂(M.mu J)
 
 /-- Factorization of the spin-$J$ contribution into $e^{J w_r}$ times `laplaceSpin`:
-$$\int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) =
-  e^{J w_r} L_J(w_l + w_r).$$ -/
+$$
+\int_{\mathbb{R}} e^{h w_l + (h + J) w_r} \, d\mu_J(h) =
+  e^{J w_r} L_J(w_l + w_r).
+$$ -/
 theorem evalSpin_eq_exp_mul_laplace (J : ℤ) (wl wr : ℂ) :
     M.evalSpin J wl wr = Complex.exp ((J : ℂ) * wr) * M.laplaceSpin J (wl + wr) := by
   dsimp [evalSpin, laplaceSpin]
@@ -292,8 +306,10 @@ theorem summable_evalSpin {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDi
 /-- **The $s$-channel positivity bound**: on $\operatorname{UcPdisk}$, increasing
 $|\operatorname{Im}(w_l)|$ or $|\operatorname{Im}(w_r)|$ never increases the modulus of
 $\mathcal{G}_{\text{mon}}$:
-$$\|\mathcal{G}_{\text{mon}}(w_l, w_r)\| \le
-  \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \operatorname{Re}(w_r)).$$ -/
+$$
+\|\mathcal{G}_{\text{mon}}(w_l, w_r)\| \le
+  \mathcal{G}_{\text{mon}}(\operatorname{Re}(w_l), \operatorname{Re}(w_r)).
+$$ -/
 theorem norm_eval_le_evalReal {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     ‖M.eval wl wr‖ ≤ M.evalReal wl.re wr.re := by
   dsimp [eval, evalReal]
@@ -439,15 +455,19 @@ theorem fourierIntegrand_add_pi {J : ℤ} (hJ : Even J) (wl wr : ℂ) (θ : ℝ)
   rw [h_exp, Complex.exp_add, Complex.exp_int_mul_two_pi_mul_I, mul_one]
 
 /-- Full spin-$J$ inverse Fourier projection over $\theta \in [-\pi, \pi]$:
-$$\int_{-\pi}^{\pi} \frac{d\theta}{2\pi} \,
-  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).$$ -/
+$$
+\int_{-\pi}^{\pi} \frac{d\theta}{2\pi} \,
+  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).
+$$ -/
 noncomputable def fourierProjSpinFull (J : ℤ) (wl wr : ℂ) : ℂ :=
   (2 * π : ℂ)⁻¹ * ∫ θ in (-π)..π, M.fourierIntegrand J wl wr θ
 
 /-- Folded spin-$J$ inverse Fourier projection over the half-interval
 $\theta \in [-\pi/2, \pi/2]$:
-$$\int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
-  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).$$ -/
+$$
+\int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
+  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).
+$$ -/
 noncomputable def fourierProjSpin (J : ℤ) (wl wr : ℂ) : ℂ :=
   (π : ℂ)⁻¹ * ∫ θ in (-π / 2)..(π / 2), M.fourierIntegrand J wl wr θ
 
@@ -500,8 +520,10 @@ lemma add_I_mul_mem_UcDisk {w : ℂ} (hw : w ∈ UcDisk) (θ : ℝ) :
 
 /-- Exact spin-$J$ Fourier projection on the full interval $[-\pi, \pi]$: for any
 $(w_l, w_r) \in \operatorname{UcPdisk}$,
-$$L_J(w_l + w_r) = \int_{-\pi}^{\pi} \frac{d\theta}{2\pi} \,
-  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).$$ -/
+$$
+L_J(w_l + w_r) = \int_{-\pi}^{\pi} \frac{d\theta}{2\pi} \,
+  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).
+$$ -/
 theorem laplaceSpin_eq_fourierProjSpinFull (J : ℤ) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     M.laplaceSpin J (wl + wr) = M.fourierProjSpinFull J wl wr := by
@@ -580,8 +602,10 @@ theorem laplaceSpin_eq_fourierProjSpinFull (J : ℤ) {wl wr : ℂ}
   exact mul_ne_zero two_ne_zero (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero)
 
 /-- Exact spin-$J$ Fourier projection on the folded half-interval $[-\pi/2, \pi/2]$ for even $J$:
-$$L_J(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
-  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).$$ -/
+$$
+L_J(w_l + w_r) = \int_{-\pi/2}^{\pi/2} \frac{d\theta}{\pi} \,
+  e^{-J (w_r + i\theta)} \, \mathcal{G}_{\text{mon}}(w_l - i\theta, w_r + i\theta).
+$$ -/
 theorem laplaceSpin_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     M.laplaceSpin J (wl + wr) = M.fourierProjSpin J wl wr := by
@@ -590,8 +614,8 @@ theorem laplaceSpin_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {wl wr : ℂ}
 
 /-- Real-axis specialization of `laplaceSpin_eq_fourierProjSpin`: for even $J$ and real
 $\sigma_l < 0, \sigma_r < 0$, the real spin-$J$ Laplace transform $L_J(\sigma_l + \sigma_r)$ is
-given by the folded $\theta$-integral on $[-\pi/2, \pi/2]$ along $(\sigma_l - i\theta,
-\sigma_r + i\theta)$. -/
+given by the folded $\theta$-integral on $[-\pi/2, \pi/2]$ along
+$(\sigma_l - i\theta, \sigma_r + i\theta)$. -/
 theorem laplaceSpinReal_eq_fourierProjSpin {J : ℤ} (hJ : Even J) {σl σr : ℝ}
     (hσl : σl < 0) (hσr : σr < 0) :
     (M.laplaceSpinReal J (σl + σr) : ℂ) = M.fourierProjSpin J (σl : ℂ) (σr : ℂ) := by
@@ -649,43 +673,43 @@ variable {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
 
 /-- Non-negative coefficient $A_{n, j}(\Delta, l) \, c_{j, a}^{(\nu)}$ of the monomial
 $q = (n, j, a)$ at primary $(\Delta, l) = p$, set to $0$ when $a > j$. -/
-noncomputable def monomialIdxCoeff (q : MonomialIdx) (p : ℝ × ℕ) : ℝ :=
+noncomputable def monomialIdxCoeff (ν : ℝ) (q : MonomialIdx) (p : ℝ × ℕ) : ℝ :=
   if q.2.2 ≤ q.2.1 then
-    ((corr.blocks p.1 p.2).level q.1).A q.2.1 *
+    ((conformalBlock ν p.1 p.2).level q.1).A q.2.1 *
       (gegenbauer.geg_two_var_coeff (ν : ℂ) q.2.1 q.2.2).re
   else 0
 
-/-- Measurability of `corr.monomialIdxCoeff q` across the primary spectrum. -/
-lemma measurable_monomialIdxCoeff (q : MonomialIdx) :
-    Measurable (corr.monomialIdxCoeff q) := by
+/-- Measurability of `monomialIdxCoeff ν q` across the primary spectrum. -/
+lemma measurable_monomialIdxCoeff (ν : ℝ) (q : MonomialIdx) :
+    Measurable (monomialIdxCoeff ν q) := by
   unfold monomialIdxCoeff
   by_cases h : q.2.2 ≤ q.2.1
   · simp only [h, ↓reduceIte]
-    exact (corr.measurable_A q.1 q.2.1).mul measurable_const
+    exact (measurable_conformalBlock_A ν q.1 q.2.1).mul measurable_const
   · simp only [h, ↓reduceIte]
     exact measurable_const
 
 /-- Non-negativity of the conformal block expansion coefficients $A_{n, j}(\Delta, l) \ge 0$ for all
 $n, j \in \mathbb{N}$ (vanishing outside `descendantSpins`). -/
-lemma level_A_nonneg (p : ℝ × ℕ) (n j : ℕ) :
-    0 ≤ ((corr.blocks p.1 p.2).level n).A j := by
+lemma level_A_nonneg (ν : ℝ) (p : ℝ × ℕ) (n j : ℕ) :
+    0 ≤ ((conformalBlock ν p.1 p.2).level n).A j := by
   by_cases hj : j ∈ descendantSpins p.2 n
-  · exact ((corr.blocks p.1 p.2).level n).A_nonneg j hj
-  · rw [((corr.blocks p.1 p.2).level n).A_support j hj]
+  · exact ((conformalBlock ν p.1 p.2).level n).A_nonneg j hj
+  · rw [((conformalBlock ν p.1 p.2).level n).A_support j hj]
 
-/-- Non-negativity of `corr.monomialIdxCoeff q p` when $\nu \ge 0$. -/
+/-- Non-negativity of `monomialIdxCoeff ν q p` when $\nu \ge 0$. -/
 lemma monomialIdxCoeff_nonneg (hν : 0 ≤ ν) (q : MonomialIdx) (p : ℝ × ℕ) :
-    0 ≤ corr.monomialIdxCoeff q p := by
+    0 ≤ monomialIdxCoeff ν q p := by
   dsimp [monomialIdxCoeff]
   split_ifs with h
-  · exact mul_nonneg (corr.level_A_nonneg p q.1 q.2.1)
+  · exact mul_nonneg (level_A_nonneg ν p q.1 q.2.1)
       (gegenbauer.geg_two_var_coeff_nonneg ν hν q.2.1 q.2.2).1
   · exact le_rfl
 
 /-- Pushforward measure on $h \in \mathbb{R}$ contributed by a single monomial index
 $q = (n, j, a)$. -/
 noncomputable def monomialAtomMeasure (q : MonomialIdx) : Measure ℝ :=
-  (corr.mu_measure.withDensity (fun p => ENNReal.ofReal (corr.monomialIdxCoeff q p))).map
+  (corr.mu_measure.withDensity (fun p => ENNReal.ofReal (monomialIdxCoeff ν q p))).map
     (monomialIdxWeight q)
 
 /-- Spin-$J$ monomial spectral measure $\mu_J$ obtained by summing `monomialAtomMeasure q` over all
@@ -699,31 +723,31 @@ noncomputable def monomialMeasure (J : ℤ) : Measure ℝ :=
 lemma integrable_monomialAtomMeasure_iff {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (hν : 0 ≤ ν) (q : MonomialIdx) {f : ℝ → E} (hf : Continuous f) :
     Integrable f (corr.monomialAtomMeasure q) ↔
-      Integrable (fun p => corr.monomialIdxCoeff q p • f (monomialIdxWeight q p))
+      Integrable (fun p => monomialIdxCoeff ν q p • f (monomialIdxWeight q p))
         corr.mu_measure := by
   dsimp [monomialAtomMeasure]
   rw [integrable_map_measure hf.aestronglyMeasurable (measurable_monomialIdxWeight q).aemeasurable]
   rw [integrable_withDensity_iff_integrable_smul'
-    (corr.measurable_monomialIdxCoeff q).ennreal_ofReal
+    (measurable_monomialIdxCoeff ν q).ennreal_ofReal
     (Eventually.of_forall fun _ => ENNReal.ofReal_lt_top)]
   refine integrable_congr (Eventually.of_forall fun p => ?_)
   dsimp [Function.comp_def]
-  rw [ENNReal.toReal_ofReal (corr.monomialIdxCoeff_nonneg hν q p)]
+  rw [ENNReal.toReal_ofReal (monomialIdxCoeff_nonneg hν q p)]
 
 /-- Change-of-variables formula for the Bochner integral against the pushforward measure
 `corr.monomialAtomMeasure q`. -/
 lemma integral_monomialAtomMeasure {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (hν : 0 ≤ ν) (q : MonomialIdx) {f : ℝ → E} (hf : Continuous f) :
     ∫ h, f h ∂(corr.monomialAtomMeasure q) =
-      ∫ p, corr.monomialIdxCoeff q p • f (monomialIdxWeight q p) ∂corr.mu_measure := by
+      ∫ p, monomialIdxCoeff ν q p • f (monomialIdxWeight q p) ∂corr.mu_measure := by
   dsimp [monomialAtomMeasure]
   rw [integral_map (measurable_monomialIdxWeight q).aemeasurable hf.aestronglyMeasurable]
   rw [integral_withDensity_eq_integral_toReal_smul
-    (corr.measurable_monomialIdxCoeff q).ennreal_ofReal
+    (measurable_monomialIdxCoeff ν q).ennreal_ofReal
     (Eventually.of_forall fun _ => ENNReal.ofReal_lt_top)]
   refine integral_congr_ae (Eventually.of_forall fun p => ?_)
   dsimp
-  rw [ENNReal.toReal_ofReal (corr.monomialIdxCoeff_nonneg hν q p)]
+  rw [ENNReal.toReal_ofReal (monomialIdxCoeff_nonneg hν q p)]
 
 /-- Almost everywhere primary spin $l$ is even with respect to `corr.mu_measure`. -/
 lemma ae_even_spin : ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure, Even p.2 := by
@@ -749,7 +773,7 @@ lemma monomialMeasure_support_unitary (J : ℤ) :
     rw [Measure.map_apply (measurable_monomialIdxWeight q) hS,
       withDensity_apply _ ((measurable_monomialIdxWeight q) hS),
       setLIntegral_eq_zero_iff ((measurable_monomialIdxWeight q) hS)
-        ((corr.measurable_monomialIdxCoeff q).ennreal_ofReal)]
+        ((measurable_monomialIdxCoeff ν q).ennreal_ofReal)]
     filter_upwards [corr.ae_unitary] with p hp h_mem
     rw [ENNReal.ofReal_eq_zero]
     refine le_of_eq ?_
@@ -759,7 +783,7 @@ lemma monomialMeasure_support_unitary (J : ℤ) :
     · have hj_mem : q.2.1 ∈ descendantSpins p.2 q.1 := by
         by_contra hj
         apply h_ne
-        rw [((corr.blocks p.1 p.2).level q.1).A_support q.2.1 hj, zero_mul]
+        rw [((conformalBlock ν p.1 p.2).level q.1).A_support q.2.1 hj, zero_mul]
       have hj_le : (q.2.1 : ℝ) ≤ (p.2 : ℝ) + (q.1 : ℝ) := by
         exact_mod_cast (mem_descendantSpins.mp hj_mem).2.1
       have ha_le : (q.2.2 : ℝ) ≤ (q.2.1 : ℝ) := by exact_mod_cast ha
@@ -793,7 +817,7 @@ lemma monomialMeasure_support_odd_spin (J : ℤ) (hJ : Odd J) :
       rw [Measure.map_apply (measurable_monomialIdxWeight q) hS,
         withDensity_apply _ ((measurable_monomialIdxWeight q) hS),
         setLIntegral_eq_zero_iff ((measurable_monomialIdxWeight q) hS)
-          ((corr.measurable_monomialIdxCoeff q).ennreal_ofReal)]
+          ((measurable_monomialIdxCoeff ν q).ennreal_ofReal)]
       filter_upwards [corr.ae_even_spin] with p hp_even _
       rw [ENNReal.ofReal_eq_zero]
       refine le_of_eq ?_
@@ -803,7 +827,7 @@ lemma monomialMeasure_support_odd_spin (J : ℤ) (hJ : Odd J) :
         rw [Int.odd_iff] at h_odd_spin
         rw [Nat.odd_iff]
         omega
-      have hA_zero : ((corr.blocks p.1 p.2).level q.1).A q.2.1 = 0 := by
+      have hA_zero : ((conformalBlock ν p.1 p.2).level q.1).A q.2.1 = 0 := by
         rcases Nat.even_or_odd q.1 with hn_even | hn_odd
         · have hj_not_mem : q.2.1 ∉ descendantSpins p.2 q.1 := by
             intro hj_mem
@@ -812,8 +836,8 @@ lemma monomialMeasure_support_odd_spin (J : ℤ) (hJ : Odd J) :
             have h1 : q.2.1 % 2 = 1 := Nat.odd_iff.mp hj_odd
             have h0 : (p.2 + q.1) % 2 = 0 := Nat.even_iff.mp h_sum_even
             omega
-          exact ((corr.blocks p.1 p.2).level q.1).A_support q.2.1 hj_not_mem
-        · exact (corr.blocks p.1 p.2).A_odd_level q.1 hn_odd q.2.1
+          exact ((conformalBlock ν p.1 p.2).level q.1).A_support q.2.1 hj_not_mem
+        · exact (conformalBlock ν p.1 p.2).A_odd_level q.1 hn_odd q.2.1
       dsimp [monomialIdxCoeff]
       split_ifs
       · rw [hA_zero, zero_mul]
@@ -822,36 +846,36 @@ lemma monomialMeasure_support_odd_spin (J : ℤ) (hJ : Odd J) :
   rw [h_zero, Measure.sum_zero]
 
 /-- Complex monomial contribution of index $q = (n, j, a)$ at primary $p = (\Delta, l)$. -/
-noncomputable def monomialIdxComplexTerm (q : MonomialIdx) (wl wr : ℂ) (p : ℝ × ℕ) : ℂ :=
-  (corr.monomialIdxCoeff q p : ℂ) *
+noncomputable def monomialIdxComplexTerm (ν : ℝ) (q : MonomialIdx) (wl wr : ℂ) (p : ℝ × ℕ) : ℂ :=
+  (monomialIdxCoeff ν q p : ℂ) *
     monomialTerm (monomialIdxWeight q p) (monomialIdxSpin q) wl wr
 
 /-- Real monomial contribution of index $q = (n, j, a)$ at primary $p = (\Delta, l)$. -/
-noncomputable def monomialIdxRealTerm (q : MonomialIdx) (σl σr : ℝ) (p : ℝ × ℕ) : ℝ :=
-  corr.monomialIdxCoeff q p *
+noncomputable def monomialIdxRealTerm (ν : ℝ) (q : MonomialIdx) (σl σr : ℝ) (p : ℝ × ℕ) : ℝ :=
+  monomialIdxCoeff ν q p *
     monomialTermReal (monomialIdxWeight q p) (monomialIdxSpin q) σl σr
 
 lemma monomialIdxRealTerm_nonneg (hν : 0 ≤ ν) (q : MonomialIdx) (σl σr : ℝ) (p : ℝ × ℕ) :
-    0 ≤ corr.monomialIdxRealTerm q σl σr p :=
-  mul_nonneg (corr.monomialIdxCoeff_nonneg hν q p)
+    0 ≤ monomialIdxRealTerm ν q σl σr p :=
+  mul_nonneg (monomialIdxCoeff_nonneg hν q p)
     (monomialTermReal_nonneg (monomialIdxWeight q p) (monomialIdxSpin q) σl σr)
 
 lemma norm_monomialIdxComplexTerm (hν : 0 ≤ ν) (q : MonomialIdx) (wl wr : ℂ) (p : ℝ × ℕ) :
-    ‖corr.monomialIdxComplexTerm q wl wr p‖ = corr.monomialIdxRealTerm q wl.re wr.re p := by
+    ‖monomialIdxComplexTerm ν q wl wr p‖ = monomialIdxRealTerm ν q wl.re wr.re p := by
   dsimp [monomialIdxComplexTerm, monomialIdxRealTerm]
-  rw [norm_mul, Complex.norm_of_nonneg (corr.monomialIdxCoeff_nonneg hν q p), norm_monomialTerm]
+  rw [norm_mul, Complex.norm_of_nonneg (monomialIdxCoeff_nonneg hν q p), norm_monomialTerm]
 
-lemma monomialIdxComplexTerm_ofReal (q : MonomialIdx) (σl σr : ℝ) (p : ℝ × ℕ) :
-    corr.monomialIdxComplexTerm q (σl : ℂ) (σr : ℂ) p =
-      (corr.monomialIdxRealTerm q σl σr p : ℂ) := by
+lemma monomialIdxComplexTerm_ofReal (ν : ℝ) (q : MonomialIdx) (σl σr : ℝ) (p : ℝ × ℕ) :
+    monomialIdxComplexTerm ν q (σl : ℂ) (σr : ℂ) p =
+      (monomialIdxRealTerm ν q σl σr p : ℂ) := by
   dsimp [monomialIdxComplexTerm, monomialIdxRealTerm]
   rw [monomialTerm_ofReal, Complex.ofReal_mul]
 
 /-- At fixed primary $p = (\Delta, l)$ and descendant level $n$, `monomialIdxCoeff` vanishes
 outside the finite set $\operatorname{descendantSpins}(l, n) \times \{0, \dots, l + n\}$. -/
-lemma monomialIdxCoeff_eq_zero_of_not_mem (n : ℕ) (ja : ℕ × ℕ) (p : ℝ × ℕ)
+lemma monomialIdxCoeff_eq_zero_of_not_mem (ν : ℝ) (n : ℕ) (ja : ℕ × ℕ) (p : ℝ × ℕ)
     (h : ja ∉ descendantSpins p.2 n ×ˢ Finset.range (p.2 + n + 1)) :
-    corr.monomialIdxCoeff (n, ja.1, ja.2) p = 0 := by
+    monomialIdxCoeff ν (n, ja.1, ja.2) p = 0 := by
   dsimp [monomialIdxCoeff]
   split_ifs with ha
   · have hj_not : ja.1 ∉ descendantSpins p.2 n := by
@@ -861,32 +885,32 @@ lemma monomialIdxCoeff_eq_zero_of_not_mem (n : ℕ) (ja : ℕ × ℕ) (p : ℝ �
       refine ⟨hj_mem, ?_⟩
       have hj_le := (mem_descendantSpins.mp hj_mem).2.1
       omega
-    rw [((corr.blocks p.1 p.2).level n).A_support ja.1 hj_not, zero_mul]
+    rw [((conformalBlock ν p.1 p.2).level n).A_support ja.1 hj_not, zero_mul]
   · rfl
 
-lemma summable_monomialIdxComplexTerm_level (n : ℕ) (wl wr : ℂ) (p : ℝ × ℕ) :
-    Summable (fun ja : ℕ × ℕ => corr.monomialIdxComplexTerm (n, ja.1, ja.2) wl wr p) := by
+lemma summable_monomialIdxComplexTerm_level (ν : ℝ) (n : ℕ) (wl wr : ℂ) (p : ℝ × ℕ) :
+    Summable (fun ja : ℕ × ℕ => monomialIdxComplexTerm ν (n, ja.1, ja.2) wl wr p) := by
   refine summable_of_ne_finset_zero
     (s := descendantSpins p.2 n ×ˢ Finset.range (p.2 + n + 1)) (fun ja hja => ?_)
   dsimp [monomialIdxComplexTerm]
-  rw [corr.monomialIdxCoeff_eq_zero_of_not_mem n ja p hja, Complex.ofReal_zero, zero_mul]
+  rw [monomialIdxCoeff_eq_zero_of_not_mem ν n ja p hja, Complex.ofReal_zero, zero_mul]
 
-lemma summable_monomialIdxRealTerm_level (n : ℕ) (σl σr : ℝ) (p : ℝ × ℕ) :
-    Summable (fun ja : ℕ × ℕ => corr.monomialIdxRealTerm (n, ja.1, ja.2) σl σr p) := by
+lemma summable_monomialIdxRealTerm_level (ν : ℝ) (n : ℕ) (σl σr : ℝ) (p : ℝ × ℕ) :
+    Summable (fun ja : ℕ × ℕ => monomialIdxRealTerm ν (n, ja.1, ja.2) σl σr p) := by
   refine summable_of_ne_finset_zero
     (s := descendantSpins p.2 n ×ˢ Finset.range (p.2 + n + 1)) (fun ja hja => ?_)
   dsimp [monomialIdxRealTerm]
-  rw [corr.monomialIdxCoeff_eq_zero_of_not_mem n ja p hja, zero_mul]
+  rw [monomialIdxCoeff_eq_zero_of_not_mem ν n ja p hja, zero_mul]
 
 /-- Summing `monomialIdxComplexTerm` over $(j, a) \in \mathbb{N} \times \mathbb{N}$ at fixed
 descendant level $n$ reproduces the polydisk level contribution `evalTermPdisk`. -/
 lemma tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk
     (hν : 0 ≤ ν) (p : ℝ × ℕ) (n : ℕ) (wl wr : ℂ) :
-    (∑' ja : ℕ × ℕ, corr.monomialIdxComplexTerm (n, ja.1, ja.2) wl wr p) =
-      ((corr.blocks p.1 p.2).level n).evalTermPdisk ν p.1 wl wr := by
+    (∑' ja : ℕ × ℕ, monomialIdxComplexTerm ν (n, ja.1, ja.2) wl wr p) =
+      ((conformalBlock ν p.1 p.2).level n).evalTermPdisk ν p.1 wl wr := by
   rw [tsum_eq_sum (s := descendantSpins p.2 n ×ˢ Finset.range (p.2 + n + 1)) (fun ja hja => by
     dsimp [monomialIdxComplexTerm]
-    rw [corr.monomialIdxCoeff_eq_zero_of_not_mem n ja p hja, Complex.ofReal_zero, zero_mul])]
+    rw [monomialIdxCoeff_eq_zero_of_not_mem ν n ja p hja, Complex.ofReal_zero, zero_mul])]
   rw [Finset.sum_product]
   dsimp [ConformalBlockLevel.evalTermPdisk, gegenbauer.geg_two_var_sum]
   refine Finset.sum_congr rfl fun j hj => ?_
@@ -924,10 +948,10 @@ lemma tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk
 /-- Real-axis specialization of `tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk`. -/
 lemma tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk
     (hν : 0 ≤ ν) (p : ℝ × ℕ) (n : ℕ) (σl σr : ℝ) :
-    (∑' ja : ℕ × ℕ, corr.monomialIdxRealTerm (n, ja.1, ja.2) σl σr p) =
-      (((corr.blocks p.1 p.2).level n).evalTermPdisk ν p.1 (σl : ℂ) (σr : ℂ)).re := by
-  have h_eq := corr.tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk hν p n (σl : ℂ) (σr : ℂ)
-  simp_rw [corr.monomialIdxComplexTerm_ofReal] at h_eq
+    (∑' ja : ℕ × ℕ, monomialIdxRealTerm ν (n, ja.1, ja.2) σl σr p) =
+      (((conformalBlock ν p.1 p.2).level n).evalTermPdisk ν p.1 (σl : ℂ) (σr : ℂ)).re := by
+  have h_eq := tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk hν p n (σl : ℂ) (σr : ℂ)
+  simp_rw [monomialIdxComplexTerm_ofReal] at h_eq
   rw [← Complex.ofReal_tsum] at h_eq
   exact congrArg Complex.re h_eq
 
@@ -936,130 +960,130 @@ $p = (\Delta, l)$ (satisfying the unitarity bound $l \le \Delta$) and negative r
 $\sigma_l < 0, \sigma_r < 0$. -/
 lemma summable_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ} (hσl : σl < 0) (hσr : σr < 0)
     (p : ℝ × ℕ) (hp : (p.2 : ℝ) ≤ p.1) :
-    Summable (fun q : MonomialIdx => corr.monomialIdxRealTerm q σl σr p) := by
+    Summable (fun q : MonomialIdx => monomialIdxRealTerm ν q σl σr p) := by
   have hwl : (σl : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσl
   have hwr : (σr : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσr
   have h_sum_level : Summable (fun n : ℕ =>
-      ∑' ja : ℕ × ℕ, corr.monomialIdxRealTerm (n, ja.1, ja.2) σl σr p) := by
-    simp_rw [corr.tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk hν p _ σl σr]
-    exact Complex.reCLM.summable ((corr.blocks p.1 p.2).summable_evalTermPdisk hν hp hwl hwr)
+      ∑' ja : ℕ × ℕ, monomialIdxRealTerm ν (n, ja.1, ja.2) σl σr p) := by
+    simp_rw [tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk hν p _ σl σr]
+    exact Complex.reCLM.summable ((conformalBlock ν p.1 p.2).summable_evalTermPdisk hν hp hwl hwr)
   exact (summable_prod_of_nonneg
-    (fun q => corr.monomialIdxRealTerm_nonneg hν q σl σr p)).mpr
-    ⟨fun n => corr.summable_monomialIdxRealTerm_level n σl σr p, h_sum_level⟩
+    (fun q => monomialIdxRealTerm_nonneg hν q σl σr p)).mpr
+    ⟨fun n => summable_monomialIdxRealTerm_level ν n σl σr p, h_sum_level⟩
 
 /-- Summing `monomialIdxRealTerm` over all $q = (n, j, a) \in \mathbb{N}^3$ reproduces the real part
 of `evalPdisk` at $(\sigma_l, \sigma_r)$. -/
 lemma tsum_monomialIdxRealTerm_eq_re_evalPdisk (hν : 0 ≤ ν) {σl σr : ℝ}
     (hσl : σl < 0) (hσr : σr < 0) (p : ℝ × ℕ) (hp : (p.2 : ℝ) ≤ p.1) :
-    (∑' q : MonomialIdx, corr.monomialIdxRealTerm q σl σr p) =
-      ((corr.blocks p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re := by
+    (∑' q : MonomialIdx, monomialIdxRealTerm ν q σl σr p) =
+      ((conformalBlock ν p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re := by
   have hwl : (σl : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσl
   have hwr : (σr : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσr
-  rw [(corr.summable_monomialIdxRealTerm hν hσl hσr p hp).tsum_prod'
-    (fun n => corr.summable_monomialIdxRealTerm_level n σl σr p)]
-  simp_rw [corr.tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk hν p _ σl σr]
+  rw [(summable_monomialIdxRealTerm hν hσl hσr p hp).tsum_prod'
+    (fun n => summable_monomialIdxRealTerm_level ν n σl σr p)]
+  simp_rw [tsum_monomialIdxRealTerm_level_eq_re_evalTermPdisk hν p _ σl σr]
   dsimp [ConformalBlock.evalPdisk]
   exact (Complex.reCLM.map_tsum
-    ((corr.blocks p.1 p.2).summable_evalTermPdisk hν hp hwl hwr)).symm
+    ((conformalBlock ν p.1 p.2).summable_evalTermPdisk hν hp hwl hwr)).symm
 
 /-- Summability of `monomialIdxComplexTerm` over all $q = (n, j, a) \in \mathbb{N}^3$ on
 $\operatorname{UcPdisk}$. -/
 lemma summable_monomialIdxComplexTerm (hν : 0 ≤ ν) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) (p : ℝ × ℕ) (hp : (p.2 : ℝ) ≤ p.1) :
-    Summable (fun q : MonomialIdx => corr.monomialIdxComplexTerm q wl wr p) := by
-  refine Summable.of_norm_bounded (corr.summable_monomialIdxRealTerm hν hwl hwr p hp) (fun q => ?_)
-  exact (corr.norm_monomialIdxComplexTerm hν q wl wr p).le
+    Summable (fun q : MonomialIdx => monomialIdxComplexTerm ν q wl wr p) := by
+  refine Summable.of_norm_bounded (summable_monomialIdxRealTerm hν hwl hwr p hp) (fun q => ?_)
+  exact (norm_monomialIdxComplexTerm hν q wl wr p).le
 
 /-- Summing `monomialIdxComplexTerm` over all $q = (n, j, a) \in \mathbb{N}^3$ at fixed primary
 $p = (\Delta, l)$ reproduces `evalPdisk wl wr`. -/
 lemma tsum_monomialIdxComplexTerm_eq_evalPdisk (hν : 0 ≤ ν) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) (p : ℝ × ℕ) (hp : (p.2 : ℝ) ≤ p.1) :
-    (∑' q : MonomialIdx, corr.monomialIdxComplexTerm q wl wr p) =
-      (corr.blocks p.1 p.2).evalPdisk wl wr := by
-  rw [(corr.summable_monomialIdxComplexTerm hν hwl hwr p hp).tsum_prod'
-    (fun n => corr.summable_monomialIdxComplexTerm_level n wl wr p)]
-  simp_rw [corr.tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk hν p _ wl wr]
+    (∑' q : MonomialIdx, monomialIdxComplexTerm ν q wl wr p) =
+      (conformalBlock ν p.1 p.2).evalPdisk wl wr := by
+  rw [(summable_monomialIdxComplexTerm hν hwl hwr p hp).tsum_prod'
+    (fun n => summable_monomialIdxComplexTerm_level ν n wl wr p)]
+  simp_rw [tsum_monomialIdxComplexTerm_level_eq_evalTermPdisk hν p _ wl wr]
   rfl
 
-lemma measurable_monomialIdxRealTerm (q : MonomialIdx) (σl σr : ℝ) :
-    Measurable (corr.monomialIdxRealTerm q σl σr) := by
+lemma measurable_monomialIdxRealTerm (ν : ℝ) (q : MonomialIdx) (σl σr : ℝ) :
+    Measurable (monomialIdxRealTerm ν q σl σr) := by
   unfold monomialIdxRealTerm monomialTermReal
-  refine (corr.measurable_monomialIdxCoeff q).mul ?_
+  refine (measurable_monomialIdxCoeff ν q).mul ?_
   have h_w := measurable_monomialIdxWeight q
   fun_prop
 
-lemma measurable_monomialIdxComplexTerm (q : MonomialIdx) (wl wr : ℂ) :
-    Measurable (corr.monomialIdxComplexTerm q wl wr) := by
+lemma measurable_monomialIdxComplexTerm (ν : ℝ) (q : MonomialIdx) (wl wr : ℂ) :
+    Measurable (monomialIdxComplexTerm ν q wl wr) := by
   unfold monomialIdxComplexTerm monomialTerm
-  refine (Complex.measurable_ofReal.comp (corr.measurable_monomialIdxCoeff q)).mul ?_
+  refine (Complex.measurable_ofReal.comp (measurable_monomialIdxCoeff ν q)).mul ?_
   have h_w := measurable_monomialIdxWeight q
   fun_prop
 
-/-- Integrability of `monomialIdxRealTerm q σl σr` with respect to `corr.mu_measure`, obtained by
+/-- Integrability of `monomialIdxRealTerm ν q σl σr` with respect to `corr.mu_measure`, obtained by
 bounding the single non-negative term $q$ by the full sum `evalPdisk (σl : ℂ) (σr : ℂ)`. -/
 lemma integrable_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ}
     (hσl : σl < 0) (hσr : σr < 0) (q : MonomialIdx) :
-    Integrable (corr.monomialIdxRealTerm q σl σr) corr.mu_measure := by
+    Integrable (monomialIdxRealTerm ν q σl σr) corr.mu_measure := by
   have hwl : (σl : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσl
   have hwr : (σr : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσr
   refine (corr.converges_correlator_pdisk hν hwl hwr).norm.mono'
-    (corr.measurable_monomialIdxRealTerm q σl σr).aestronglyMeasurable
+    (measurable_monomialIdxRealTerm ν q σl σr).aestronglyMeasurable
     (corr.ae_unitary.mono fun p hp => ?_)
-  rw [Real.norm_of_nonneg (corr.monomialIdxRealTerm_nonneg hν q σl σr p)]
+  rw [Real.norm_of_nonneg (monomialIdxRealTerm_nonneg hν q σl σr p)]
   calc
-    corr.monomialIdxRealTerm q σl σr p
-      ≤ ∑' q' : MonomialIdx, corr.monomialIdxRealTerm q' σl σr p :=
-        (corr.summable_monomialIdxRealTerm hν hσl hσr p hp).le_tsum q
-          (fun q' _ => corr.monomialIdxRealTerm_nonneg hν q' σl σr p)
-    _ = ((corr.blocks p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re :=
-        corr.tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp
-    _ ≤ ‖(corr.blocks p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)‖ :=
+    monomialIdxRealTerm ν q σl σr p
+      ≤ ∑' q' : MonomialIdx, monomialIdxRealTerm ν q' σl σr p :=
+        (summable_monomialIdxRealTerm hν hσl hσr p hp).le_tsum q
+          (fun q' _ => monomialIdxRealTerm_nonneg hν q' σl σr p)
+    _ = ((conformalBlock ν p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re :=
+        tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp
+    _ ≤ ‖(conformalBlock ν p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)‖ :=
         Complex.re_le_norm _
 
-/-- Integrability of `monomialIdxComplexTerm q wl wr` with respect to `corr.mu_measure`. -/
+/-- Integrability of `monomialIdxComplexTerm ν q wl wr` with respect to `corr.mu_measure`. -/
 lemma integrable_monomialIdxComplexTerm (hν : 0 ≤ ν) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) (q : MonomialIdx) :
-    Integrable (corr.monomialIdxComplexTerm q wl wr) corr.mu_measure := by
+    Integrable (monomialIdxComplexTerm ν q wl wr) corr.mu_measure := by
   refine (corr.integrable_monomialIdxRealTerm hν hwl hwr q).mono'
-    (corr.measurable_monomialIdxComplexTerm q wl wr).aestronglyMeasurable
+    (measurable_monomialIdxComplexTerm ν q wl wr).aestronglyMeasurable
     (Eventually.of_forall fun p => ?_)
-  exact (corr.norm_monomialIdxComplexTerm hν q wl wr p).le
+  exact (norm_monomialIdxComplexTerm hν q wl wr p).le
 
 /-- Master Tonelli summability lemma: for $\sigma_l < 0, \sigma_r < 0$, the integrated real monomial
-contributions $\int \operatorname{monomialIdxRealTerm}(q, \sigma_l, \sigma_r)\, d\mu$ are summable
-over all triples $q = (n, j, a) \in \mathbb{N}^3$. -/
+contributions $\int \operatorname{monomialIdxRealTerm}(\nu, q, \sigma_l, \sigma_r)\, d\mu$ are
+summable over all triples $q = (n, j, a) \in \mathbb{N}^3$. -/
 lemma summable_integral_monomialIdxRealTerm (hν : 0 ≤ ν) {σl σr : ℝ}
     (hσl : σl < 0) (hσr : σr < 0) :
     Summable (fun q : MonomialIdx =>
-      ∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure) := by
+      ∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure) := by
   have hwl : (σl : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσl
   have hwr : (σr : ℂ) ∈ UcDisk := by simpa [UcDisk] using hσr
   have h_nonneg (q : MonomialIdx) :
-      0 ≤ ∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure :=
-    integral_nonneg (corr.monomialIdxRealTerm_nonneg hν q σl σr)
+      0 ≤ ∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure :=
+    integral_nonneg (monomialIdxRealTerm_nonneg hν q σl σr)
   have h_eq :
-      (fun q : MonomialIdx => ∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure) =
+      (fun q : MonomialIdx => ∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure) =
       fun q : MonomialIdx =>
-        (ENNReal.ofReal (∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure)).toReal := by
+        (ENNReal.ofReal (∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure)).toReal := by
     ext q
     exact (ENNReal.toReal_ofReal (h_nonneg q)).symm
   rw [h_eq]
   refine ENNReal.summable_toReal ?_
   have h_lint (q : MonomialIdx) :
-      ENNReal.ofReal (∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure) =
-        ∫⁻ p, ENNReal.ofReal (corr.monomialIdxRealTerm q σl σr p) ∂corr.mu_measure :=
+      ENNReal.ofReal (∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure) =
+        ∫⁻ p, ENNReal.ofReal (monomialIdxRealTerm ν q σl σr p) ∂corr.mu_measure :=
     ofReal_integral_eq_lintegral_ofReal (corr.integrable_monomialIdxRealTerm hν hσl hσr q)
-      (Eventually.of_forall (corr.monomialIdxRealTerm_nonneg hν q σl σr))
+      (Eventually.of_forall (monomialIdxRealTerm_nonneg hν q σl σr))
   simp_rw [h_lint]
   rw [← lintegral_tsum
-    (fun q => (corr.measurable_monomialIdxRealTerm q σl σr).ennreal_ofReal.aemeasurable)]
+    (fun q => (measurable_monomialIdxRealTerm ν q σl σr).ennreal_ofReal.aemeasurable)]
   have h_tsum_eq : ∀ᵐ p : ℝ × ℕ ∂corr.mu_measure,
-      (∑' q : MonomialIdx, ENNReal.ofReal (corr.monomialIdxRealTerm q σl σr p)) =
-        ENNReal.ofReal (((corr.blocks p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re) := by
+      (∑' q : MonomialIdx, ENNReal.ofReal (monomialIdxRealTerm ν q σl σr p)) =
+        ENNReal.ofReal (((conformalBlock ν p.1 p.2).evalPdisk (σl : ℂ) (σr : ℂ)).re) := by
     filter_upwards [corr.ae_unitary] with p hp
-    rw [← ENNReal.ofReal_tsum_of_nonneg (fun q => corr.monomialIdxRealTerm_nonneg hν q σl σr p)
-      (corr.summable_monomialIdxRealTerm hν hσl hσr p hp),
-      corr.tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp]
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun q => monomialIdxRealTerm_nonneg hν q σl σr p)
+      (summable_monomialIdxRealTerm hν hσl hσr p hp),
+      tsum_monomialIdxRealTerm_eq_re_evalPdisk hν hσl hσr p hp]
   rw [lintegral_congr_ae h_tsum_eq]
   refine ne_of_lt (lt_of_le_of_lt (lintegral_mono fun p => ?_)
     (corr.converges_correlator_pdisk hν hwl hwr).norm.hasFiniteIntegral)
@@ -1102,7 +1126,7 @@ lemma monomialMeasure_integrable_real (hν : 0 ≤ ν) {σl σr : ℝ}
       rw [h_norm, corr.integral_monomialAtomMeasure hν q hf_cont]
       simp [monomialIdxRealTerm, hq]
     · rw [integral_zero_measure]
-      exact integral_nonneg (corr.monomialIdxRealTerm_nonneg hν q σl σr)
+      exact integral_nonneg (monomialIdxRealTerm_nonneg hν q σl σr)
 
 /-- Expansion of the spin-$J$ real monomial integral as a sum over the fiber
 $\operatorname{monomialIdxSpin}(q) = J$. -/
@@ -1111,7 +1135,7 @@ lemma monomialMeasure_integral_real (hν : 0 ≤ ν) {σl σr : ℝ}
     (∫ h : ℝ, monomialTermReal h J σl σr ∂(corr.monomialMeasure J)) =
       ∑' q : MonomialIdx,
         if monomialIdxSpin q = J then
-          ∫ p, corr.monomialIdxRealTerm q σl σr p ∂corr.mu_measure
+          ∫ p, monomialIdxRealTerm ν q σl σr p ∂corr.mu_measure
         else 0 := by
   have h_int := corr.monomialMeasure_integrable_real hν hσl hσr J
   dsimp [monomialMeasure] at h_int ⊢
@@ -1151,7 +1175,7 @@ lemma toMonomialFourPointData_evalSpin (hν : 0 ≤ ν) {wl wr : ℂ}
     (corr.toMonomialFourPointData hν).evalSpin J wl wr =
       ∑' q : MonomialIdx,
         if monomialIdxSpin q = J then
-          ∫ p, corr.monomialIdxComplexTerm q wl wr p ∂corr.mu_measure
+          ∫ p, monomialIdxComplexTerm ν q wl wr p ∂corr.mu_measure
         else 0 := by
   have h_int := (corr.toMonomialFourPointData hν).integrable_monomialTerm hwl hwr J
   dsimp [MonomialFourPointData.evalSpin, toMonomialFourPointData, monomialMeasure] at h_int ⊢
@@ -1173,16 +1197,16 @@ theorem toMonomialFourPointData_eval (hν : 0 ≤ ν) {wl wr : ℂ}
   dsimp [MonomialFourPointData.eval, correlator_pdisk, eval_correlator_pdisk]
   simp_rw [corr.toMonomialFourPointData_evalSpin hν hwl hwr]
   have h_sum_norm : Summable (fun q : MonomialIdx =>
-      ∫ p, ‖corr.monomialIdxComplexTerm q wl wr p‖ ∂corr.mu_measure) := by
-    simp_rw [corr.norm_monomialIdxComplexTerm hν _ wl wr]
+      ∫ p, ‖monomialIdxComplexTerm ν q wl wr p‖ ∂corr.mu_measure) := by
+    simp_rw [norm_monomialIdxComplexTerm hν _ wl wr]
     exact corr.summable_integral_monomialIdxRealTerm hν hwl hwr
   have h_sum_complex : Summable (fun q : MonomialIdx =>
-      ∫ p, corr.monomialIdxComplexTerm q wl wr p ∂corr.mu_measure) :=
+      ∫ p, monomialIdxComplexTerm ν q wl wr p ∂corr.mu_measure) :=
     Summable.of_norm_bounded h_sum_norm (fun q => norm_integral_le_integral_norm _)
   rw [(hasSum_fiberwise_monomialIdxSpin h_sum_complex.hasSum).tsum_eq]
   refine (integral_tsum_of_summable_integral_norm
     (fun q => corr.integrable_monomialIdxComplexTerm hν hwl hwr q) h_sum_norm).trans ?_
   refine integral_congr_ae (corr.ae_unitary.mono fun p hp => ?_)
-  exact corr.tsum_monomialIdxComplexTerm_eq_evalPdisk hν hwl hwr p hp
+  exact tsum_monomialIdxComplexTerm_eq_evalPdisk hν hwl hwr p hp
 
 end FourPointData

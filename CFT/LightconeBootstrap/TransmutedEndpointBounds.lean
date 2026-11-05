@@ -15,9 +15,11 @@ and establishes its low-$x$ and high-$x$ endpoint bounds:
    `transmuteInnerDiff`, `transmuteOpInner`)**:
    At $\delta = 0$ (identical scalars), the inner-derivative transmutation operator $\mathcal{L}_0$
    takes the purely elementary form
-   $$\bigl(\operatorname{transmuteOpInner} f\bigr)(w) =
-     \frac{1}{\sqrt{\pi}} \int_0^1 x^{-1/2}(1 - x)^{-1/2}\bigl(1 - x e^{2w}\bigr)^{-1/2} \,
-       \mathcal{D}_{\mathrm{inner}}(f, w, x) \, dx,$$
+$$
+\bigl(\operatorname{transmuteOpInner} f\bigr)(w) =
+  \frac{1}{\sqrt{\pi}} \int_0^1 x^{-1/2}(1 - x)^{-1/2}\bigl(1 - x e^{2w}\bigr)^{-1/2} \,
+    \mathcal{D}_{\mathrm{inner}}(f, w, x) \, dx,
+$$
    where $\mathcal{D}_{\mathrm{inner}}(f, w, x)$ (`transmuteInnerDiff`) only involves the first and
    second derivatives of $f$ at $w + \log x$. Consequently:
    - `transmuteOpInner` annihilates constant functions identically (`transmuteOpInner_const`),
@@ -35,6 +37,20 @@ and establishes its low-$x$ and high-$x$ endpoint bounds:
 3. **Elementary Beta Tail Integral Bound $I_N(e)$ (`integral_rpow_neg_half_mul_add_rpow_le`)**:
    For $e \in (0, 1]$ and any exponent $\beta \ne 0$, a dyadic split at $\min(e, 1/2)$ gives
    $$\int_0^{1/2} y^{-1/2} (e + y)^{-1/2 - \beta} \, dy \le C \bigl(e^{-\beta} + 1\bigr).$$
+
+4. **High-$x$ Endpoint Cancellation, Cauchy Reductions, and Folded $\theta$-Contour Bound**:
+   - On $x \in [1/2, 1)$, the factor $(1 - e^w)^2$ in `transmuteInnerDiff` cancels two inverse
+     powers of $\|1 - x e^w\| \ge \frac{1}{3}(\|1 - e^w\| + 1 - x)$
+     (`norm_transmuteInnerKernel_mul_diff_le_of_source_bound`).
+   - Combining low-$x$ and high-$x$ Cauchy derivative estimates yields the folded $\theta$-contour
+     integral bound `norm_folded_integral_transmuteOpInner_le`.
+
+5. **Action of `transmuteOpInner` on `block1d H` for All $H \ge 0$ (`transmuteOpInner_block1d`)**:
+   Proves that for all $H \ge 0$ and $w \in \operatorname{UcDisk}$,
+$$
+\bigl(\operatorname{transmuteOpInner}(\operatorname{block1d} H)\bigr)(w)
+  = \operatorname{transmuteWeight}(H) \, e^{H w}.
+$$
 -/
 
 open MeasureTheory Set Filter Metric Real Complex Topology
@@ -55,10 +71,12 @@ noncomputable def transmuteInnerKernel (w : ℂ) (x : ℝ) : ℂ :=
     (1 - (x : ℂ) * Complex.exp (2 * w)) ^ (-1 / 2 : ℂ)
 
 /-- The inner-derivative differential expression at $\delta = 0$:
-$$\mathcal{D}_{\mathrm{inner}}(f, w, x) =
+$$
+\mathcal{D}_{\mathrm{inner}}(f, w, x) =
   (1 - e^w)^2 \left[\frac{1 + x e^w}{1 - x e^w} f''(w + \log x)
     + \frac{2 x e^w}{(1 - x e^w)^2} f'(w + \log x)\right]
-  - \frac{1}{2}(1 + e^w)^2 f'(w + \log x).$$ -/
+  - \frac{1}{2}(1 + e^w)^2 f'(w + \log x).
+$$ -/
 noncomputable def transmuteInnerDiff (f : ℂ → ℂ) (w : ℂ) (x : ℝ) : ℂ :=
   (1 - Complex.exp w) ^ 2 *
     ((1 + (x : ℂ) * Complex.exp w) / (1 - (x : ℂ) * Complex.exp w) *
@@ -68,10 +86,12 @@ noncomputable def transmuteInnerDiff (f : ℂ → ℂ) (w : ℂ) (x : ℝ) : ℂ
     (1 / 2 : ℂ) * (1 + Complex.exp w) ^ 2 * deriv f (w + (Real.log x : ℂ))
 
 /-- The convergent inner-derivative 1D transmutation operator at $\delta = 0$:
-$$\bigl(\operatorname{transmuteOpInner} f\bigr)(w) =
+$$
+\bigl(\operatorname{transmuteOpInner} f\bigr)(w) =
   \frac{1}{\sqrt{\pi}} \int_{x \in (0, 1)}
     \operatorname{transmuteInnerKernel}(w, x) \,
-    \operatorname{transmuteInnerDiff}(f, w, x) \, dx.$$ -/
+    \operatorname{transmuteInnerDiff}(f, w, x) \, dx.
+$$ -/
 noncomputable def transmuteOpInner (f : ℂ → ℂ) (w : ℂ) : ℂ :=
   ((Real.sqrt π : ℝ) : ℂ)⁻¹ *
     ∫ x in Ioo (0 : ℝ) 1, transmuteInnerKernel w x * transmuteInnerDiff f w x
@@ -191,9 +211,11 @@ lemma deriv_eulerD {f : ℂ → ℂ} (hf' : Differentiable ℂ (deriv f)) {z : �
 /-- Exact algebraic connection between `transmuteInnerDiff` and the radial Euler operator
 `eulerD` ($\mathscr{D}$): for any twice-differentiable $f : \mathbb{C} \to \mathbb{C}$,
 $w \in \operatorname{UcDisk}$, and $x \in (0, 1)$,
-$$\operatorname{transmuteInnerDiff}(f, w, x) =
+$$
+\operatorname{transmuteInnerDiff}(f, w, x) =
   \frac{1 - x e^w}{1 + x e^w} \left[(1 - e^w)^2 (\mathscr{D}^2 f)(w + \log x)
-    - \frac{1}{2}(1 + e^w)^2 (\mathscr{D} f)(w + \log x)\right].$$ -/
+    - \frac{1}{2}(1 + e^w)^2 (\mathscr{D} f)(w + \log x)\right].
+$$ -/
 theorem transmuteInnerDiff_eq_eulerD {f : ℂ → ℂ} (_hf : Differentiable ℂ f)
     (hf' : Differentiable ℂ (deriv f)) {w : ℂ} (hw : w ∈ UcDisk)
     {x : ℝ} (hx : x ∈ Ioo (0 : ℝ) 1) :
@@ -335,8 +357,10 @@ theorem norm_transmuteInnerKernel_le {w : ℂ} (hw : w ∈ UcDisk)
 /-- On the low-$x$ interval $x \in (0, 1/2]$, `transmuteInnerDiff f w x` is uniformly bounded in
 terms of the first and second derivatives of $f$ at $w + \log x$ for all
 $w \in \operatorname{UcDisk}$:
-$$\|\operatorname{transmuteInnerDiff}(f, w, x)\| \le
-  16 \, \|f''(w + \log x)\| + 18 \, \|f'(w + \log x)\|.$$ -/
+$$
+\|\operatorname{transmuteInnerDiff}(f, w, x)\| \le
+  16 \, \|f''(w + \log x)\| + 18 \, \|f'(w + \log x)\|.
+$$ -/
 theorem norm_transmuteInnerDiff_le (f : ℂ → ℂ) {w : ℂ} (hw : w ∈ UcDisk)
     {x : ℝ} (hx : x ∈ Ioc (0 : ℝ) (1 / 2)) :
     ‖transmuteInnerDiff f w x‖ ≤
@@ -703,8 +727,10 @@ theorem le_norm_one_sub_mul_exp_two_mul {w : ℂ} (hw : w ∈ UcDisk)
 
 /-- High-$x$ bound on `transmuteInnerKernel w x` for $w \in \operatorname{UcDisk}$ with
 $\operatorname{Im} w \in [-\pi/2, \pi/2]$ and $x \in [1/2, 1)$:
-$$\|\operatorname{transmuteInnerKernel}(w, x)\| \le
-  \sqrt{6} \, (1 - x)^{-1/2} \bigl(\|1 - e^w\| + (1 - x)\bigr)^{-1/2}.$$ -/
+$$
+\|\operatorname{transmuteInnerKernel}(w, x)\| \le
+  \sqrt{6} \, (1 - x)^{-1/2} \bigl(\|1 - e^w\| + (1 - x)\bigr)^{-1/2}.
+$$ -/
 theorem norm_transmuteInnerKernel_le_high {w : ℂ} (hw : w ∈ UcDisk)
     (him : w.im ∈ Icc (-π / 2) (π / 2)) {x : ℝ} (hx : x ∈ Ico (1 / 2 : ℝ) 1) :
     ‖transmuteInnerKernel w x‖ ≤
@@ -758,8 +784,10 @@ theorem norm_transmuteInnerKernel_le_high {w : ℂ} (hw : w ∈ UcDisk)
 
 /-- High-$x$ bound on `transmuteInnerDiff f w x` for $w \in \operatorname{UcDisk}$ and
 $x \in [1/2, 1)$ (capturing the $(1 - e^w)^2$ second-order cancellation at $e^w = 1$):
-$$\|\operatorname{transmuteInnerDiff}(f, w, x)\| \le
-  6 \bigl(\|1 - e^w\| + (1 - x)\bigr) \|f''(w + \log x)\| + 20 \, \|f'(w + \log x)\|.$$ -/
+$$
+\|\operatorname{transmuteInnerDiff}(f, w, x)\| \le
+  6 \bigl(\|1 - e^w\| + (1 - x)\bigr) \|f''(w + \log x)\| + 20 \, \|f'(w + \log x)\|.
+$$ -/
 theorem norm_transmuteInnerDiff_le_high (f : ℂ → ℂ) {w : ℂ} (hw : w ∈ UcDisk)
     {x : ℝ} (hx : x ∈ Ico (1 / 2 : ℝ) 1) :
     ‖transmuteInnerDiff f w x‖ ≤
@@ -881,9 +909,11 @@ $\|f'(w + \log x)\| \le C_1 u^{\gamma_{\mathrm{src}} - 1}$ and
 $\|f''(w + \log x)\| \le C_2 u^{\gamma_{\mathrm{src}} - 2}$ with
 $u = \|1 - e^w\| + (1 - x)$, then for $w \in \operatorname{UcDisk}$ with
 $\operatorname{Im} w \in [-\pi/2, \pi/2]$ and $x \in [1/2, 1)$,
-$$\|\operatorname{transmuteInnerKernel}(w, x) \, \operatorname{transmuteInnerDiff}(f, w, x)\|
+$$
+\|\operatorname{transmuteInnerKernel}(w, x) \, \operatorname{transmuteInnerDiff}(f, w, x)\|
   \le \sqrt{6} \, (6 C_2 + 20 C_1) \, (1 - x)^{-1/2}
-    \bigl(\|1 - e^w\| + (1 - x)\bigr)^{\gamma_{\mathrm{src}} - 3/2}.$$ -/
+    \bigl(\|1 - e^w\| + (1 - x)\bigr)^{\gamma_{\mathrm{src}} - 3/2}.
+$$ -/
 theorem norm_transmuteInnerKernel_mul_diff_le_of_source_bound
     {f : ℂ → ℂ} {w : ℂ} (hw : w ∈ UcDisk) (him : w.im ∈ Icc (-π / 2) (π / 2))
     {x : ℝ} (hx : x ∈ Ico (1 / 2 : ℝ) 1)
@@ -1076,9 +1106,11 @@ theorem integral_rpow_neg_half_mul_add_rpow_le_of_le_two {β : ℝ} (hβ : β �
 for any $\gamma_{\mathrm{src}} \ne 1$ and $C_1, C_2 \ge 0$, there exists $C_{\mathrm{high}} \ge 0$
 such that whenever $w \in \operatorname{UcDisk}$ with $\operatorname{Im} w \in [-\pi/2, \pi/2]$
 and $f$ satisfies the Cauchy derivative bounds on $x \in (1/2, 1)$,
-$$\left\|\int_{x \in (1/2, 1)} \operatorname{transmuteInnerKernel}(w, x) \,
+$$
+\left\|\int_{x \in (1/2, 1)} \operatorname{transmuteInnerKernel}(w, x) \,
   \operatorname{transmuteInnerDiff}(f, w, x) \, dx\right\|
-  \le C_{\mathrm{high}} \Bigl(\|1 - e^w\|^{\gamma_{\mathrm{src}} - 1} + 1\Bigr).$$ -/
+  \le C_{\mathrm{high}} \Bigl(\|1 - e^w\|^{\gamma_{\mathrm{src}} - 1} + 1\Bigr).
+$$ -/
 theorem norm_setIntegral_high_transmuteInner_le {γ_src C₁ C₂ : ℝ}
     (hγ : γ_src ≠ 1) (hC₁ : 0 ≤ C₁) (hC₂ : 0 ≤ C₂) :
     ∃ C_high : ℝ, 0 ≤ C_high ∧ ∀ {w : ℂ}, w ∈ UcDisk →
@@ -1170,9 +1202,11 @@ theorem norm_setIntegral_high_transmuteInner_le {γ_src C₁ C₂ : ℝ}
 
 /-- Low-$x$ set integral bound on `Ioc (0 : ℝ) (1 / 2)` for `transmuteOpInner`:
 if $\|f'(w + \log x)\| \le M_1$ and $\|f''(w + \log x)\| \le M_2$ for all $x \in (0, 1/2]$, then
-$$\left\|\int_{x \in (0, 1/2]} \operatorname{transmuteInnerKernel}(w, x) \,
+$$
+\left\|\int_{x \in (0, 1/2]} \operatorname{transmuteInnerKernel}(w, x) \,
   \operatorname{transmuteInnerDiff}(f, w, x) \, dx\right\|
-  \le 2 \sqrt{2} \, (16 M_2 + 18 M_1).$$ -/
+  \le 2 \sqrt{2} \, (16 M_2 + 18 M_1).
+$$ -/
 theorem norm_setIntegral_low_transmuteInner_le {w : ℂ} (hw : w ∈ UcDisk)
     {f : ℂ → ℂ} {M₁ M₂ : ℝ} (hM₁ : 0 ≤ M₁) (hM₂ : 0 ≤ M₂)
     (h_int : IntegrableOn
@@ -1303,8 +1337,10 @@ For any $\gamma_{\mathrm{src}} \ne 1$ and $M_1, M_2, C_1, C_2 \ge 0$, there exis
 such that for all $w \in \operatorname{UcDisk}$ with $\operatorname{Im} w \in [-\pi/2, \pi/2]$ and
 any $f : \mathbb{C} \to \mathbb{C}$ satisfying the low-$x$ bounds on $(0, 1/2]$ and the high-$x$
 bounds on $(1/2, 1)$,
-$$\|\operatorname{transmuteOpInner}(f)(w)\|
-  \le C \Bigl(\|1 - e^w\|^{\gamma_{\mathrm{src}} - 1} + 1\Bigr).$$ -/
+$$
+\|\operatorname{transmuteOpInner}(f)(w)\|
+  \le C \Bigl(\|1 - e^w\|^{\gamma_{\mathrm{src}} - 1} + 1\Bigr).
+$$ -/
 theorem norm_transmuteOpInner_le_of_split_bounds {γ_src M₁ M₂ C₁ C₂ : ℝ}
     (hγ : γ_src ≠ 1) (hM₁ : 0 ≤ M₁) (hM₂ : 0 ≤ M₂) (hC₁ : 0 ≤ C₁) (hC₂ : 0 ≤ C₂) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ {w : ℂ}, w ∈ UcDisk →
@@ -1381,10 +1417,12 @@ there exists $C_{\mathrm{fold}} \ge 0$ such that for all $k \ge 1$ and any famil
 $R : \mathbb{R} \to \mathbb{C} \to \mathbb{C}$ satisfying the low-$x$ ($M_1, M_2$) and high-$x$
 ($C_1, C_2$ with $\gamma_{\mathrm{src}} = 2(h_{\mathrm{gap}} - \Delta_\phi)$) bounds along the
 folded contour $w_r(\theta) = -1/(2k) + i\theta$ ($\theta \in [-\pi/2, \pi/2]$),
-$$\left\|(2k)^{-2\Delta_\phi} \frac{1}{\pi} \int_{-\pi/2}^{\pi/2}
+$$
+\left\|(2k)^{-2\Delta_\phi} \frac{1}{\pi} \int_{-\pi/2}^{\pi/2}
   e^{-2k(-1/(2k) + i\theta)} \,
   \operatorname{transmuteOpInner}(R_\theta)\!\left(-\frac{1}{2k} + i\theta\right) d\theta\right\|
-  \le C_{\mathrm{fold}} \Bigl((2k)^{-2 h_{\mathrm{gap}}} + (2k)^{-2\Delta_\phi}\Bigr).$$ -/
+  \le C_{\mathrm{fold}} \Bigl((2k)^{-2 h_{\mathrm{gap}}} + (2k)^{-2\Delta_\phi}\Bigr).
+$$ -/
 theorem norm_folded_integral_transmuteOpInner_le {Δ_phi h_gap M₁ M₂ C₁ C₂ : ℝ}
     (_hΔ : 0 < Δ_phi) (_hh : 0 < h_gap)
     (hγ_ne1 : 2 * (h_gap - Δ_phi) ≠ 1)
@@ -1586,9 +1624,11 @@ theorem norm_deriv_and_deriv2_add_log_le_of_re_le {f : ℂ → ℂ}
 /-- **Low-$x$ Set Integral Bound from Half-Plane Boundedness**:
 If $f : \mathbb{C} \to \mathbb{C}$ is holomorphic on $\operatorname{UcDisk}$ with
 $\|f(z)\| \le M_0$ on $\operatorname{Re} z \le -1/4$, then for any $w \in \operatorname{UcDisk}$,
-$$\left\|\int_{x \in (0, 1/2]} \operatorname{transmuteInnerKernel}(w, x) \,
+$$
+\left\|\int_{x \in (0, 1/2]} \operatorname{transmuteInnerKernel}(w, x) \,
   \operatorname{transmuteInnerDiff}(f, w, x) \, dx\right\|
-  \le 2192 \sqrt{2} \, M_0.$$ -/
+  \le 2192 \sqrt{2} \, M_0.
+$$ -/
 theorem norm_setIntegral_low_transmuteInner_le_of_re_le_bound {f : ℂ → ℂ}
     (hf : DifferentiableOn ℂ f UcDisk) {M₀ : ℝ} (hM₀_nonneg : 0 ≤ M₀)
     (hM₀ : ∀ z : ℂ, z.re ≤ -1 / 4 → ‖f z‖ ≤ M₀)
@@ -1611,9 +1651,11 @@ containing $\overline{B}\bigl(w + \log x,\, c (\|1 - e^w\| + 1 - x)\bigr)$ ($c >
 $\|f(z)\| \le M \bigl(\|1 - e^w\| + 1 - x\bigr)^{\gamma_{\mathrm{src}}}$ on that closed ball. Then
 for $w \in \operatorname{UcDisk}$ with $\operatorname{Im} w \in [-\pi/2, \pi/2]$ and
 $x \in [1/2, 1)$,
-$$\|\operatorname{transmuteInnerKernel}(w, x) \, \operatorname{transmuteInnerDiff}(f, w, x)\|
+$$
+\|\operatorname{transmuteInnerKernel}(w, x) \, \operatorname{transmuteInnerDiff}(f, w, x)\|
   \le \sqrt{6} \left(\frac{24 M}{c^2} + \frac{20 M}{c}\right)
-    (1 - x)^{-1/2} \bigl(\|1 - e^w\| + (1 - x)\bigr)^{\gamma_{\mathrm{src}} - 3/2}.$$ -/
+    (1 - x)^{-1/2} \bigl(\|1 - e^w\| + (1 - x)\bigr)^{\gamma_{\mathrm{src}} - 3/2}.
+$$ -/
 theorem norm_transmuteInnerKernel_mul_diff_le_of_ball_bound
     {U : Set ℂ} (hU : IsOpen U) {f : ℂ → ℂ} (hf : DifferentiableOn ℂ f U)
     {w : ℂ} (hw : w ∈ UcDisk) (him : w.im ∈ Icc (-π / 2) (π / 2))
@@ -1664,8 +1706,10 @@ In this section we prove:
 2. For all $H > 0$ and $w \in \operatorname{UcDisk}$, integrating by parts on $s \in (0, 1)$
    against the Casimir differential equation for $\operatorname{block1d} H$ and subtracting the
    $s \to 0^+$ counterterm $S_0(H, w, s) = (H - 1/2) e^{H w} s^{H - 1/2}(1 - s)^{1/2}$ shows that
-   $$\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w)
-     = (\operatorname{transmuteWeight} H : \mathbb{C}) \, e^{H w}.$$
+$$
+\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w)
+  = (\operatorname{transmuteWeight} H : \mathbb{C}) \, e^{H w}.
+$$
 3. Consequently, for $H > 1/2$, `transmuteOpInner (block1d H) w = transmuteOp (block1d H) w`. -/
 
 /-- For $n \ge 1$, the rising Pochhammer symbol $(0)_{n + 1}$ vanishes. -/
@@ -1890,8 +1934,10 @@ theorem deriv_deriv_block1d {H : ℝ} (hH : 0 ≤ H) {z : ℂ} (hz : z ∈ UcDis
   rw [h_ev.deriv_eq, (hasDerivAt_block1dDeriv1 hH hz).deriv]
 
 /-- Two-term Casimir recurrence for `block1dCoeff`:
-$$c_{n + 1}(H) \bigl((H + 2(n + 1))^2 - (H + 2(n + 1)) - H(H - 1)\bigr)
-  = c_n(H) \bigl((H + 2n)^2 + (H + 2n) - H(H - 1)\bigr).$$ -/
+$$
+c_{n + 1}(H) \bigl((H + 2(n + 1))^2 - (H + 2(n + 1)) - H(H - 1)\bigr)
+  = c_n(H) \bigl((H + 2n)^2 + (H + 2n) - H(H - 1)\bigr).
+$$ -/
 lemma block1dCoeff_casimir_succ {H : ℝ} (hH : 0 ≤ H) (n : ℕ) :
     block1dCoeff H (n + 1) *
         ((H + 2 * ((n + 1 : ℕ) : ℝ)) ^ 2 - (H + 2 * ((n + 1 : ℕ) : ℝ)) - H * (H - 1)) =
@@ -1910,8 +1956,10 @@ lemma block1dCoeff_casimir_succ {H : ℝ} (hH : 0 ≤ H) (n : ℕ) :
 
 /-- **1D Casimir Differential Equation for `block1d H` on `UcDisk`**:
 For all $H \ge 0$ and $z \in \operatorname{UcDisk}$,
-$$(1 - e^{2z}) (\operatorname{block1d} H)''(z) - (1 + e^{2z}) (\operatorname{block1d} H)'(z)
-  = H(H - 1) (1 - e^{2z}) \operatorname{block1d}(H, z).$$ -/
+$$
+(1 - e^{2z}) (\operatorname{block1d} H)''(z) - (1 + e^{2z}) (\operatorname{block1d} H)'(z)
+  = H(H - 1) (1 - e^{2z}) \operatorname{block1d}(H, z).
+$$ -/
 theorem casimir_block1d {H : ℝ} (hH : 0 ≤ H) {z : ℂ} (hz : z ∈ UcDisk) :
     (1 - Complex.exp (2 * z)) * block1dDeriv2 H z -
         (1 + Complex.exp (2 * z)) * block1dDeriv1 H z =
@@ -1986,8 +2034,10 @@ noncomputable def transmuteBoundaryKernel (w : ℂ) (s : ℝ) : ℂ :=
     (1 - (s : ℂ) * Complex.exp (2 * w)) ^ (1 / 2 : ℂ)
 
 /-- The unregularized integration-by-parts boundary term for `block1d H`:
-$$B(H, w, s) = W(w, s) \left[\frac{1 + s e^w}{1 - s e^w} (\operatorname{block1d} H)'(w + \log s)
-  - \frac{1}{2} \operatorname{block1d}(H, w + \log s)\right].$$ -/
+$$
+B(H, w, s) = W(w, s) \left[\frac{1 + s e^w}{1 - s e^w} (\operatorname{block1d} H)'(w + \log s)
+  - \frac{1}{2} \operatorname{block1d}(H, w + \log s)\right].
+$$ -/
 noncomputable def transmuteBoundaryTerm (H : ℝ) (w : ℂ) (s : ℝ) : ℂ :=
   transmuteBoundaryKernel w s *
     ((1 + (s : ℂ) * Complex.exp w) / (1 - (s : ℂ) * Complex.exp w) *
@@ -2055,8 +2105,10 @@ lemma transmuteBoundaryKernel_eq_mul_transmuteInnerKernel {w : ℂ} (hw : w ∈ 
   ring
 
 /-- Derivative of `transmuteBoundaryKernel w` on $s \in (0, 1)$:
-$$\frac{d}{ds} W(w, s)
-  = -\operatorname{transmuteInnerKernel}(w, s) \, \frac{1 - s^2 e^{2w}}{2 s}.$$ -/
+$$
+\frac{d}{ds} W(w, s)
+  = -\operatorname{transmuteInnerKernel}(w, s) \, \frac{1 - s^2 e^{2w}}{2 s}.
+$$ -/
 lemma hasDerivAt_transmuteBoundaryKernel {w : ℂ} (hw : w ∈ UcDisk)
     {s : ℝ} (hs : s ∈ Ioo (0 : ℝ) 1) :
     HasDerivAt (transmuteBoundaryKernel w)
@@ -2133,11 +2185,13 @@ lemma hasDerivAt_transmuteBoundaryKernel {w : ℂ} (hw : w ∈ UcDisk)
 
 /-- **Pointwise Integration-by-Parts Identity for `block1d H`**:
 For all $H \ge 0$, $w \in \operatorname{UcDisk}$, and $s \in (0, 1)$,
-$$\frac{d}{ds} B(H, w, s)
+$$
+\frac{d}{ds} B(H, w, s)
   = \left(H - \frac{1}{2}\right)^2 \operatorname{transmuteKernel}(w, s) \,
       \operatorname{block1d}(H, w + \log s)
     - \operatorname{transmuteInnerKernel}(w, s) \,
-      \operatorname{transmuteInnerDiff}(\operatorname{block1d} H, w, s).$$ -/
+      \operatorname{transmuteInnerDiff}(\operatorname{block1d} H, w, s).
+$$ -/
 theorem hasDerivAt_transmuteBoundaryTerm {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw : w ∈ UcDisk)
     {s : ℝ} (hs : s ∈ Ioo (0 : ℝ) 1) :
     HasDerivAt (transmuteBoundaryTerm H w)
@@ -2246,9 +2300,11 @@ theorem hasDerivAt_transmuteBoundaryTerm {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw 
   linear_combination h_alg + K * (s : ℂ)⁻¹ * h_cas
 
 /-- Derivative of the counterterm $S_0(H, w, s)$ on $s \in (0, 1)$:
-$$\frac{d}{ds} S_0(H, w, s)
+$$
+\frac{d}{ds} S_0(H, w, s)
   = e^{H w} \left[\left(H - \frac{1}{2}\right)^2 \operatorname{betaKernel}(H, 0, s)
-    - H\left(H - \frac{1}{2}\right) \operatorname{betaKernel}(H, 1, s)\right].$$ -/
+    - H\left(H - \frac{1}{2}\right) \operatorname{betaKernel}(H, 1, s)\right].
+$$ -/
 lemma hasDerivAt_transmuteBoundarySub (H : ℝ) (w : ℂ) {s : ℝ} (hs : s ∈ Ioo (0 : ℝ) 1) :
     HasDerivAt (transmuteBoundarySub H w)
       (Complex.exp ((H : ℂ) * w) *
@@ -3839,8 +3895,10 @@ lemma integrableOn_transmuteInner_block1d {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw
 /-- **Main 1D Inner-Derivative Transmutation Theorem for $H > 0$
 (`transmuteOpInner_block1d_of_pos`)**:
 For all $H > 0$ and all $w \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w)
-  = (\operatorname{transmuteWeight} H : \mathbb{C}) \, e^{H w}.$$ -/
+$$
+\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w)
+  = (\operatorname{transmuteWeight} H : \mathbb{C}) \, e^{H w}.
+$$ -/
 theorem transmuteOpInner_block1d_of_pos {H : ℝ} (hH : 0 < H) {w : ℂ} (hw : w ∈ UcDisk) :
     transmuteOpInner (block1d H) w =
       (transmuteWeight H : ℂ) * Complex.exp ((H : ℂ) * w) := by
@@ -3877,11 +3935,13 @@ theorem transmuteOpInner_block1d_of_pos {H : ℝ} (hH : 0 < H) {w : ℂ} (hw : w
 
 /-- **Action of `transmuteOpInner` on `block1d H` for All $H \ge 0$ (`transmuteOpInner_block1d`)**:
 For all $H \ge 0$ and all $w \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w) =
+$$
+\operatorname{transmuteOpInner}(\operatorname{block1d} H)(w) =
   \begin{cases}
     0 & \text{if } H = 0, \\
     \operatorname{transmuteWeight}(H) \, e^{H w} & \text{if } H > 0.
-  \end{cases}$$ -/
+  \end{cases}
+$$ -/
 theorem transmuteOpInner_block1d {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw : w ∈ UcDisk) :
     transmuteOpInner (block1d H) w =
       if H = 0 then 0 else (transmuteWeight H : ℂ) * Complex.exp ((H : ℂ) * w) := by

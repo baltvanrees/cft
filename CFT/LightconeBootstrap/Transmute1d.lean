@@ -37,16 +37,20 @@ monomial `exp (H * w)`.
 3. **Transmutation Kernel, Beta Integral, and Action on `block1d` (`transmuteKernel`,
    `transmuteCore`, `transmuteCore_block1d`)**:
    - For $H > 1/2$ and $w \in \operatorname{UcDisk}$,
-     $$\operatorname{transmuteCore}(\operatorname{block1d} H)\, w
-       = \frac{\Gamma(H - 1/2)}{\Gamma(H)} e^{H w}.$$
+$$
+\operatorname{transmuteCore}(\operatorname{block1d} H)\, w
+  = \frac{\Gamma(H - 1/2)}{\Gamma(H)} e^{H w}.
+$$
 
 4. **$H$-Independent Differential-Integral Operator `transmuteOp` ($\mathcal{L}_0$) and
    Non-Negative Truncated Weight (`derivHalfSub`, `transmuteOp`, `transmuteOp_block1d`,
    `transmutePosWeight`)**:
    - Combining `transmuteCore` with $\bigl(\partial_w - \tfrac{1}{2}\bigr)^2$ (`derivHalfSub`)
      defines the $H$-independent operator
-     $$\operatorname{transmuteOp}(f)(w) :=
-       \left(\partial_w - \frac{1}{2}\right)^2 \bigl(\operatorname{transmuteCore} f\bigr)(w),$$
+$$
+\operatorname{transmuteOp}(f)(w) :=
+  \left(\partial_w - \frac{1}{2}\right)^2 \bigl(\operatorname{transmuteCore} f\bigr)(w),
+$$
      which satisfies `transmuteOp (block1d H) w = transmuteWeight H * exp (H * w)` on `UcDisk`
      and acts linearly on finite sums of 1D conformal blocks (`transmuteOp_finset_sum_block1d`).
    - We also define the non-negative measurable truncation `transmutePosWeight` for weighting CFT
@@ -256,9 +260,11 @@ lemma block1dCoeff_eq_halfBinom_mul_div (H : ℝ) (n : ℕ) :
 
 /-- Unified Pochhammer cancellation identity for `block1dCoeff`: for $H > 1/2$ and any
 $n, p \in \mathbb{N}$,
-$$\operatorname{block1dCoeff}(H, n) \frac{(H - 1/2)_{n + 1 + p}}{(H)_{n + 1 + p}}
+$$
+\operatorname{block1dCoeff}(H, n) \frac{(H - 1/2)_{n + 1 + p}}{(H)_{n + 1 + p}}
   = \left(H - \frac{1}{2}\right) \operatorname{halfBinom}(n)
-    \frac{(H + n + 1/2)_p}{(H + n)_{p + 1}}.$$ -/
+    \frac{(H + n + 1/2)_p}{(H + n)_{p + 1}}.
+$$ -/
 lemma block1dCoeff_mul_pochhammer_div_add_succ {H : ℝ} (hH : 1 / 2 < H) (n p : ℕ) :
     block1dCoeff H n *
         (realPochhammer (H - 1 / 2) (n + 1 + p) / realPochhammer H (n + 1 + p)) =
@@ -302,8 +308,10 @@ lemma block1dCoeff_mul_pochhammer_div_succ {H : ℝ} (hH : 1 / 2 < H) (m k : ℕ
 
 /-- **Exact Vanishing of Higher Descendant Modes**:
 For all $H > 1/2$ and all $m \ge 1$,
-$$\sum_{n=0}^m b_{m - n} \, c_n(H) \frac{(H - 1/2)_{m + n}}{(H)_{m + n}}
-  = \sum_{k=0}^{m - 1} b_{m - 1 - k} \, c_k(H) \frac{(H - 1/2)_{m + 1 + k}}{(H)_{m + 1 + k}}.$$ -/
+$$
+\sum_{n=0}^m b_{m - n} \, c_n(H) \frac{(H - 1/2)_{m + n}}{(H)_{m + n}}
+  = \sum_{k=0}^{m - 1} b_{m - 1 - k} \, c_k(H) \frac{(H - 1/2)_{m + 1 + k}}{(H)_{m + 1 + k}}.
+$$ -/
 theorem sum_transmuteCoeff_eq {H : ℝ} (hH : 1 / 2 < H) {m : ℕ} (hm : 1 ≤ m) :
     (∑ n ∈ Finset.range (m + 1),
       halfBinom (m - n) * block1dCoeff H n *
@@ -396,8 +404,10 @@ noncomputable def transmuteKernel (w : ℂ) (s : ℝ) : ℂ :=
     (1 - (s : ℂ) * Complex.exp (2 * w)) ^ (-1 / 2 : ℂ)
 
 /-- The core 1D fractional transmutation operator acting via real log-translations on `UcDisk`:
-$$(\operatorname{transmuteCore} f)(w)
-  = \frac{1}{\sqrt{\pi}} \int_0^1 \operatorname{transmuteKernel}(w, s) \, f(w + \log s) \, ds.$$ -/
+$$
+(\operatorname{transmuteCore} f)(w)
+  = \frac{1}{\sqrt{\pi}} \int_0^1 \operatorname{transmuteKernel}(w, s) \, f(w + \log s) \, ds.
+$$ -/
 noncomputable def transmuteCore (f : ℂ → ℂ) (w : ℂ) : ℂ :=
   ((Real.sqrt π : ℝ) : ℂ)⁻¹ *
     ∫ s in Ioo (0 : ℝ) 1, transmuteKernel w s * f (w + (Real.log s : ℂ))
@@ -478,9 +488,11 @@ lemma integrableOn_betaKernel {H : ℝ} (hH : 1 / 2 < H) (N : ℕ) :
 
 /-- Evaluation of the Beta integral on $s^{H + N - 3/2} (1 - s)^{-1/2}$ for $H > 1/2$ and
 $N \in \mathbb{N}$:
-$$\int_0^1 s^{H + N - 3/2} (1 - s)^{-1/2} \, ds
+$$
+\int_0^1 s^{H + N - 3/2} (1 - s)^{-1/2} \, ds
   = \sqrt{\pi} \, \operatorname{transmuteCoreWeight}(H)
-    \frac{(H - 1/2)_N}{(H)_N}.$$ -/
+    \frac{(H - 1/2)_N}{(H)_N}.
+$$ -/
 theorem integral_betaKernel {H : ℝ} (hH : 1 / 2 < H) (N : ℕ) :
     (∫ s in Ioo (0 : ℝ) 1, betaKernel H N s) =
       Real.sqrt π * transmuteCoreWeight H *
@@ -944,8 +956,10 @@ lemma summable_mul_add_one_mul_exp_pow {w : ℂ} (hw : w ∈ UcDisk) :
 
 /-- **Main 1D Fractional Transmutation Theorem (`transmuteCore_block1d`)**:
 For all $H > 1/2$ and all $w \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteCore}(\operatorname{block1d} H)\, w
-  = \operatorname{transmuteCoreWeight}(H) \, e^{H w}.$$ -/
+$$
+\operatorname{transmuteCore}(\operatorname{block1d} H)\, w
+  = \operatorname{transmuteCoreWeight}(H) \, e^{H w}.
+$$ -/
 theorem transmuteCore_block1d {H : ℝ} (hH : 1 / 2 < H) {w : ℂ} (hw : w ∈ UcDisk) :
     transmuteCore (block1d H) w =
       (transmuteCoreWeight H : ℂ) * Complex.exp ((H : ℂ) * w) := by
@@ -1106,8 +1120,10 @@ noncomputable def derivHalfSub (f : ℂ → ℂ) (w : ℂ) : ℂ :=
   deriv f w - (1 / 2 : ℂ) * f w
 
 /-- The $H$-independent 1D conformal block transmutation operator
-$$\mathcal{L}_0(f)(w) :=
-  \left(\partial_w - \frac{1}{2}\right)^2 \bigl(\operatorname{transmuteCore} f\bigr)(w).$$
+$$
+\mathcal{L}_0(f)(w) :=
+  \left(\partial_w - \frac{1}{2}\right)^2 \bigl(\operatorname{transmuteCore} f\bigr)(w).
+$$
 Because `transmuteCore (block1d H) w = transmuteCoreWeight H * exp (H * w)` on the open half-plane
 `UcDisk`, applying $\bigl(\partial_w - \tfrac{1}{2}\bigr)^2$ multiplies by $(H - 1/2)^2$ and turns
 `transmuteCoreWeight H` into `transmuteWeight H` without any $H$-dependence in the operator. -/
@@ -1162,8 +1178,10 @@ lemma derivHalfSub_derivHalfSub_const_mul_exp (c : ℂ) (H : ℝ) (w : ℂ) :
 
 /-- **Main 1D transmutation theorem for the $H$-independent operator `transmuteOp`**
 ($\mathcal{L}_0$): for all $H > 1/2$ and $w \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOp}(\operatorname{block1d} H)\, w =
-  \operatorname{transmuteWeight}(H) \, e^{H w}.$$ -/
+$$
+\operatorname{transmuteOp}(\operatorname{block1d} H)\, w =
+  \operatorname{transmuteWeight}(H) \, e^{H w}.
+$$ -/
 theorem transmuteOp_block1d {H : ℝ} (hH : 1 / 2 < H) {w : ℂ} (hw : w ∈ UcDisk) :
     transmuteOp (block1d H) w =
       (transmuteWeight H : ℂ) * Complex.exp ((H : ℂ) * w) := by
@@ -1236,11 +1254,13 @@ theorem transmuteOp_finset_sum_block1d {ι : Type*} (S : Finset ι)
   ring
 
 /-- Non-negative truncation of `transmuteWeight H` at the unitarity threshold $H > 1/2$:
-$$\operatorname{transmutePosWeight}(H) :=
+$$
+\operatorname{transmutePosWeight}(H) :=
   \begin{cases}
     \operatorname{transmuteWeight}(H) & \text{if } H > 1/2, \\
     0 & \text{otherwise.}
-  \end{cases}$$
+  \end{cases}
+$$
 For every spin $J \ge 1$ and unitary left twist $h \ge 0$, $H = h + J \ge 1 > 1/2$, so
 `transmutePosWeight (h + J) = transmuteWeight (h + J) > 0`. -/
 noncomputable def transmutePosWeight (H : ℝ) : ℝ :=

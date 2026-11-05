@@ -51,18 +51,22 @@ namespace CFT.ConeTauberian
 
 /-- The unsymmetrized 2D chiral conformal block product for left/right collinear weights
 `hl hr : ℝ`:
-$$\operatorname{block2dChiral}(h_l, h_r, w_l, w_r) =
-  \operatorname{block1d}(h_l, w_l) \operatorname{block1d}(h_r, w_r).$$ -/
+$$
+\operatorname{block2dChiral}(h_l, h_r, w_l, w_r) =
+  \operatorname{block1d}(h_l, w_l) \operatorname{block1d}(h_r, w_r).
+$$ -/
 noncomputable def block2dChiral (hl hr : ℝ) (wl wr : ℂ) : ℂ :=
   block1d hl wl * block1d hr wr
 
 /-- The symmetrized 2D conformal block for scaling dimension `Δ : ℝ` and 2D spin `j : ℕ`:
-$$\operatorname{block2d}(\Delta, j, w_l, w_r) =
+$$
+\operatorname{block2d}(\Delta, j, w_l, w_r) =
   \frac{1}{1 + \delta_{j, 0}} \left[
     \operatorname{block2dChiral}\!\left(\frac{\Delta - j}{2}, \frac{\Delta + j}{2}, w_l, w_r\right)
     + \operatorname{block2dChiral}\!\left(
         \frac{\Delta + j}{2}, \frac{\Delta - j}{2}, w_l, w_r\right)
-  \right].$$ -/
+  \right].
+$$ -/
 noncomputable def block2d (Δ : ℝ) (j : ℕ) (wl wr : ℂ) : ℂ :=
   ((1 + (if j = 0 then (1 : ℝ) else 0) : ℝ) : ℂ)⁻¹ *
     (block2dChiral ((Δ - (j : ℝ)) / 2) ((Δ + (j : ℝ)) / 2) wl wr +
@@ -90,9 +94,11 @@ lemma transmuteOp_add_const_mul_block1d (c1 c2 : ℂ) {H1 H2 : ℝ}
 
 /-- **Exact bilateral transmutation identity on `block2dChiral`**:
 for `hl > 1/2`, `hr > 1/2`, and `wl, wr ∈ UcDisk`,
-$$\operatorname{transmuteOp2d}(\operatorname{block2dChiral} h_l h_r)(w_l, w_r) =
+$$
+\operatorname{transmuteOp2d}(\operatorname{block2dChiral} h_l h_r)(w_l, w_r) =
   \operatorname{transmuteWeight}(h_l) \operatorname{transmuteWeight}(h_r)
-  e^{h_l w_l + h_r w_r}.$$ -/
+  e^{h_l w_l + h_r w_r}.
+$$ -/
 theorem transmuteOp2d_block2dChiral {hl hr : ℝ} (hhl : 1 / 2 < hl) (hhr : 1 / 2 < hr)
     {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     transmuteOp2d (block2dChiral hl hr) wl wr =
@@ -154,8 +160,10 @@ theorem transmuteOp2d_block2d {Δ : ℝ} {j : ℕ} (hΔj : 1 / 2 < (Δ - (j : �
 -/
 
 /-- The unsymmetrized Gegenbauer angular coefficient
-$$\operatorname{gegSpinCoeff}(\nu, \ell, m) :=
-  \frac{(\nu)_m}{m!} \frac{(\nu)_{\ell - m}}{(\ell - m)!}.$$ -/
+$$
+\operatorname{gegSpinCoeff}(\nu, \ell, m) :=
+  \frac{(\nu)_m}{m!} \frac{(\nu)_{\ell - m}}{(\ell - m)!}.
+$$ -/
 noncomputable def gegSpinCoeff (ν : ℝ) (l m : ℕ) : ℝ :=
   pochhammerCoeff ν m * pochhammerCoeff ν (l - m)
 
@@ -214,8 +222,10 @@ lemma gegenbauer_eval_Trigger_eq_sum_gegSpinCoeff (ν : ℝ) (l : ℕ) (r : ℂ)
 
 /-- **Transverse Shift Binomial Resummation Identity**:
 for any $\nu \in \mathbb{R}$ and $\xi \in (0, 1)$,
-$$\sum_{k=0}^\infty \operatorname{pochhammerCoeff}(\nu - 1/2, k) (1 - \xi^2)^k
-  = \xi^{1 - 2\nu}.$$ -/
+$$
+\sum_{k=0}^\infty \operatorname{pochhammerCoeff}(\nu - 1/2, k) (1 - \xi^2)^k
+  = \xi^{1 - 2\nu}.
+$$ -/
 theorem hasSum_transverseShift (ν : ℝ) {ξ : ℝ} (hξ : ξ ∈ Ioo (0 : ℝ) 1) :
     HasSum (fun k : ℕ => pochhammerCoeff (ν - 1 / 2) k * (1 - ξ ^ 2) ^ k)
       (ξ ^ (1 - 2 * ν)) := by
@@ -240,9 +250,11 @@ theorem hasSum_transverseShift (ν : ℝ) {ξ : ℝ} (hξ : ξ ∈ Ioo (0 : ℝ)
 /-- **Uniform $O(m^{-1} + (\ell - m)^{-1})$ Product Stirling Bound for `gegSpinCoeff`**:
 for $\nu > 0$, there exists $C > 0$ such that for all $\ell, m \in \mathbb{N}$ with
 $1 \le m$ and $1 \le \ell - m$,
-$$\left|\bigl(m(\ell - m)\bigr)^{1 - \nu} \operatorname{gegSpinCoeff}(\nu, \ell, m)
+$$
+\left|\bigl(m(\ell - m)\bigr)^{1 - \nu} \operatorname{gegSpinCoeff}(\nu, \ell, m)
   - \frac{1}{\Gamma(\nu)^2}\right|
-  \le C \left(\frac{1}{m} + \frac{1}{\ell - m}\right).$$ -/
+  \le C \left(\frac{1}{m} + \frac{1}{\ell - m}\right).
+$$ -/
 theorem exists_abs_rpow_mul_gegSpinCoeff_sub_inv_gamma_sq_le {ν : ℝ} (hν : 0 < ν) :
     ∃ C > 0, ∀ {l m : ℕ}, 1 ≤ m → 1 ≤ l - m →
       |((m : ℝ) * ((l - m : ℕ) : ℝ)) ^ (1 - ν) * gegSpinCoeff ν l m -

@@ -754,8 +754,11 @@ lemma one_add_natCast_pow_mul_exp_le (p : ℕ) {σ_plus σ : ℝ}
         mul_le_mul_of_nonneg_left h_exp_prod (by positivity)
 
 /-- Summability of the mixed-exponent shifted binomial series
-$\sum_{n=0}^\infty \operatorname{pochhammerCoeff}(a, n) \operatorname{pochhammerCoeff}(b, n + K)
-  (e^\sigma)^n$ for $a > 0, b > 0$, and $\sigma < 0$. -/
+$$
+\sum_{n=0}^\infty \operatorname{pochhammerCoeff}(a, n) \operatorname{pochhammerCoeff}(b, n + K)
+  (e^\sigma)^n
+$$
+for $a > 0, b > 0$, and $\sigma < 0$. -/
 lemma summable_pochhammerCoeff_mixed_mul_exp {a b : ℝ} (ha : 0 < a) (hb : 0 < b)
     (K : ℕ) {σ : ℝ} (hσ : σ < 0) :
     Summable (fun n : ℕ =>
@@ -842,8 +845,10 @@ lemma summable_pochhammerCoeff_mixed_mul_exp {a b : ℝ} (ha : 0 < a) (hb : 0 < 
 /-- **Uniform $O(K^{-1})$ Bound for the Mixed-Exponent Shifted Binomial Series**:
 For any $a > 0$, $b > 0$, and $\sigma_+ < 0$, there exists $C \ge 0$ such that for all $K \ge 1$
 and all $\sigma \le \sigma_+$,
-$$\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!} e^{n \sigma}
-  - \frac{1}{\Gamma(b)} (1 - e^\sigma)^{-a}\right| \le \frac{C}{K}.$$ -/
+$$
+\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!} e^{n \sigma}
+  - \frac{1}{\Gamma(b)} (1 - e^\sigma)^{-a}\right| \le \frac{C}{K}.
+$$ -/
 theorem exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub {a b σ_plus : ℝ}
     (ha : 0 < a) (hb : 0 < b) (hσ_plus : σ_plus < 0) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ {σ : ℝ}, σ ≤ σ_plus →
@@ -1890,7 +1895,7 @@ theorem exists_uniform_bound_fourierProjSpin_sub_identity_real {ν Δ_phi h_gap 
     Real.exp (1 - h_gap * σr0) * K_left * (4 : ℝ) ^ Δ_phi * (M.evalReal σl0 σr0 - 1)
   have hK_rem_nonneg : 0 ≤ K_rem :=
     mul_nonneg (mul_nonneg (mul_nonneg (Real.exp_pos _).le hK_left_nonneg) (by positivity))
-      (M.evalReal_sub_one_nonneg hgap σl0 σr0)
+      (M.evalReal_sub_one_nonneg hgap hσl0_neg hσr0_neg)
   refine ⟨π⁻¹ * K_rem * C_int, by positivity, fun {k} hk1 hσk {σ} hσ => ?_⟩
   have h2k_pos : (0 : ℝ) < 2 * (k : ℝ) := by exact_mod_cast (by omega : 0 < 2 * k)
   set ε := 1 / (2 * (k : ℝ))
@@ -2017,7 +2022,7 @@ theorem exists_uniform_bound_fourierProjSpin_sub_identity_real {ν Δ_phi h_gap 
             (Real.exp (- (h_gap * σr0)) * (M.evalReal σl0 σr0 - 1))) := by
           refine mul_le_mul_of_nonneg_left (h_pt.trans ?_) (Real.exp_pos 1).le
           exact mul_le_mul_of_nonneg_right h_prod_le
-            (mul_nonneg (Real.exp_pos _).le (M.evalReal_sub_one_nonneg hgap σl0 σr0))
+            (mul_nonneg (Real.exp_pos _).le (M.evalReal_sub_one_nonneg hgap hσl0_neg hσr0_neg))
       _ = K_rem *
             ‖1 - Complex.exp ((-ε : ℂ) + (θ : ℂ) * I)‖ ^ (2 * (h_gap - Δ_phi)) := by
         dsimp [K_rem]

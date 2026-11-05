@@ -64,14 +64,15 @@ spin-to-dimension ratio $\xi = \ell / \Delta$) for $d$-dimensional primary opera
      for which we know the series coefficients exactly. The positivity of these coefficients will do
      a lot of the heavy lifting in the analytic continuation to two independent complex
      variables.
-   - Euclidean conformal blocks (`ConformalBlock`) as functions of a single complex variable $ρ$,
-     of the form
+   - Euclidean conformal blocks (`ConformalBlock` and canonical `conformalBlock ν Δ l`) as functions
+     of a single complex variable $ρ$, of the form
      $$
     G_{\Delta}^{(l)}(\rho) = \sum_{n=0}^{\infty} \|\rho\|^{\Delta + n}
       \sum_{j \in S(l, n)} A_{n, j} C_j^\nu(\cos \arg \rho)\,.
      $$
-     with abstract coefficients $A_{n,j}$ for which we only specify some necessary properties. In a
-     future version these should be defined explicitly using the conformal Casimir.
+     with coefficients $A_{n,j}$ whose existence (`exists_conformalBlock`) and measurability
+     (`measurable_conformalBlock_A`) are stated as theorems to be discharged from the conformal
+     Casimir recursion.
    - The analytic continuation of conformal blocks to `UcPDisk`
      (`ConformalBlock.evalPdisk`) and joint holomorphy (`ConformalBlock.differentiableOn_evalPdisk`)
      on $\operatorname{UcPdisk}$.
@@ -132,10 +133,10 @@ spin-to-dimension ratio $\xi = \ell / \Delta$) for $d$-dimensional primary opera
      non-negative truncated weight (`transmutePosWeight`).
    - `CFT.LightconeBootstrap.LightconeBlockDecomp`: Action of `transmuteOp` on
      `ConformalBlockLightconeLevel` and `ConformalBlockLightcone`,
-     `LightconeBlockFourPointData`, and its transmuted `MonomialFourPointData` construction
-     (`toTransmutedMonomialFourPointData`,
-     `pairSpin_toTransmuted_eq_primary_of_support_leadingTwist`,
-     `primary_pair_eq_toTransmuted_pair_div`).
+     `LightconeBlockFourPointData`, its transmuted `MonomialFourPointData` construction
+     (`toTransmutedMonomialFourPointData`, `pairSpin_toTransmutedMonomialFourPointData`), and
+     the canonical pushforward measures from `FourPointData` (`FourPointData.primaryTwistMeasure`,
+     `FourPointData.lightconeMeasure`).
    - `CFT.LightconeBootstrap.TransmutedRealLaplace`: Transmuted universal and 1-term $t$-channel
      identity Laplace transforms (`transmutedUniversalLaplaceReal`,
      `transmutedIdentityLaplaceReal`), their uniform $O(K^{-1})$ proximity
@@ -151,29 +152,27 @@ spin-to-dimension ratio $\xi = \ell / \Delta$) for $d$-dimensional primary opera
      `exactTransmutedIdentityPairing`), 1-term and universal pairings (`transmutedIdentityPairing`,
      `transmutedUniversalPairing`), and the inner-derivative crossing interface
      (`HasInnerTransmutedCrossing`,
-     `exists_const_abs_primary_sub_exactIdentity_le_of_innerCrossing`).
+     `exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing`).
    - `CFT.LightconeBootstrap.TransmutedCrossing`: Exact 1D GFF collinear block transmutation
      (`hasSum_gffBlockCoeff_mul_transmuteOpInner_block1d`), untransmuted $t$-channel remainder
      derivative bounds (`exists_low_x_deriv_bounds_tChannelRemainder`,
      `exists_high_x_deriv_bounds_tChannelRemainder`), derivation of `HasInnerTransmutedCrossing`
      from base crossing and collinear block agreement
      (`LightconeBlockFourPointData.hasInnerTransmutedCrossing_of_agreesWithCorrelator`), and the
-     unconditional quantitative lightcone bootstrap theorems
-     (`exists_const_abs_muLC_sub_exactIdentity_le_of_agreesWithCorrelator`,
-     `exists_const_abs_primary_sub_exactIdentity_le_of_agreesWithCorrelator`,
-     `exists_const_abs_primary_sub_identity_le_of_agreesWithCorrelator`,
-     `exists_const_abs_primary_sub_universal_le_of_agreesWithCorrelator`).
+     unconditional quantitative 1D lightcone-block bootstrap theorems on `FourPointData`
+     (`FourPointData.exists_const_abs_lightcone_sub_exactIdentity_le`,
+     `FourPointData.exists_const_abs_lightcone_sub_identity_le`,
+     `FourPointData.exists_const_abs_lightcone_sub_universal_le`).
    - `CFT.LightconeBootstrap.PrimaryAllTwists`: Normalized subleading collinear block coefficients
-     (`NormalizedCollinearBlockCoeffs`), exact rational transmutation weight ratio
-     (`weightShiftRatio_eq_transmuteWeight_div`), canonical construction of the collinear block
-     transfer kernel (`NormalizedCollinearBlockCoeffs.toCollinearTransferKernel`,
-     `CollinearTransferKernel`), recursive GFF $d$-dimensional primary coefficients and pairing
-     (`gffPrimaryCoeff`, `gffPrimaryPairing`), and finite triangular inversion upgrading the
-     quantitative lightcone bootstrap to $d$-dimensional primary operators at all bounded twists
-     $h \in [-N, N]$ with full exponent $0 < \gamma < \min(2 h_{\text{gap}},\, 2\Delta_\phi)$
-     (`LightconeBlockFourPointData.exists_const_abs_primary_allTwists_sub_gffPrimary_le`,
-     `exists_const_abs_primary_allTwists_sub_gffPrimary_le_of_normalizedBlockCoeffs`,
-     `LightconeBlockFourPointData.exists_const_abs_primary_unweighted_allTwists_le`).
+     (`normalizedCollinearBlockCoeff`), exact rational transmutation weight ratio
+     (`weightShiftRatio_eq_transmuteWeight_div`), collinear block transfer functions
+     (`collinearTransferRatio`, `collinearTransferFn`), recursive GFF $d$-dimensional primary
+     coefficients and pairing (`gffPrimaryCoeff`, `gffPrimaryPairing`), and finite triangular
+     inversion deriving the quantitative lightcone bootstrap for $d$-dimensional primary operators
+     at all bounded twists $h \in [-N, N]$ with full exponent
+     $0 < \gamma < \min(2 h_{\text{gap}},\, 2\Delta_\phi)$
+     (`FourPointData.exists_const_abs_primary_allTwists_sub_gffPrimary_le`,
+     `FourPointData.exists_const_abs_primary_unweighted_allTwists_le`).
 6. **Quantitative High-Energy Cone Tauberian Bootstrap (`CFT.ConeTauberian.*`)**:
    - `CFT.ConeTauberian.ErdelyiKoberInversion`: Real Euler Beta integral, Weyl / Erdélyi–Kober
      fractional integral eigenfunction identity (`weylIntegralRight_one_sub_rpow`), continuum
@@ -188,10 +187,11 @@ spin-to-dimension ratio $\xi = \ell / \Delta$) for $d$-dimensional primary opera
      shift binomial resummation (`hasSum_transverseShift`), and uniform $O(\Delta^{-1})$ Stirling
      bounds (`exists_abs_rpow_mul_gegSpinCoeff_sub_inv_gamma_sq_le`,
      `exists_abs_rpow_mul_transmuteWeight_nat_sub_one_le`).
-   - `CFT.ConeTauberian.ConeAsymptotics`: `ConeBlockFourPointData`, the pure $2 h_{\text{gap}}$
+   - `CFT.ConeTauberian.ConeAsymptotics`: 2D bilaterally transmuted measures
+     (`FourPointData.transmutedMeasure2d`, `transmutedIdentityMeasure2d`), the pure $2 h_{\text{gap}}$
      quantitative bound against the exact universal $t$-channel identity
-     (`ConeBlockFourPointData.exists_const_abs_transmuted2d_sub_identity_le`), the quantitative
-     $\min(2 h_{\text{gap}}, 1)$ smoothed primary bootstrap theorem
-     (`ConeBlockFourPointData.exists_const_abs_primaryCone_sub_le`), and cumulative spin-summed
-     primary asymptotics (`ConeBlockFourPointData.tendsto_cumulativePrimaryWeight`).
+     (`FourPointData.exists_const_abs_transmuted2d_sub_identity_le`), the quantitative
+     $\min(2 h_{\text{gap}} / (4\Delta_\phi + 1), 1)$ smoothed primary bootstrap theorem
+     (`FourPointData.exists_const_abs_primaryCone_sub_le`), and cumulative spin-summed
+     primary asymptotics (`FourPointData.tendsto_cumulativePrimaryWeight`).
 -/

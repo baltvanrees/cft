@@ -47,7 +47,7 @@ This will be important for the lightcone bootstrap, though the proof of this res
 `exists_conformalBlockLightcone` remains to be formalized.
 -/
 
-open Real Complex Topology Set Metric Polynomial
+open Real Complex Topology Set Metric Polynomial MeasureTheory
 open scoped ComplexConjugate
 
 /-!
@@ -66,9 +66,11 @@ variable {l n : ℕ} (lvl : ConformalBlockLevel l n)
 
 /-- Polydisk evaluation of descendant level $n$ on $\operatorname{UcPdisk}$ using
 `geg_two_var_sum`:
-$$\sum_{j \in \text{descendantSpins}(l, n)} A_{n, j}
+$$
+\sum_{j \in \text{descendantSpins}(l, n)} A_{n, j}
   e^{\frac{\Delta + n - j}{2} (w_l + w_r)}
-  \operatorname{geg\_two\_var\_sum}\ \nu\ e^{w_l}\ e^{w_r}\ j.$$ -/
+  \operatorname{geg\_two\_var\_sum}\ \nu\ e^{w_l}\ e^{w_r}\ j.
+$$ -/
 noncomputable def evalTermPdisk (ν Δ : ℝ) (wl wr : ℂ) : ℂ :=
   ∑ j ∈ descendantSpins l n,
     (lvl.A j : ℂ) *
@@ -334,8 +336,9 @@ theorem norm_evalPdisk_le_eval_of_re_le (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ
   exact (norm_tsum_le_tsum_norm h_sum_norm).trans
     (h_sum_norm.tsum_le_tsum h_term_bound h_sum_rhs)
 
-/-- Same bound for the entire block, with $\sigma = \max(\operatorname{Re}(w_l),
-\operatorname{Re}(w_r))$ and $r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))}$. -/
+/-- Same bound for the entire block, with
+$\sigma = \max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))$ and
+$r = e^{\max(\operatorname{Re}(w_l), \operatorname{Re}(w_r))}$. -/
 theorem norm_evalPdisk_le_eval (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) {wl wr : ℂ}
     (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
     ‖B.evalPdisk wl wr‖ ≤ B.eval (Real.exp (max wl.re wr.re) : ℂ) :=
@@ -361,9 +364,9 @@ theorem _root_.ConformalBlockLevel.differentiable_evalTermPdisk {l n : ℕ}
   dsimp [ConformalBlockLevel.evalTermPdisk, gegenbauer.geg_two_var_sum]
   fun_prop
 
-/-- Every point $w_0 \in \operatorname{UcPdisk}$ has a closed ball $\overline{B}(w_0, \delta)
-\subseteq \operatorname{UcPdisk}$ on which both coordinates have real part bounded above by some
-$\sigma < 0$. -/
+/-- Every point $w_0 \in \operatorname{UcPdisk}$ has a closed ball
+$\overline{B}(w_0, \delta) \subseteq \operatorname{UcPdisk}$ on which both coordinates have real
+part bounded above by some $\sigma < 0$. -/
 lemma _root_.exists_closedBall_subset_UcPdisk {w₀ : ℂ × ℂ} (hw₀ : w₀ ∈ UcPdisk) :
     ∃ δ > 0, ∃ σ < (0 : ℝ), closedBall w₀ δ ⊆ UcPdisk ∧
       ∀ w ∈ closedBall w₀ δ, w.1.re ≤ σ ∧ w.2.re ≤ σ := by
@@ -410,14 +413,32 @@ theorem differentiableOn_evalPdisk (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) :
   obtain ⟨hw1, hw2⟩ := h_re w hw
   exact (B.level n).norm_evalTermPdisk_le_evalTerm_of_re_le hν hΔ hw1 hw2
 
+/-- For the identity conformal block ($\Delta = 0, l = 0$), `B.evalPdisk wl wr = 1` for all
+$w_l, w_r \in \mathbb{C}$. -/
+theorem evalPdisk_zero {B : ConformalBlock ν 0 0} (wl wr : ℂ) :
+    B.evalPdisk wl wr = 1 := by
+  dsimp [evalPdisk]
+  rw [tsum_eq_single 0]
+  · have h_spins : descendantSpins 0 0 = {0} := by decide
+    dsimp [ConformalBlockLevel.evalTermPdisk, gegenbauer.geg_two_var_sum,
+      gegenbauer.geg_two_var_coeff]
+    rw [h_spins, Finset.sum_singleton, B.norm_primary, Finset.sum_range_one]
+    simp [gegenbauer.ph, gegenbauer.fact]
+  · intro n hn
+    dsimp [ConformalBlockLevel.evalTermPdisk]
+    refine Finset.sum_eq_zero fun j _ => ?_
+    rw [B.A_identity rfl rfl n hn j, Complex.ofReal_zero, zero_mul, zero_mul, zero_mul]
+
 end ConformalBlock
 
 /-!
 ## Lightcone conformal block decomposition into one-dimensional conformal blocks
 
 Consider the lightcone expansion on $\operatorname{UcPdisk}$:
-$$G_{\Delta, l}(e^{w_l}, e^{w_r}) =
-  \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),$$
+$$
+G_{\Delta, l}(e^{w_l}, e^{w_r}) =
+  \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),
+$$
 We claim, though it is not yet proven, that the leading twist function $g_0(w_r)$ is proportional
 to a single one-dimensional conformal block $k_{(\Delta + l)/2}(e^{w_r})$ from `Blocks_1d.lean`,
 while each subleading twist function
@@ -428,6 +449,17 @@ $k_{(\Delta - l)/2 + k_r}(e^{w_r})$ with non-negative coefficients.
 /-- Left/right scaling exponent $h(k) = \frac{\Delta - l}{2} + k$. -/
 noncomputable def blockExp (Δ : ℝ) (l k : ℕ) : ℝ :=
   (Δ - (l : ℝ)) / 2 + (k : ℝ)
+
+/-- Allowed right-moving shift indices $k_r = m + l - 2s$ ($0 \le s \le m, 2s \le l$) at
+left-moving twist level $m$ for a primary of spin $l$. -/
+def lightconeRightSpins (l m : ℕ) : Finset ℕ :=
+  ((Finset.Icc 0 m).filter (fun s => 2 * s ≤ l)).image (fun s => m + l - 2 * s)
+
+@[simp]
+lemma mem_lightconeRightSpins {l m kr : ℕ} :
+    kr ∈ lightconeRightSpins l m ↔
+      ∃ s, s ≤ m ∧ 2 * s ≤ l ∧ m + l - 2 * s = kr := by
+  simp [lightconeRightSpins, and_assoc]
 
 /-- Data for a single left-moving twist level $m$ in the lightcone expansion of a conformal block.
 Captures the right-moving function $g_m(w_r)$ as a finite linear combination of 1D conformal
@@ -449,8 +481,10 @@ variable (lvl : ConformalBlockLightconeLevel)
 
 /-- Evaluation of the right-moving function $g_m(w_r)$ as a finite linear combination of
 1D conformal blocks:
-$$g_m(w_r) = \sum_{k_r \in \text{support}} C_{m, k_r} \,
-  k_{(\Delta - l)/2 + k_r}(e^{w_r}).$$ -/
+$$
+g_m(w_r) = \sum_{k_r \in \text{support}} C_{m, k_r} \,
+  k_{(\Delta - l)/2 + k_r}(e^{w_r}).
+$$ -/
 noncomputable def eval (Δ : ℝ) (l : ℕ) (wr : ℂ) : ℂ :=
   ∑ kr ∈ lvl.support, (lvl.C kr : ℂ) * block1d (blockExp Δ l kr) wr
 
@@ -458,19 +492,22 @@ end ConformalBlockLightconeLevel
 
 /-- Lightcone decomposition of a conformal block $G_{\Delta, l}(e^{w_l}, e^{w_r})$ into
 one-dimensional conformal blocks:
-$$G_{\Delta, l}(e^{w_l}, e^{w_r}) =
-  \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),$$
+$$
+G_{\Delta, l}(e^{w_l}, e^{w_r}) =
+  \sum_{m=0}^{\infty} e^{((\Delta - l)/2 + m) w_l} g_m(w_r),
+$$
 where $g_0(w_r) = C_{0, l} \, k_{(\Delta + l)/2}(e^{w_r})$ is a single 1D conformal block and
 every $g_m(w_r)$ for $m > 0$ is a finite linear combination of 1D conformal blocks with
 non-negative coefficients. -/
 structure ConformalBlockLightcone (Δ : ℝ) (l : ℕ) where
   /-- Lightcone level data $g_m$ for each left-moving twist level $m \in \mathbb{N}$. -/
   level : ℕ → ConformalBlockLightconeLevel
+  /-- At each left-moving twist level $m$, the right-moving shift indices $k_r$ are of the form
+  $k_r = m + l - 2s$ with $0 \le s \le m$ and $2s \le l$. -/
+  support_subset : ∀ m : ℕ, (level m).support ⊆ lightconeRightSpins l m
   /-- Leading twist ($m = 0$) consists of a single 1D conformal block at $k_r = l$
   (weight $\bar{h} = (\Delta + l) / 2$). -/
   support_zero : (level 0).support = {l}
-  /-- Positivity of the leading 1D conformal block coefficient $C_{0, l} > 0$. -/
-  C_zero_pos : 0 < (level 0).C l
   /-- Summability of the lightcone expansion on the real negative half-lines
   $x_l < 0, x_r < 0$. -/
   summable_real : ∀ xl < (0 : ℝ), ∀ xr < (0 : ℝ),
@@ -499,6 +536,33 @@ lemma evalLevel_zero (wr : ℂ) :
   congr 2
   ring
 
+/-- Trivial single-block `ConformalBlockLightcone Δ l` used as a default outside the unitary
+region. -/
+noncomputable def default (Δ : ℝ) (l : ℕ) : ConformalBlockLightcone Δ l where
+  level m :=
+    if m = 0 then
+      { support := {l}
+        C := fun kr => if kr = l then 1 else 0
+        C_nonneg := fun kr _ => by split_ifs <;> norm_num
+        C_support := fun kr hkr => if_neg (Finset.notMem_singleton.mp hkr) }
+    else
+      { support := ∅
+        C := fun _ => 0
+        C_nonneg := fun _ h => (Finset.notMem_empty _ h).elim
+        C_support := fun _ _ => rfl }
+  support_subset m := by
+    split_ifs with hm
+    · subst hm
+      intro kr hkr
+      rw [Finset.mem_singleton.mp hkr, mem_lightconeRightSpins]
+      exact ⟨0, le_rfl, Nat.zero_le l, by omega⟩
+    · exact Finset.empty_subset _
+  support_zero := rfl
+  summable_real xl _ xr _ := by
+    refine summable_of_ne_finset_zero (s := {0}) (fun m hm => ?_)
+    have hm0 : m ≠ 0 := Finset.notMem_singleton.mp hm
+    simp [ConformalBlockLightconeLevel.eval, hm0]
+
 end ConformalBlockLightcone
 
 namespace ConformalBlock
@@ -507,11 +571,110 @@ variable {ν Δ : ℝ} {l : ℕ} (B : ConformalBlock ν Δ l)
 
 /-- Every conformal block continued to $\operatorname{UcPdisk}$ admits a lightcone decomposition
 into finite non-negative sums of one-dimensional conformal blocks at each left-moving twist
-level $m$. Proof at the moment is `sorry`. -/
-theorem exists_conformalBlockLightcone (hν : 0 < ν) (hΔ : (l : ℝ) ≤ Δ) :
+level $m$, with leading ($m = 0$) coefficient $C_{0, l} = (\nu)_l / l!$.
+Proof at the moment is `sorry`. -/
+theorem exists_conformalBlockLightcone (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) :
     ∃ L : ConformalBlockLightcone Δ l,
+      (L.level 0).C l = realPochhammer ν l / (l.factorial : ℝ) ∧
+      ((L.level 0).C l = 0 → ∀ m kr : ℕ, (L.level m).C kr = 0) ∧
       ∀ wl ∈ UcDisk, ∀ wr ∈ UcDisk,
         B.evalPdisk wl wr = L.eval wl wr := by
   sorry
 
+/-- Canonical lightcone conformal block decomposition associated to `B : ConformalBlock ν Δ l`. -/
+noncomputable def toLightcone : ConformalBlockLightcone Δ l :=
+  open scoped Classical in
+  if h : 0 ≤ ν ∧ (l : ℝ) ≤ Δ then
+    (B.exists_conformalBlockLightcone h.1 h.2).choose
+  else
+    ConformalBlockLightcone.default Δ l
+
+/-- Leading ($m = 0$) 1D conformal block coefficient of `B.toLightcone`:
+$$C_{0, l} = \frac{(\nu)_l}{l!}.$$ -/
+theorem toLightcone_C_zero (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) :
+    (B.toLightcone.level 0).C l = realPochhammer ν l / (l.factorial : ℝ) := by
+  dsimp [toLightcone]
+  rw [dif_pos ⟨hν, hΔ⟩]
+  exact (B.exists_conformalBlockLightcone hν hΔ).choose_spec.1
+
+/-- If the leading ($m = 0$) coefficient $C_{0, l}$ vanishes, all lightcone coefficients
+$C_{m, k_r}$ of `B.toLightcone` vanish. -/
+theorem toLightcone_C_eq_zero_of_C_zero (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ)
+    (h0 : (B.toLightcone.level 0).C l = 0) (m kr : ℕ) :
+    (B.toLightcone.level m).C kr = 0 := by
+  dsimp [toLightcone] at h0 ⊢
+  rw [dif_pos ⟨hν, hΔ⟩] at h0 ⊢
+  exact (B.exists_conformalBlockLightcone hν hΔ).choose_spec.2.1 h0 m kr
+
+/-- Evaluating `B.toLightcone` on $\operatorname{UcPdisk}$ reproduces `B.evalPdisk`. -/
+theorem evalPdisk_eq_toLightcone_eval (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ)
+    {wl wr : ℂ} (hwl : wl ∈ UcDisk) (hwr : wr ∈ UcDisk) :
+    B.evalPdisk wl wr = B.toLightcone.eval wl wr := by
+  dsimp [toLightcone]
+  rw [dif_pos ⟨hν, hΔ⟩]
+  exact (B.exists_conformalBlockLightcone hν hΔ).choose_spec.2.2 wl hwl wr hwr
+
 end ConformalBlock
+
+/-- Measurability of the lightcone conformal block expansion coefficients
+$C_{m, k_r}(\nu, \Delta, l)$ across the primary spectrum $(\Delta, l) \in \mathbb{R} \times \mathbb{N}$. -/
+theorem measurable_conformalBlock_toLightcone_C (ν : ℝ) (m kr : ℕ) :
+    Measurable (fun p : ℝ × ℕ => (((conformalBlock ν p.1 p.2).toLightcone).level m).C kr) := by
+  sorry
+
+/-- **Normalized Subleading Collinear Conformal Block Coefficient
+(`normalizedCollinearBlockCoeff`)**:
+The normalized subleading collinear conformal block coefficient
+$$
+\mathcal{R}_{m, s}(\nu, k, h) := \frac{B_{m, m - 2s}(h, 2(k + s))}{C_{0, 2(k + s)}}
+$$
+in spacetime dimension $d = 2\nu + 2$ for primary twist $h$ at left-moving twist level
+$m \ge 1$ and spin shift $0 \le s \le m$, defined directly from the canonical lightcone conformal
+block `(conformalBlock ν (2 * h + (l : ℝ)) l).toLightcone` with $l = 2(k + s)$ and
+$k_r = m + l - 2s = m + 2k$. -/
+noncomputable def normalizedCollinearBlockCoeff (ν : ℝ) (m s k : ℕ) (h : ℝ) : ℝ :=
+  let l := 2 * (k + s)
+  let L := (conformalBlock ν (2 * h + (l : ℝ)) l).toLightcone
+  ((L.level m).C (m + 2 * k)) / ((L.level 0).C l)
+
+/-- Exact factorization of the subleading lightcone block coefficient $C_{m, m + 2k}$ at primary
+spin $l = 2(k + s)$ and twist $h \ge 0$ into `normalizedCollinearBlockCoeff` times the leading
+($m = 0$) coefficient $(\nu)_l / l!$. -/
+theorem toLightcone_C_eq_normalizedCollinearBlockCoeff_mul
+    {ν : ℝ} (hν : 0 ≤ ν) (m s k : ℕ) {h : ℝ} (hh : 0 ≤ h) :
+    (((conformalBlock ν (2 * h + ((2 * (k + s) : ℕ) : ℝ)) (2 * (k + s))).toLightcone.level m).C
+        (m + 2 * k)) =
+      normalizedCollinearBlockCoeff ν m s k h *
+        (realPochhammer ν (2 * (k + s)) / ((2 * (k + s)).factorial : ℝ)) := by
+  set l := 2 * (k + s)
+  set B := conformalBlock ν (2 * h + (l : ℝ)) l
+  have hΔ : (l : ℝ) ≤ 2 * h + (l : ℝ) := by linarith
+  rw [← B.toLightcone_C_zero hν hΔ]
+  dsimp [normalizedCollinearBlockCoeff]
+  by_cases h0 : (B.toLightcone.level 0).C l = 0
+  · rw [B.toLightcone_C_eq_zero_of_C_zero hν hΔ h0 m (m + 2 * k), h0, mul_zero]
+  · exact (div_mul_cancel₀ _ h0).symm
+
+/-- First-order smoothness of $h \mapsto \mathcal{R}_{m, s}(\nu, k, h)$ for $h > 0$
+(from the Casimir recursion for conformal blocks). -/
+theorem differentiableAt_normalizedCollinearBlockCoeff (ν : ℝ) (_hν : 0 ≤ ν)
+    (m s k : ℕ) {h : ℝ} (_hh : 0 < h) :
+    DifferentiableAt ℝ (normalizedCollinearBlockCoeff ν m s k) h := by
+  sorry
+
+/-- Second-order smoothness of $h \mapsto \mathcal{R}_{m, s}(\nu, k, h)$ for $h > 0$
+(from the Casimir recursion for conformal blocks). -/
+theorem differentiableAt_deriv_normalizedCollinearBlockCoeff (ν : ℝ) (_hν : 0 ≤ ν)
+    (m s k : ℕ) {h : ℝ} (_hh : 0 < h) :
+    DifferentiableAt ℝ (deriv (normalizedCollinearBlockCoeff ν m s k)) h := by
+  sorry
+
+/-- Uniform $C^2$ bound on bounded positive twists $0 < h \le N$ across all spins $k \ge 1$
+(from the Casimir recursion for conformal blocks). -/
+theorem exists_c2_bound_normalizedCollinearBlockCoeff (ν : ℝ) (_hν : 0 ≤ ν) (m s N : ℕ) :
+    ∃ B : ℝ, 0 ≤ B ∧
+      ∀ {k : ℕ}, 1 ≤ k → ∀ {h : ℝ}, 0 < h → h ≤ (N : ℝ) →
+        |normalizedCollinearBlockCoeff ν m s k h| ≤ B ∧
+        |deriv (normalizedCollinearBlockCoeff ν m s k) h| ≤ B ∧
+        |deriv (deriv (normalizedCollinearBlockCoeff ν m s k)) h| ≤ B := by
+  sorry

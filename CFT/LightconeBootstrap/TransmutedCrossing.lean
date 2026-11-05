@@ -15,9 +15,11 @@ axioms (`FourPointData`) and the $s$-channel collinear block decomposition
 1. **Exact 1D GFF Collinear Block Coefficients (`gffBlockCoeff`) & Termwise Transmutation**:
    We define the 1D GFF block coefficients $c_m(\Delta_\phi)$ and prove the exact Gamma/Pochhammer
    identity (`gffBlockCoeff_mul_transmuteWeight_eq`):
-   $$c_m(\Delta_\phi) \, \operatorname{transmuteWeight}(\Delta_\phi + m)
-     = \operatorname{transmutedCrossFactorCoeff}(\Delta_\phi) \,
-       \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m),$$
+$$
+c_m(\Delta_\phi) \, \operatorname{transmuteWeight}(\Delta_\phi + m)
+  = \operatorname{transmutedCrossFactorCoeff}(\Delta_\phi) \,
+    \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m),
+$$
    so that termwise inner transmutation of the GFF block series reproduces
    `crossFactorExactTransmuted Δ_phi w` on `UcDisk`
    (`hasSum_gffBlockCoeff_mul_transmuteOpInner_block1d`).
@@ -40,9 +42,8 @@ axioms (`FourPointData`) and the $s$-channel collinear block decomposition
 
 4. **`LightconeBlockFourPointData.AgreesWithCorrelator` & Quantitative Bootstrap Theorems**:
    We define `AgreesWithCorrelator`, prove `hasInnerTransmutedCrossing_of_agreesWithCorrelator`,
-   and deduce the multi-trajectory large-spin bootstrap theorems for both 1D lightcone-block
-   measures `muLC` and $d$-dimensional primary measures `muPrim` directly from
-   `FourPointData` + `AgreesWithCorrelator`.
+   and deduce the multi-trajectory large-spin bootstrap theorems for 1D lightcone-block
+   measures `muLC` directly from `FourPointData` + `AgreesWithCorrelator`.
 -/
 
 open MeasureTheory Set Filter Metric Real Complex Topology
@@ -56,49 +57,6 @@ namespace CFT.LightconeBootstrap
 transmuted $t$-channel identity factor `crossFactorTransmuted`. -/
 noncomputable def transmutedCrossFactorCoeff (Δ_phi : ℝ) : ℝ :=
   Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi
-
-/-- The 1D GFF collinear block coefficients $c_m(\Delta_\phi)$ normalized so that termwise
-application of `transmuteWeight (Δ_phi + m)` yields
-`transmutedCrossFactorCoeff Δ_phi * exactTransmutedPochhammer Δ_phi m`. -/
-noncomputable def gffBlockCoeff (Δ_phi : ℝ) : ℕ → ℝ
-  | 0 => (4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)
-  | m + 1 =>
-      ((4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)) *
-        (4 : ℝ) ^ (m + 1) * (realPochhammer Δ_phi (m + 1)) ^ 2 /
-          (((m + 1).factorial : ℝ) * realPochhammer (2 * Δ_phi + (m : ℝ)) (m + 1))
-
-@[simp]
-lemma gffBlockCoeff_zero (Δ_phi : ℝ) :
-    gffBlockCoeff Δ_phi 0 = (4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π) :=
-  rfl
-
-@[simp]
-lemma gffBlockCoeff_succ (Δ_phi : ℝ) (m : ℕ) :
-    gffBlockCoeff Δ_phi (m + 1) =
-      ((4 : ℝ) ^ (2 * Δ_phi) / (4 * Real.sqrt π)) *
-        (4 : ℝ) ^ (m + 1) * (realPochhammer Δ_phi (m + 1)) ^ 2 /
-          (((m + 1).factorial : ℝ) * realPochhammer (2 * Δ_phi + (m : ℝ)) (m + 1)) :=
-  rfl
-
-/-- Strict positivity of `gffBlockCoeff Δ_phi m` for all $\Delta_\phi > 0$ and $m \in \mathbb{N}$. -/
-theorem gffBlockCoeff_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (m : ℕ) :
-    0 < gffBlockCoeff Δ_phi m := by
-  cases m with
-  | zero =>
-    rw [gffBlockCoeff_zero]
-    positivity
-  | succ k =>
-    rw [gffBlockCoeff_succ]
-    have h1 : 0 < realPochhammer Δ_phi (k + 1) := realPochhammer_pos hΔ (k + 1)
-    have h2 : 0 < realPochhammer (2 * Δ_phi + (k : ℝ)) (k + 1) :=
-      realPochhammer_pos (by positivity) (k + 1)
-    have h3 : (0 : ℝ) < ((k + 1).factorial : ℝ) :=
-      Nat.cast_pos.mpr (Nat.factorial_pos (k + 1))
-    positivity
-
-lemma gffBlockCoeff_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (m : ℕ) :
-    0 ≤ gffBlockCoeff Δ_phi m :=
-  (gffBlockCoeff_pos hΔ m).le
 
 /-- Legendre duplication identity in ratio form: for $s > 0$,
 $$\frac{\Gamma(s + 1/2)}{\Gamma(s)} = \sqrt{\pi} \, 4^{-s} \, \frac{\Gamma(2s + 1)}{s \, \Gamma(s)^2}.$$ -/
@@ -130,9 +88,11 @@ lemma Gamma_add_half_div_Gamma_eq {s : ℝ} (hs : 0 < s) :
 
 /-- **Exact Transmutation Weight Identity for GFF Block Coefficients**:
 For all $\Delta_\phi > 0$ and $m \in \mathbb{N}$,
-$$\operatorname{gffBlockCoeff}(\Delta_\phi, m) \, \operatorname{transmuteWeight}(\Delta_\phi + m)
+$$
+\operatorname{gffBlockCoeff}(\Delta_\phi, m) \, \operatorname{transmuteWeight}(\Delta_\phi + m)
   = \operatorname{transmutedCrossFactorCoeff}(\Delta_\phi) \,
-    \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m).$$ -/
+    \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m).
+$$ -/
 theorem gffBlockCoeff_mul_transmuteWeight_eq {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (m : ℕ) :
     gffBlockCoeff Δ_phi m * transmuteWeight (Δ_phi + (m : ℝ)) =
       transmutedCrossFactorCoeff Δ_phi * exactTransmutedPochhammer Δ_phi m := by
@@ -256,9 +216,11 @@ theorem gffBlockCoeff_mul_transmuteWeight_eq {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (
 
 /-- **Termwise Inner Transmutation of the 1D GFF Block Series**:
 For all $\Delta_\phi > 0$ and $w \in \operatorname{UcDisk}$,
-$$\sum_{m=0}^{\infty} c_m(\Delta_\phi) \,
+$$
+\sum_{m=0}^{\infty} c_m(\Delta_\phi) \,
   \operatorname{transmuteOpInner}\bigl(\operatorname{block1d}(\Delta_\phi + m)\bigr)(w)
-  = \operatorname{crossFactorExactTransmuted}(\Delta_\phi, w).$$ -/
+  = \operatorname{crossFactorExactTransmuted}(\Delta_\phi, w).
+$$ -/
 theorem hasSum_gffBlockCoeff_mul_transmuteOpInner_block1d
     {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {w : ℂ} (hw : w ∈ UcDisk) :
     HasSum
@@ -396,8 +358,10 @@ theorem norm_block1d_le_exp_half {H : ℝ} (hH : 0 ≤ H) {σ : ℝ} (hσ : σ <
         dsimp [block1dDerivBoundConst]; ring
 
 /-- Uniform norm bound on `deriv (block1d H) z` for $H \ge 0$ and $\operatorname{Re} z \le \sigma < 0$:
-$$\bigl\|\operatorname{deriv}(\operatorname{block1d} H)(z)\bigr\|
-  \le B_1(\sigma) \, e^{H(\sigma / 2)}.$$ -/
+$$
+\bigl\|\operatorname{deriv}(\operatorname{block1d} H)(z)\bigr\|
+  \le B_1(\sigma) \, e^{H(\sigma / 2)}.
+$$ -/
 theorem norm_deriv_block1d_le_exp_half {H : ℝ} (hH : 0 ≤ H) {σ : ℝ} (hσ : σ < 0)
     {z : ℂ} (hz : z.re ≤ σ) :
     ‖deriv (block1d H) z‖ ≤ block1dDerivBoundConst 1 σ * Real.exp (H * (σ / 2)) := by
@@ -423,8 +387,10 @@ theorem norm_deriv_block1d_le_exp_half {H : ℝ} (hH : 0 ≤ H) {σ : ℝ} (hσ 
 
 /-- Uniform norm bound on `deriv (deriv (block1d H)) z` for $H \ge 0$ and
 $\operatorname{Re} z \le \sigma < 0$:
-$$\bigl\|\operatorname{deriv}(\operatorname{deriv}(\operatorname{block1d} H))(z)\bigr\|
-  \le B_2(\sigma) \, e^{H(\sigma / 2)}.$$ -/
+$$
+\bigl\|\operatorname{deriv}(\operatorname{deriv}(\operatorname{block1d} H))(z)\bigr\|
+  \le B_2(\sigma) \, e^{H(\sigma / 2)}.
+$$ -/
 theorem norm_deriv_deriv_block1d_le_exp_half {H : ℝ} (hH : 0 ≤ H) {σ : ℝ} (hσ : σ < 0)
     {z : ℂ} (hz : z.re ≤ σ) :
     ‖deriv (deriv (block1d H)) z‖ ≤ block1dDerivBoundConst 2 σ * Real.exp (H * (σ / 2)) := by
@@ -572,10 +538,12 @@ lemma block1dInnerDomConst_nonneg {σ : ℝ} (hσ : σ < 0) :
 
 /-- **Uniform Domination of `transmuteInnerKernel * transmuteInnerDiff (block1d H)`**:
 For all $H \ge 0$, $w \in \operatorname{UcDisk}$, and $s \in (0, 1)$,
-$$\bigl\|\operatorname{transmuteInnerKernel}(w, s) \,
+$$
+\bigl\|\operatorname{transmuteInnerKernel}(w, s) \,
   \operatorname{transmuteInnerDiff}(\operatorname{block1d} H, w, s)\bigr\|
   \le \operatorname{block1dInnerDomConst}(\operatorname{Re} w) \,
-    e^{H (\operatorname{Re} w / 2)} \, \operatorname{betaKernel}(1, 0, s).$$ -/
+    e^{H (\operatorname{Re} w / 2)} \, \operatorname{betaKernel}(1, 0, s).
+$$ -/
 theorem norm_transmuteInner_block1d_le {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw : w ∈ UcDisk)
     {s : ℝ} (hs : s ∈ Ioo (0 : ℝ) 1) :
     ‖transmuteInnerKernel w s * transmuteInnerDiff (block1d H) w s‖ ≤
@@ -608,8 +576,10 @@ theorem norm_transmuteInner_block1d_le {H : ℝ} (hH : 0 ≤ H) {w : ℂ} (hw : 
         dsimp [block1dInnerDomConst]; ring
 
 /-- Lower bound on `transmuteWeight (Δ_phi + (k + 1 : ℕ))` for $\Delta_\phi > 0$ and $k \in \mathbb{N}$:
-$$\frac{1}{2} \frac{\Gamma(\Delta_\phi + 1/2)}{\Gamma(\Delta_\phi)}
-  \le \operatorname{transmuteWeight}\bigl(\Delta_\phi + (k + 1 : \mathbb{N})\bigr).$$ -/
+$$
+\frac{1}{2} \frac{\Gamma(\Delta_\phi + 1/2)}{\Gamma(\Delta_\phi)}
+  \le \operatorname{transmuteWeight}\bigl(\Delta_\phi + (k + 1 : \mathbb{N})\bigr).
+$$ -/
 lemma transmuteWeight_add_nat_succ_ge {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (k : ℕ) :
     (1 / 2 : ℝ) * (Real.Gamma (Δ_phi + 1 / 2) / Real.Gamma Δ_phi) ≤
       transmuteWeight (Δ_phi + ((k + 1 : ℕ) : ℝ)) := by
@@ -710,12 +680,6 @@ theorem summable_gffBlockCoeff_mul_exp {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {σ : �
     simp [Complex.mul_re]
   rw [h_norm_eq, ← mul_assoc]
   exact mul_le_mul_of_nonneg_right h_gff_le (Real.exp_pos _).le
-
-/-- The 1D GFF collinear block series
-$$\operatorname{gffBlockSeries}(\Delta_\phi, z) :=
-  \sum_{m=0}^{\infty} c_m(\Delta_\phi) \, \operatorname{block1d}(\Delta_\phi + m, z).$$ -/
-noncomputable def gffBlockSeries (Δ_phi : ℝ) (z : ℂ) : ℂ :=
-  ∑' m : ℕ, (gffBlockCoeff Δ_phi m : ℂ) * block1d (Δ_phi + (m : ℝ)) z
 
 /-- Summability of the 1D GFF block series on `UcDisk`. -/
 theorem summable_gffBlockSeries {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {z : ℂ} (hz : z ∈ UcDisk) :
@@ -922,8 +886,10 @@ theorem hasSum_transmuteInner_gffBlockSeries {Δ_phi : ℝ} (hΔ : 0 < Δ_phi)
 /-- **Commutation of `transmuteOpInner` ($\mathcal{L}_0$) with the 1D GFF Block Series
 (`transmuteOpInner_gffBlockSeries`)**:
 For all $\Delta_\phi > 0$ and all $w \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOpInner}\bigl(\operatorname{gffBlockSeries} \Delta_\phi\bigr)(w)
-  = \operatorname{crossFactorExactTransmuted}(\Delta_\phi, w).$$ -/
+$$
+\operatorname{transmuteOpInner}\bigl(\operatorname{gffBlockSeries} \Delta_\phi\bigr)(w)
+  = \operatorname{crossFactorExactTransmuted}(\Delta_\phi, w).
+$$ -/
 theorem transmuteOpInner_gffBlockSeries {Δ_phi : ℝ} (hΔ : 0 < Δ_phi)
     {w : ℂ} (hw : w ∈ UcDisk) :
     transmuteOpInner (gffBlockSeries Δ_phi) w = crossFactorExactTransmuted Δ_phi w := by
@@ -997,8 +963,9 @@ theorem transmuteOpInner_gffBlockSeries {Δ_phi : ℝ} (hΔ : 0 < Δ_phi)
 
 /-! ## Section 2: First and Second Derivatives of `crossFactor` and `crossW` -/
 
-/-- The fundamental strip $\operatorname{StripPi} := \{z \in \operatorname{UcDisk} \mid
-\operatorname{Im} z \in (-\pi, \pi)\}$ on which `zOfW` and `crossW` are holomorphic. -/
+/-- The fundamental strip
+$\operatorname{StripPi} := \{z \in \operatorname{UcDisk} \mid \operatorname{Im} z \in (-\pi, \pi)\}$
+on which `zOfW` and `crossW` are holomorphic. -/
 def StripPi : Set ℂ :=
   { z : ℂ | z ∈ UcDisk ∧ z.im ∈ Ioo (-π) π }
 
@@ -1010,8 +977,10 @@ lemma mem_StripPi_iff {z : ℂ} :
   Iff.rfl
 
 /-- First derivative of `crossFactor Δ_phi` at $z \in \operatorname{UcDisk}$:
-$$\frac{d}{dz} \operatorname{crossFactor}(\Delta_\phi, z)
-  = \Delta_\phi \, \frac{1 + e^z}{1 - e^z} \, \operatorname{crossFactor}(\Delta_\phi, z).$$ -/
+$$
+\frac{d}{dz} \operatorname{crossFactor}(\Delta_\phi, z)
+  = \Delta_\phi \, \frac{1 + e^z}{1 - e^z} \, \operatorname{crossFactor}(\Delta_\phi, z).
+$$ -/
 theorem hasDerivAt_crossFactor (Δ_phi : ℝ) {z : ℂ} (hz : z ∈ UcDisk) :
     HasDerivAt (crossFactor Δ_phi)
       ((Δ_phi : ℂ) * ((1 + Complex.exp z) / (1 - Complex.exp z)) *
@@ -1090,8 +1059,10 @@ theorem deriv_deriv_crossFactor (Δ_phi : ℝ) {z : ℂ} (hz : z ∈ UcDisk) :
   (hasDerivAt_deriv_crossFactor Δ_phi hz).deriv
 
 /-- Upper bound on `‖deriv (crossFactor Δ_phi) z‖` for $z \in \operatorname{UcDisk}$:
-$$\|\partial_z \operatorname{crossFactor}(\Delta_\phi, z)\| \le
-  2 |\Delta_\phi| \, \|1 - e^z\|^{-1} \, \|\operatorname{crossFactor}(\Delta_\phi, z)\|.$$ -/
+$$
+\|\partial_z \operatorname{crossFactor}(\Delta_\phi, z)\| \le
+  2 |\Delta_\phi| \, \|1 - e^z\|^{-1} \, \|\operatorname{crossFactor}(\Delta_\phi, z)\|.
+$$ -/
 theorem norm_deriv_crossFactor_le (Δ_phi : ℝ) {z : ℂ} (hz : z ∈ UcDisk) :
     ‖deriv (crossFactor Δ_phi) z‖ ≤
       2 * |Δ_phi| * ‖1 - Complex.exp z‖⁻¹ * ‖crossFactor Δ_phi z‖ := by
@@ -1116,9 +1087,11 @@ theorem norm_deriv_crossFactor_le (Δ_phi : ℝ) {z : ℂ} (hz : z ∈ UcDisk) :
     _ = 2 * |Δ_phi| * ‖1 - Complex.exp z‖⁻¹ * ‖crossFactor Δ_phi z‖ := by ring
 
 /-- Upper bound on `‖deriv (deriv (crossFactor Δ_phi)) z‖` for $z \in \operatorname{UcDisk}$:
-$$\|\partial_z^2 \operatorname{crossFactor}(\Delta_\phi, z)\| \le
+$$
+\|\partial_z^2 \operatorname{crossFactor}(\Delta_\phi, z)\| \le
   (2 |\Delta_\phi| + 4 \Delta_\phi^2) \, \|1 - e^z\|^{-2} \,
-    \|\operatorname{crossFactor}(\Delta_\phi, z)\|.$$ -/
+    \|\operatorname{crossFactor}(\Delta_\phi, z)\|.
+$$ -/
 theorem norm_deriv_deriv_crossFactor_le (Δ_phi : ℝ) {z : ℂ} (hz : z ∈ UcDisk) :
     ‖deriv (deriv (crossFactor Δ_phi)) z‖ ≤
       (2 * |Δ_phi| + 4 * Δ_phi ^ 2) * (‖1 - Complex.exp z‖ ^ 2)⁻¹ *
@@ -1454,9 +1427,13 @@ lemma log_one_sub_sqrt_two_div_four_mul_exp_neg_one_neg :
     nlinarith [Real.exp_pos (-1)]
   exact Real.log_neg (by linarith) (by linarith)
 
-/-- First and second derivatives of $z \mapsto \operatorname{crossFactor}(\Delta_\phi, w_l) \cdot
-\operatorname{crossFactor}(\Delta_\phi, z) \cdot f(\operatorname{crossW}(z))$ on `StripPi`, which
-coincides with `tChannelRemainder M Δ_phi wl` on the open neighborhood `StripPi`. -/
+/-- First and second derivatives of
+$$
+z \mapsto \operatorname{crossFactor}(\Delta_\phi, w_l) \cdot
+  \operatorname{crossFactor}(\Delta_\phi, z) \cdot f(\operatorname{crossW}(z))
+$$
+on `StripPi`, which coincides with `tChannelRemainder M Δ_phi wl` on the open neighborhood
+`StripPi`. -/
 lemma deriv_and_deriv2_tChannelRemainder_eq_on_StripPi {ν Δ_phi : ℝ}
     (M : MonomialFourPointData) (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν)
     (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
@@ -1561,10 +1538,14 @@ $\operatorname{Re} w_l \le \sigma_l$, $\operatorname{Im} w_l \in (-\pi, \pi)$, a
 $\operatorname{Re}(\operatorname{crossW} w_l) \le \sigma_{l, 0}$, all $w_r \in \operatorname{UcDisk}$
 with $\operatorname{Re} w_r \ge -1/2$ and $\operatorname{Im} w_r \in [-\pi/2, \pi/2]$, and all
 $x \in (1/2, 1)$,
-$$\|\partial_z R(w_l, w_r + \log x)\| \le
-  C_1 \bigl(\|1 - e^{w_r}\| + (1 - x)\bigr)^{2(h' - \Delta_\phi) - 1},$$
-$$\|\partial_z^2 R(w_l, w_r + \log x)\| \le
-  C_2 \bigl(\|1 - e^{w_r}\| + (1 - x)\bigr)^{2(h' - \Delta_\phi) - 2}.$$ -/
+$$
+\|\partial_z R(w_l, w_r + \log x)\| \le
+  C_1 \bigl(\|1 - e^{w_r}\| + (1 - x)\bigr)^{2(h' - \Delta_\phi) - 1},
+$$
+$$
+\|\partial_z^2 R(w_l, w_r + \log x)\| \le
+  C_2 \bigl(\|1 - e^{w_r}\| + (1 - x)\bigr)^{2(h' - \Delta_\phi) - 2}.
+$$ -/
 theorem exists_high_x_deriv_bounds_tChannelRemainder {ν Δ_phi h_gap h' : ℝ}
     (M : MonomialFourPointData) (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
     (hM : ∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
@@ -1593,7 +1574,7 @@ theorem exists_high_x_deriv_bounds_tChannelRemainder {ν Δ_phi h_gap h' : ℝ}
     Real.exp (h' * (r_c - σr0 / 2)) * (M.evalReal σl0 (σr0 / 2) - 1)
   have hK_gap_nonneg : 0 ≤ K_gap := by
     dsimp [K_gap]
-    exact mul_nonneg (Real.exp_pos _).le (M.evalReal_sub_one_nonneg hgap' σl0 (σr0 / 2))
+    exact mul_nonneg (Real.exp_pos _).le (M.evalReal_sub_one_nonneg hgap' hσl0 hσr0_half_neg)
   set B₁ : ℝ :=
     K_wl * (4 : ℝ) ^ Δ_phi * K_gap * (2 * |Δ_phi| + 2 / r_c)
   set B₂ : ℝ :=
@@ -1659,7 +1640,8 @@ theorem exists_high_x_deriv_bounds_tChannelRemainder {ν Δ_phi h_gap h' : ℝ}
             (M.evalReal (crossW wl).re (σr0 / 2) - 1) := h_norm
       _ ≤ (Real.exp (h' * (r_c - σr0 / 2)) * Real.exp (h' * w'.re)) *
             (M.evalReal σl0 (σr0 / 2) - 1) :=
-          mul_le_mul h_exp_le h_mono_wl (M.evalReal_sub_one_nonneg hgap' _ _) (by positivity)
+          mul_le_mul h_exp_le h_mono_wl
+            (M.evalReal_sub_one_nonneg hgap' hwl_cross_mem hσr0_half_neg) (by positivity)
       _ = Real.exp (h' * (r_c - σr0 / 2)) * (M.evalReal σl0 (σr0 / 2) - 1) *
             Real.exp (h' * w'.re) := by ring
   have hf0_bd : ‖f w'‖ ≤ K_gap * Real.exp (h' * w'.re) :=
@@ -2169,7 +2151,7 @@ theorem integrableOn_transmuteInner_tChannelRemainder {ν Δ_phi : ℝ}
           (mul_nonneg (by positivity) (betaKernel_nonneg 1 0 hs))
     _ = (C_k * C_diff) * betaKernel 1 0 s := by ring
 
-/-! ## Section 4: `LightconeBlockFourPointData.AgreesWithCorrelator` & Unconditional Theorem 2 -/
+/-! ## Section 4: `LightconeBlockFourPointData.AgreesWithCorrelator` & Quantitative 1D Lightcone-Block Bootstrap -/
 
 /-- For all $H > 1/2$, comparing `integral_betaKernel hH 1` with $\int_0^1 s^{H - 1/2}\, ds = (H + 1/2)^{-1}$
 gives the lower bound
@@ -2500,31 +2482,39 @@ lemma sigmaFinite_muLC_even
   linarith
 
 /-- Spin-$2k$ contribution to the 1D collinear block expansion:
-$$\operatorname{evalCollinearSpin}(L, k, w_l, w_r) :=
+$$
+\operatorname{evalCollinearSpin}(L, k, w_l, w_r) :=
   \int_{\mathbb{R}} e^{h w_l} \, \operatorname{block1d}\bigl(h + 2k, w_r\bigr) \,
-    d\mu^{\mathrm{LC}}_{2k}(h).$$ -/
+    d\mu^{\mathrm{LC}}_{2k}(h).
+$$ -/
 noncomputable def evalCollinearSpin (k : ℕ) (wl wr : ℂ) : ℂ :=
   ∫ h : ℝ, Complex.exp ((h : ℂ) * wl) * block1d (h + 2 * (k : ℝ)) wr ∂(L.muLC (2 * (k : ℤ)))
 
 /-- Full $s$-channel 1D collinear block expansion on $\operatorname{UcPdisk}$:
-$$\operatorname{evalCollinear}(L, w_l, w_r) :=
+$$
+\operatorname{evalCollinear}(L, w_l, w_r) :=
   1 + \sum_{k=0}^{\infty} \int_{\mathbb{R}} e^{h w_l} \,
-    \operatorname{block1d}\bigl(h + 2k, w_r\bigr) \, d\mu^{\mathrm{LC}}_{2k}(h).$$ -/
+    \operatorname{block1d}\bigl(h + 2k, w_r\bigr) \, d\mu^{\mathrm{LC}}_{2k}(h).
+$$ -/
 noncomputable def evalCollinear (wl wr : ℂ) : ℂ :=
   1 + ∑' k : ℕ, L.evalCollinearSpin k wl wr
 
 /-- Spin-$2k$ contribution to the transmuted $s$-channel expansion:
-$$\operatorname{evalCollinearTransmutedSpin}(L, k, w_l, w_r) :=
+$$
+\operatorname{evalCollinearTransmutedSpin}(L, k, w_l, w_r) :=
   \int_{\mathbb{R}} \operatorname{transmuteWeight}(h + 2k) \,
-    e^{h w_l + (h + 2k) w_r} \, d\mu^{\mathrm{LC}}_{2k}(h).$$ -/
+    e^{h w_l + (h + 2k) w_r} \, d\mu^{\mathrm{LC}}_{2k}(h).
+$$ -/
 noncomputable def evalCollinearTransmutedSpin (k : ℕ) (wl wr : ℂ) : ℂ :=
   ∫ h : ℝ, (transmuteWeight (h + 2 * (k : ℝ)) : ℂ) *
     monomialTerm h (2 * (k : ℤ)) wl wr ∂(L.muLC (2 * (k : ℤ)))
 
 /-- Full transmuted $s$-channel expansion on $\operatorname{UcPdisk}$:
-$$\operatorname{evalCollinearTransmuted}(L, w_l, w_r) :=
+$$
+\operatorname{evalCollinearTransmuted}(L, w_l, w_r) :=
   \sum_{k=0}^{\infty} \int_{\mathbb{R}} \operatorname{transmuteWeight}(h + 2k) \,
-    e^{h w_l + (h + 2k) w_r} \, d\mu^{\mathrm{LC}}_{2k}(h).$$ -/
+    e^{h w_l + (h + 2k) w_r} \, d\mu^{\mathrm{LC}}_{2k}(h).
+$$ -/
 noncomputable def evalCollinearTransmuted (wl wr : ℂ) : ℂ :=
   ∑' k : ℕ, L.evalCollinearTransmutedSpin k wl wr
 
@@ -2963,8 +2953,10 @@ lemma aestronglyMeasurable_transmuteInner_collinear_prod
 /-- **Commutation of `transmuteOpInner` ($\mathcal{L}_0$) with the Spin-$2k$ $s$-Channel Integral
 (`transmuteOpInner_evalCollinearSpin`)**:
 For every spin $k \in \mathbb{N}$ and all $w_l, w_r \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOpInner}\bigl(L.\operatorname{evalCollinearSpin} k\, w_l\bigr)(w_r)
-  = L.\operatorname{evalCollinearTransmutedSpin} k\, w_l\, w_r.$$ -/
+$$
+\operatorname{transmuteOpInner}\bigl(L.\operatorname{evalCollinearSpin} k\, w_l\bigr)(w_r)
+  = L.\operatorname{evalCollinearTransmutedSpin} k\, w_l\, w_r.
+$$ -/
 theorem transmuteOpInner_evalCollinearSpin
     (hh_gap : 0 < L.h_gap)
     (h_supp0 : L.muLC 0 (Iio L.h_gap) = 0)
@@ -3422,8 +3414,10 @@ lemma continuousOn_transmuteInner_evalCollinearSpin
 /-- **Commutation of `transmuteOpInner` ($\mathcal{L}_0$) with the Full $s$-Channel 1D Collinear
 Block Sum and Integral (`transmuteOpInner_evalCollinear`)**:
 For all $w_l, w_r \in \operatorname{UcDisk}$,
-$$\operatorname{transmuteOpInner}\bigl(L.\operatorname{evalCollinear} w_l\bigr)(w_r)
-  = L.\operatorname{evalCollinearTransmuted} w_l\, w_r.$$ -/
+$$
+\operatorname{transmuteOpInner}\bigl(L.\operatorname{evalCollinear} w_l\bigr)(w_r)
+  = L.\operatorname{evalCollinearTransmuted} w_l\, w_r.
+$$ -/
 theorem transmuteOpInner_evalCollinear
     (hh_gap : 0 < L.h_gap)
     (h_supp0 : L.muLC 0 (Iio L.h_gap) = 0)
@@ -3648,9 +3642,11 @@ When `M.eval wl z = L.evalCollinear wl z` on `UcPdisk` and
 `crossFactor Δ_phi z = gffBlockSeries Δ_phi z` on `UcDisk` (the 1D GFF block series), commuting
 `transmuteOpInner` ($\mathcal{L}_0$) with both the $s$-channel sum/integral and the 1D GFF block
 series yields the exact pointwise identity on `UcPdisk`:
-$$\operatorname{transmuteOpInner}\bigl(\operatorname{tChannelRemainder} M\, \Delta_\phi\, w_l\bigr)(w_r)
+$$
+\operatorname{transmuteOpInner}\bigl(\operatorname{tChannelRemainder} M\, \Delta_\phi\, w_l\bigr)(w_r)
   = L.\operatorname{evalCollinearTransmuted} w_l\, w_r -
-    \operatorname{crossIdentityExactTransmuted}(\Delta_\phi, w_l, w_r).$$ -/
+    \operatorname{crossIdentityExactTransmuted}(\Delta_\phi, w_l, w_r).
+$$ -/
 theorem transmuteOpInner_tChannelRemainder_eq_of_collinear
     {Δ_phi : ℝ} (hΔ : 0 < Δ_phi)
     (hh_gap : 0 < L.h_gap)
@@ -3950,9 +3946,11 @@ structure AgreesWithCorrelator {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi
                   C_tail * ((2 * (k : ℝ)) ^ (- (2 * h')) + (2 * (k : ℝ)) ^ (- (2 * Δ_phi)))
 
 /-- Constructor for `AgreesWithCorrelator` from the pointwise inner-transmutation identity
-$$\bigl(L.\text{toTransmutedMonomialFourPointData.eval } w_l\, w_r -
+$$
+\bigl(L.\text{toTransmutedMonomialFourPointData.eval } w_l\, w_r -
   \operatorname{crossIdentityExactTransmuted}(\Delta_\phi, w_l, w_r)\bigr)
-  = \operatorname{transmuteOpInner}\bigl(\operatorname{tChannelRemainder} M\, \Delta_\phi\, w_l\bigr)(w_r)$$
+  = \operatorname{transmuteOpInner}\bigl(\operatorname{tChannelRemainder} M\, \Delta_\phi\, w_l\bigr)(w_r)
+$$
 on $\operatorname{UcPdisk}$ (yielding `C_tail = 0`!). -/
 theorem AgreesWithCorrelator.of_eval_eq {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
     (hh_gap : 0 < L.h_gap)
@@ -4189,63 +4187,71 @@ theorem hasInnerTransmutedCrossing_of_agreesWithCorrelator {ν Δ_phi : ℝ}
         (MonomialFourPointData.add_I_mul_mem_UcDisk hwr0 θ) hwr_re hwr_im hx).2
     · exact hC_tail hh'_pos hh'_le hk1 hσk hσ
 
-/-- **1D Lightcone-Block Bootstrap Against `exactTransmutedIdentityPairing` Directly
-from `FourPointData` + `AgreesWithCorrelator`** (Zero $O(k^{-1})$ Error, Valid for All
-$\Delta_\phi > 0$, All $h_{\mathrm{gap}} > 0$, and All
-$0 < \gamma < \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi)$): -/
-theorem exists_const_abs_muLC_sub_exactIdentity_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (2 * Δ_phi))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
-        (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          exactTransmutedIdentityPairing Δ_phi (2 * k) φ| ≤
-        C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
-  L.exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing
-    (L.hasInnerTransmutedCrossing_of_agreesWithCorrelator corr hν hΔ hL)
-    hγ_pos hγ_lt N
+end LightconeBlockFourPointData
 
-/-- **$d$-Dimensional Primary Bootstrap on $(-\infty, h_{\mathrm{gap}} + 1)$ Against
-`exactTransmutedIdentityPairing` Directly from `FourPointData` + `AgreesWithCorrelator`**
+end CFT.LightconeBootstrap
+
+open CFT.LightconeBootstrap
+
+namespace FourPointData
+
+variable {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
+
+/-- Collinear evaluation identity and spin-0 gap/integrability properties of
+`corr.toLightconeBlockFourPointData hν h_gap`, inherited from
+`ConformalBlock.exists_conformalBlockLightcone` and `gffBlockSeries`. -/
+lemma toLightconeBlockFourPointData_collinear_props {h_gap : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
+    (hgap : corr.HasTwistGap h_gap) :
+    corr.lightconeMeasure 0 (Iio h_gap) = 0 ∧
+    (∀ J : ℤ, J < 0 → corr.lightconeMeasure J = 0) ∧
+    (∀ {σl σr : ℝ}, σl < 0 → σr < 0 →
+      Integrable (fun h : ℝ => monomialTermReal h 0 σl σr) (corr.lightconeMeasure 0)) ∧
+    (∀ {wl wr : ℂ}, wl ∈ UcDisk → wr ∈ UcDisk →
+      corr.correlator_pdisk wl wr =
+        (corr.toLightconeBlockFourPointData hν h_gap).evalCollinear wl wr) ∧
+    (∀ {w : ℂ}, w ∈ UcDisk → crossFactor Δ_phi w = gffBlockSeries Δ_phi w) :=
+  ⟨corr.lightconeMeasure_zero_Iio_eq_zero hν (hgap.toMonomialFourPointData hν),
+   corr.lightconeMeasure_eq_zero_of_neg,
+   fun hσl hσr => corr.lightconeMeasure_integrable_real hν hσl hσr 0,
+   fun hwl hwr => corr.correlator_pdisk_eq_one_add_tsum_lightconeMeasure hν
+     (hgap.toMonomialFourPointData hν) hwl hwr,
+   fun hw => gffBlockSeries_eq_crossFactor hΔ hw⟩
+
+/-- The canonical `LightconeBlockFourPointData` associated to `corr : FourPointData ν Δ_phi`
+satisfies `AgreesWithCorrelator corr`, obtained via `AgreesWithCorrelator.of_collinear_eval_eq`
+(commuting `transmuteOpInner` with the $s$-channel collinear sum/integral and with the 1D GFF
+block series). -/
+theorem toLightconeBlockFourPointData_agreesWithCorrelator {h_gap : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
+    (hgap : corr.HasTwistGap h_gap) :
+    (corr.toLightconeBlockFourPointData hν h_gap).AgreesWithCorrelator corr := by
+  obtain ⟨h_supp0, h_neg, h_int0, h_coll, h_gff⟩ :=
+    corr.toLightconeBlockFourPointData_collinear_props hν hΔ hgap
+  exact LightconeBlockFourPointData.AgreesWithCorrelator.of_collinear_eval_eq
+    (corr.toLightconeBlockFourPointData hν h_gap) corr hΔ hgap.h_gap_pos
+    h_supp0 h_neg h_int0 (corr.toMonomialFourPointData hν)
+    (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
+    (hgap.toMonomialFourPointData hν) h_coll h_gff
+
+/-- **Main Quantitative 1D Lightcone-Block Bootstrap Against `exactTransmutedIdentityPairing`**
 (Zero $O(k^{-1})$ Error, Valid for All $\Delta_\phi > 0$, All $h_{\mathrm{gap}} > 0$, and All
-$0 < \gamma < \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi)$): -/
-theorem exists_const_abs_primary_sub_exactIdentity_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (2 * Δ_phi))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      (∀ h : ℝ, L.h_gap + 1 ≤ h → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * L.leadingTwistCoeff (2 * k) *
-          (∫ h : ℝ, transmuteWeight (h + (2 * k : ℕ)) * φ h ∂(L.muPrim (2 * k))) -
-        (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          exactTransmutedIdentityPairing Δ_phi (2 * k) φ| ≤
-        C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
-  L.exists_const_abs_primary_sub_exactIdentity_le_of_innerCrossing
-    (L.hasInnerTransmutedCrossing_of_agreesWithCorrelator corr hν hΔ hL)
-    hγ_pos hγ_lt N
-
-/-- **Unconditional 1D Lightcone-Block Bootstrap Against `transmutedIdentityPairing` Directly from
-`FourPointData` + `AgreesWithCorrelator`** (for $0 < \gamma < \min(2 h_{\mathrm{gap}},\, \min 1\, (2\Delta_\phi))$): -/
-theorem exists_const_abs_muLC_sub_identity_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (min 1 (2 * Δ_phi)))
+$0 < \gamma < \min(2 h_{\mathrm{gap}},\, 2\Delta_\phi)$):
+For any reflection-positive CFT (`FourPointData ν Δ_phi` with $\nu \ge 0, \Delta_\phi > 0$) with
+twist gap `corr.HasTwistGap h_gap`, the 1D collinear block spectral measures
+`corr.lightconeMeasure (2k)` satisfy
+$$
+\Biggl|(2k)^{-2\Delta_\phi}
+  \int_{\mathbb{R}} \operatorname{transmuteWeight}(h + 2k) \, \varphi(h) \,
+    d\mu^{\mathrm{LC}}_{2k}(h)
+  - (2k)^{-2\Delta_\phi}
+    \operatorname{exactTransmutedIdentityPairing}(\Delta_\phi, 2k, \varphi)\Biggr|
+  \le C \, (2k)^{-\gamma} \, M_\varphi.
+$$ -/
+theorem exists_const_abs_lightcone_sub_exactIdentity_le {h_gap γ : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
+    (hgap : corr.HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (2 * Δ_phi))
     (N : ℕ) :
     ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
       ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
@@ -4255,17 +4261,43 @@ theorem exists_const_abs_muLC_sub_identity_le_of_agreesWithCorrelator
       (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
       (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
       |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+            ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
+        (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
+          exactTransmutedIdentityPairing Δ_phi (2 * k) φ| ≤
+        C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
+  (corr.toLightconeBlockFourPointData hν h_gap).exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing
+    ((corr.toLightconeBlockFourPointData hν h_gap).hasInnerTransmutedCrossing_of_agreesWithCorrelator
+      corr hν hΔ (corr.toLightconeBlockFourPointData_agreesWithCorrelator hν hΔ hgap))
+    hγ_pos hγ_lt N
+
+/-- **1D Lightcone-Block Bootstrap Against `transmutedIdentityPairing`**
+(for $0 < \gamma < \min(2 h_{\mathrm{gap}},\, \min 1\, (2\Delta_\phi))$): -/
+theorem exists_const_abs_lightcone_sub_identity_le {h_gap γ : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
+    (hgap : corr.HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi)))
+    (N : ℕ) :
+    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
+      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
+      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
+      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
+      0 ≤ M_φ →
+      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
+      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
+      |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
+          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+            ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
         (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
           transmutedIdentityPairing Δ_phi (2 * k) φ| ≤
         C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  have hγ_lt_id : γ < min (2 * L.h_gap) (2 * Δ_phi) :=
+  have hγ_lt_id : γ < min (2 * h_gap) (2 * Δ_phi) :=
     lt_of_lt_of_le hγ_lt (min_le_min le_rfl (min_le_right 1 (2 * Δ_phi)))
   have hγ_le_one : γ ≤ 1 :=
     ((lt_of_lt_of_le hγ_lt (min_le_right _ _)).trans_le (min_le_left 1 (2 * Δ_phi))).le
   obtain ⟨C₁, hC₁_pos, hC₁⟩ :=
-    L.exists_const_abs_muLC_sub_exactIdentity_le_of_agreesWithCorrelator
-      corr hν hΔ hL hγ_pos hγ_lt_id N
+    corr.exists_const_abs_lightcone_sub_exactIdentity_le
+      hν hΔ hgap hγ_pos hγ_lt_id N
   obtain ⟨C₂, hC₂_pos, hC₂⟩ :=
     exists_const_abs_exactTransmutedIdentityPairing_sub_transmutedIdentityPairing_le hΔ N
   refine ⟨C₁ + C₂, add_pos hC₁_pos hC₂_pos,
@@ -4281,16 +4313,19 @@ theorem exists_const_abs_muLC_sub_identity_le_of_agreesWithCorrelator
     (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hr_one hC₂_pos.le) hM_φ)
   calc
     |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-        (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+        (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+          ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
       (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * transmutedIdentityPairing Δ_phi (2 * k) φ|
       = |((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+              ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ) +
         ((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * transmutedIdentityPairing Δ_phi (2 * k) φ)| := by
         congr 1; ring
     _ ≤ |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+              ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ| +
         |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * transmutedIdentityPairing Δ_phi (2 * k) φ| :=
@@ -4299,47 +4334,11 @@ theorem exists_const_abs_muLC_sub_identity_le_of_agreesWithCorrelator
         add_le_add h_b1 h_b2
     _ = (C₁ + C₂) * (2 * (k : ℝ)) ^ (-γ) * M_φ := by ring
 
-/-- **Unconditional $d$-Dimensional Primary Bootstrap on $(-\infty, h_{\mathrm{gap}} + 1)$ Against
-`transmutedIdentityPairing` Directly from `FourPointData` + `AgreesWithCorrelator`**: -/
-theorem exists_const_abs_primary_sub_identity_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (min 1 (2 * Δ_phi)))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      (∀ h : ℝ, L.h_gap + 1 ≤ h → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * L.leadingTwistCoeff (2 * k) *
-          (∫ h : ℝ, transmuteWeight (h + (2 * k : ℕ)) * φ h ∂(L.muPrim (2 * k))) -
-        (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          transmutedIdentityPairing Δ_phi (2 * k) φ| ≤
-        C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  obtain ⟨C, hC_pos, hC⟩ :=
-    L.exists_const_abs_muLC_sub_identity_le_of_agreesWithCorrelator
-      corr hν hΔ hL hγ_pos hγ_lt N
-  refine ⟨C, hC_pos,
-    fun {k} hk1 {φ} {M_φ} hφ hφ' hsupp hsupp_gap hM_φ hφ0 hφ1 hφ2 => ?_⟩
-  have h2k_ge1_nat : 1 ≤ 2 * k := by omega
-  have h2k_ge1_int : (1 : ℤ) ≤ 2 * (k : ℤ) := by omega
-  have h_pair1 := L.pairSpin_toTransmutedMonomialFourPointData h2k_ge1_int φ
-  have h_pair2 := L.pairSpin_toTransmuted_eq_primary_of_support_leadingTwist h2k_ge1_nat hsupp_gap
-  have h_cast : ((2 * k : ℕ) : ℤ) = 2 * (k : ℤ) := by push_cast; rfl
-  rw [h_cast, h_pair1] at h_pair2
-  have h_bound := hC hk1 hφ hφ' hsupp hM_φ hφ0 hφ1 hφ2
-  rw [h_pair2] at h_bound
-  simpa [mul_assoc] using h_bound
-
-/-- **Unconditional 1D Lightcone-Block Bootstrap Against `transmutedUniversalPairing` Directly from
-`FourPointData` + `AgreesWithCorrelator`**: -/
-theorem exists_const_abs_muLC_sub_universal_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (min 1 (2 * Δ_phi)))
+/-- **1D Lightcone-Block Bootstrap Against `transmutedUniversalPairing`**: -/
+theorem exists_const_abs_lightcone_sub_universal_le {h_gap γ : ℝ}
+    (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
+    (hgap : corr.HasTwistGap h_gap)
+    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi)))
     (N : ℕ) :
     ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
       ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
@@ -4349,16 +4348,17 @@ theorem exists_const_abs_muLC_sub_universal_le_of_agreesWithCorrelator
       (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
       (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
       |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+          (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+            ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
         transmutedUniversalPairing Δ_phi φ| ≤
         C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  have hγ_lt_id : γ < min (2 * L.h_gap) (2 * Δ_phi) :=
+  have hγ_lt_id : γ < min (2 * h_gap) (2 * Δ_phi) :=
     lt_of_lt_of_le hγ_lt (min_le_min le_rfl (min_le_right 1 (2 * Δ_phi)))
   have hγ_le_one : γ ≤ 1 :=
     ((lt_of_lt_of_le hγ_lt (min_le_right _ _)).trans_le (min_le_left 1 (2 * Δ_phi))).le
   obtain ⟨C₁, hC₁_pos, hC₁⟩ :=
-    L.exists_const_abs_muLC_sub_exactIdentity_le_of_agreesWithCorrelator
-      corr hν hΔ hL hγ_pos hγ_lt_id N
+    corr.exists_const_abs_lightcone_sub_exactIdentity_le
+      hν hΔ hgap hγ_pos hγ_lt_id N
   obtain ⟨C₂, hC₂_pos, hC₂⟩ :=
     exists_const_abs_exactTransmutedIdentityPairing_sub_universal_le hΔ N
   refine ⟨C₁ + C₂, add_pos hC₁_pos hC₂_pos,
@@ -4374,15 +4374,18 @@ theorem exists_const_abs_muLC_sub_universal_le_of_agreesWithCorrelator
     (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hr_one hC₂_pos.le) hM_φ)
   calc
     |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-        (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+        (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+          ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
       transmutedUniversalPairing Δ_phi φ|
       = |((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+              ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ) +
         ((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ -
           transmutedUniversalPairing Δ_phi φ)| := by congr 1; ring
     _ ≤ |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) *
-            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h ∂(L.muLC (2 * (k : ℤ)))) -
+            (∫ h : ℝ, transmuteWeight (h + ((2 * (k : ℤ) : ℤ) : ℝ)) * φ h
+              ∂(corr.lightconeMeasure (2 * (k : ℤ)))) -
           (2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ| +
         |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * exactTransmutedIdentityPairing Δ_phi (2 * k) φ -
           transmutedUniversalPairing Δ_phi φ| := abs_add_le _ _
@@ -4390,42 +4393,6 @@ theorem exists_const_abs_muLC_sub_universal_le_of_agreesWithCorrelator
         add_le_add h_b1 h_b2
     _ = (C₁ + C₂) * (2 * (k : ℝ)) ^ (-γ) * M_φ := by ring
 
-/-- **Unconditional $d$-Dimensional Primary Bootstrap on $(-\infty, h_{\mathrm{gap}} + 1)$ Against
-`transmutedUniversalPairing` Directly from `FourPointData` + `AgreesWithCorrelator`**: -/
-theorem exists_const_abs_primary_sub_universal_le_of_agreesWithCorrelator
-    {ν Δ_phi γ : ℝ} (corr : FourPointData ν Δ_phi) (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi)
-    (hL : L.AgreesWithCorrelator corr)
-    (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (min 1 (2 * Δ_phi)))
-    (N : ℕ) :
-    ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
-      ∀ {φ : ℝ → ℝ} {M_φ : ℝ},
-      Differentiable ℝ φ → Differentiable ℝ (deriv φ) →
-      (∀ h : ℝ, (N : ℝ) < |h| → φ h = 0) →
-      (∀ h : ℝ, L.h_gap + 1 ≤ h → φ h = 0) →
-      0 ≤ M_φ →
-      (∀ h, |φ h| ≤ M_φ) → (∀ h, |deriv φ h| ≤ M_φ) →
-      (∀ h, |deriv (deriv φ) h| ≤ M_φ) →
-      |(2 * (k : ℝ)) ^ (- (2 * Δ_phi)) * L.leadingTwistCoeff (2 * k) *
-          (∫ h : ℝ, transmuteWeight (h + (2 * k : ℕ)) * φ h ∂(L.muPrim (2 * k))) -
-        transmutedUniversalPairing Δ_phi φ| ≤
-        C * (2 * (k : ℝ)) ^ (-γ) * M_φ := by
-  obtain ⟨C, hC_pos, hC⟩ :=
-    L.exists_const_abs_muLC_sub_universal_le_of_agreesWithCorrelator
-      corr hν hΔ hL hγ_pos hγ_lt N
-  refine ⟨C, hC_pos,
-    fun {k} hk1 {φ} {M_φ} hφ hφ' hsupp hsupp_gap hM_φ hφ0 hφ1 hφ2 => ?_⟩
-  have h2k_ge1_nat : 1 ≤ 2 * k := by omega
-  have h2k_ge1_int : (1 : ℤ) ≤ 2 * (k : ℤ) := by omega
-  have h_pair1 := L.pairSpin_toTransmutedMonomialFourPointData h2k_ge1_int φ
-  have h_pair2 := L.pairSpin_toTransmuted_eq_primary_of_support_leadingTwist h2k_ge1_nat hsupp_gap
-  have h_cast : ((2 * k : ℕ) : ℤ) = 2 * (k : ℤ) := by push_cast; rfl
-  rw [h_cast, h_pair1] at h_pair2
-  have h_bound := hC hk1 hφ hφ' hsupp hM_φ hφ0 hφ1 hφ2
-  rw [h_pair2] at h_bound
-  simpa [mul_assoc] using h_bound
-
-end LightconeBlockFourPointData
-
-end CFT.LightconeBootstrap
+end FourPointData
 
 

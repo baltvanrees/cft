@@ -14,16 +14,20 @@ density for the high-energy cone bootstrap:
 1. **General Real Beta Integral & Change-of-Variable Identities on `Ioo`:
    (`integral_rpow_mul_one_sub_rpow`, `integral_Ioo_aff_sub`, `integral_Ioo_sq_sub`)**:
    We establish the general real Euler Beta integral on `(0, 1)`:
-   $$\int_0^1 s^{a - 1} (1 - s)^{b - 1} \, ds = \frac{\Gamma(a)\,\Gamma(b)}{\Gamma(a + b)}
-     \qquad (a > 0,\; b > 0),$$
+$$
+\int_0^1 s^{a - 1} (1 - s)^{b - 1} \, ds = \frac{\Gamma(a)\,\Gamma(b)}{\Gamma(a + b)}
+  \qquad (a > 0,\; b > 0),
+$$
    together with the affine rescaling $s = s' + (1 - s') t$ on `(s', 1)` and the quadratic change
    of variables $s = \xi^2$ ($ds = 2\xi\,d\xi$) on `(\xi', 1)`.
 2. **Weyl / Erdélyi–Kober Fractional Integral & Power-Law Eigenfunction Identity
    (`weylIntegralRight`, `weylIntegralRight_one_sub_rpow`)**:
    We define the right-handed Weyl / Erdélyi–Kober fractional integral of order $\nu > 0$ on
    `(0, 1)` and prove its exact action on power laws $(1 - s)^{\alpha - 1}$:
-   $$\frac{1}{\Gamma(\nu)} \int_{s'}^1 (s - s')^{\nu - 1} (1 - s)^{\alpha - 1} \, ds
-     = \frac{\Gamma(\alpha)}{\Gamma(\alpha + \nu)} (1 - s')^{\alpha + \nu - 1}.$$
+$$
+\frac{1}{\Gamma(\nu)} \int_{s'}^1 (s - s')^{\nu - 1} (1 - s)^{\alpha - 1} \, ds
+  = \frac{\Gamma(\alpha)}{\Gamma(\alpha + \nu)} (1 - s')^{\alpha + \nu - 1}.
+$$
 3. **Continuum Primary Spectral Density $\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)$ and Exact
    $d \to 2$ Branching & Cylinder Integrals
    (`primaryConeDensity`, `primaryConeDensity_eq_weylIntegralRight`,
@@ -35,8 +39,11 @@ density for the high-energy cone bootstrap:
    $\mathcal{C}^{\text{prim}}_\nu(\Delta_\phi)$, and prove both:
    - the exact Erdélyi–Kober branching identity mapping $\rho^{\text{prim}}_{\nu, \Delta_\phi}$
      onto $\rho_{2d}^{\text{eff}}$, and
-   - the full cylinder integral $\int_0^1 \int_0^1 \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)
-     \, d\xi \, du = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi)$.
+   - the full cylinder integral:
+$$
+\int_0^1 \int_0^1 \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) \, d\xi \, du
+  = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi).
+$$
 4. **Monotone Sandwiching Lemma (`tendsto_of_le_of_ge_approx`)**:
    A general filter convergence lemma deducing $\lim_{\Delta \to \infty} F(\Delta) = L$ whenever
    $F(\Delta)$ can be sandwiched within $\varepsilon$ of $L$ by smooth approximations.
@@ -184,8 +191,10 @@ noncomputable def weylIntegralRight (ν : ℝ) (g : ℝ → ℝ) (s' : ℝ) : �
 
 /-- **Fundamental Weyl / Erdélyi–Kober Eigenfunction Identity**:
 for $\nu > 0$, $\alpha > 0$, and $s' < 1$,
-$$\frac{1}{\Gamma(\nu)} \int_{s'}^1 (s - s')^{\nu - 1} (1 - s)^{\alpha - 1} \, ds
-  = \frac{\Gamma(\alpha)}{\Gamma(\alpha + \nu)} (1 - s')^{\alpha + \nu - 1}.$$ -/
+$$
+\frac{1}{\Gamma(\nu)} \int_{s'}^1 (s - s')^{\nu - 1} (1 - s)^{\alpha - 1} \, ds
+  = \frac{\Gamma(\alpha)}{\Gamma(\alpha + \nu)} (1 - s')^{\alpha + \nu - 1}.
+$$ -/
 theorem weylIntegralRight_one_sub_rpow {ν α s' : ℝ} (hν : 0 < ν) (hα : 0 < α)
     (hs' : s' < 1) :
     weylIntegralRight ν (fun s => (1 - s) ^ (α - 1)) s' =
@@ -230,26 +239,30 @@ theorem weylIntegralRight_one_sub_rpow {ν α s' : ℝ} (hν : 0 < ν) (hα : 0 
 /-! ## Section 3: Continuum Primary Spectral Density & Exact Branching and Cylinder Integrals -/
 
 /-- The normalization constant $c_{\nu, \Delta_\phi} > 0$ of the continuum primary spectral density:
-$$c_{\nu, \Delta_\phi} :=
+$$
+c_{\nu, \Delta_\phi} :=
   \frac{2^{2\nu + 1} \, \Gamma(\nu) \, \Gamma(2\Delta_\phi - 1/2)}
-       {\Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi - \nu - 1/2)}.$$ -/
+       {\Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi - \nu - 1/2)}.
+$$ -/
 noncomputable def primaryConeConst (ν Δ_phi : ℝ) : ℝ :=
   (2 : ℝ) ^ (2 * ν + 1) * Real.Gamma ν * Real.Gamma (2 * Δ_phi - 1 / 2) /
     ((Real.Gamma Δ_phi) ^ 4 * Real.Gamma (2 * Δ_phi - ν - 1 / 2))
 
 /-- The continuum primary spectral density on $(u, \xi) \in (0, \infty) \times (0, 1)$:
-$$\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) :=
+$$
+\rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) :=
   c_{\nu, \Delta_\phi} \, u^{4\Delta_\phi - 2\nu - 1} \,
-  \xi^{2\nu} \left(1 - \xi^2\right)^{2\Delta_\phi - \nu - 3/2}.$$ -/
+  \xi^{2\nu} \left(1 - \xi^2\right)^{2\Delta_\phi - \nu - 3/2}.
+$$ -/
 noncomputable def primaryConeDensity (ν Δ_phi u ξ : ℝ) : ℝ :=
   primaryConeConst ν Δ_phi * u ^ (4 * Δ_phi - 2 * ν - 1) *
     ξ ^ (2 * ν) * (1 - ξ ^ 2) ^ (2 * Δ_phi - ν - 3 / 2)
 
 /-- **Closed-Form Algebraic Evaluation of the Erdélyi–Kober Inversion Integral**:
 for $\nu < 1$, $\Delta_\phi > 3/4$, and $\xi \in (-1, 1)$, applying the complementary
-Weyl fractional integral $I_-^{1 - \nu}$ to $-\frac{d}{ds}(1 - s)^{2\Delta_\phi - 3/2}
-= (2\Delta_\phi - 3/2)(1 - s)^{2\Delta_\phi - 5/2}$ at $s' = \xi^2$ evaluates in closed algebraic
-form to `primaryConeDensity ν Δ_phi u ξ`. -/
+Weyl fractional integral $I_-^{1 - \nu}$ to
+$-\frac{d}{ds}(1 - s)^{2\Delta_\phi - 3/2} = (2\Delta_\phi - 3/2)(1 - s)^{2\Delta_\phi - 5/2}$
+at $s' = \xi^2$ evaluates in closed algebraic form to `primaryConeDensity ν Δ_phi u ξ`. -/
 theorem primaryConeDensity_eq_weylIntegralRight {ν Δ_phi u ξ : ℝ}
     (hν1 : ν < 1) (hΔ : 3 / 4 < Δ_phi) (hξ : ξ ^ 2 < 1) :
     ((2 : ℝ) ^ (2 * ν + 1) * Real.Gamma ν * (2 * Δ_phi - 3 / 2) / (Real.Gamma Δ_phi) ^ 4) *
@@ -270,26 +283,32 @@ theorem primaryConeDensity_eq_weylIntegralRight {ν Δ_phi u ξ : ℝ}
   ring
 
 /-- The 2D effective continuum density on $(u, \xi') \in (0, \infty) \times (0, 1)$:
-$$\rho_{2d}^{\text{eff}}(\Delta_\phi, u, \xi') :=
+$$
+\rho_{2d}^{\text{eff}}(\Delta_\phi, u, \xi') :=
   \frac{4}{\Gamma(\Delta_\phi)^4} \, u^{4\Delta_\phi - 2}
-  \left(1 - (\xi')^2\right)^{2\Delta_\phi - 3/2}.$$ -/
+  \left(1 - (\xi')^2\right)^{2\Delta_\phi - 3/2}.
+$$ -/
 noncomputable def eff2dDensity (Δ_phi u ξ' : ℝ) : ℝ :=
   (4 / (Real.Gamma Δ_phi) ^ 4) * u ^ (4 * Δ_phi - 2) *
     (1 - ξ' ^ 2) ^ (2 * Δ_phi - 3 / 2)
 
 /-- The cumulative unweighted primary OPE constant:
-$$\mathcal{C}^{\text{prim}}_\nu(\Delta_\phi) :=
+$$
+\mathcal{C}^{\text{prim}}_\nu(\Delta_\phi) :=
   \frac{2^{2\nu - 1} \, \Gamma(\nu) \, \Gamma(\nu + 1/2) \, \Gamma(2\Delta_\phi - 1/2)}
-       {(2\Delta_\phi - \nu) \, \Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi)}.$$ -/
+       {(2\Delta_\phi - \nu) \, \Gamma(\Delta_\phi)^4 \, \Gamma(2\Delta_\phi)}.
+$$ -/
 noncomputable def cumulativePrimaryConst (ν Δ_phi : ℝ) : ℝ :=
   (2 : ℝ) ^ (2 * ν - 1) * Real.Gamma ν * Real.Gamma (ν + 1 / 2) *
     Real.Gamma (2 * Δ_phi - 1 / 2) /
     ((2 * Δ_phi - ν) * (Real.Gamma Δ_phi) ^ 4 * Real.Gamma (2 * Δ_phi))
 
 /-- The continuum $d \to 2$ Erdélyi–Kober branching kernel
-$$\mathcal{K}_\nu(\xi, \xi') :=
+$$
+\mathcal{K}_\nu(\xi, \xi') :=
   \frac{2^{2 - 2\nu}}{\Gamma(\nu)^2} \, \xi^{1 - 2\nu}
-  \left(\xi^2 - (\xi')^2\right)^{\nu - 1} \mathbf{1}_{\xi' < \xi}.$$ -/
+  \left(\xi^2 - (\xi')^2\right)^{\nu - 1} \mathbf{1}_{\xi' < \xi}.
+$$ -/
 noncomputable def branchingKernel (ν ξ ξ' : ℝ) : ℝ :=
   if ξ' < ξ then
     (2 : ℝ) ^ (2 - 2 * ν) / (Real.Gamma ν) ^ 2 *
@@ -452,8 +471,10 @@ theorem integral_primaryConeDensity_xi {ν Δ_phi u : ℝ}
 
 /-- **Full Cylinder Integral of `primaryConeDensity`**:
 for $\nu > 0$ and $\Delta_\phi > \frac{\nu}{2} + \frac{1}{4}$,
-$$\int_0^1 \left(\int_0^1 \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) \, d\xi\right) du
-  = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi).$$ -/
+$$
+\int_0^1 \left(\int_0^1 \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi) \, d\xi\right) du
+  = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi).
+$$ -/
 theorem integral_primaryConeDensity_cylinder {ν Δ_phi : ℝ}
     (hν : 0 < ν) (hΔ : ν / 2 + 1 / 4 < Δ_phi) :
     (∫ u in Ioo (0 : ℝ) 1, ∫ ξ in Ioo (0 : ℝ) 1, primaryConeDensity ν Δ_phi u ξ) =
@@ -472,9 +493,9 @@ theorem integral_primaryConeDensity_cylinder {ν Δ_phi : ℝ}
 /-! ## Section 4: Monotone Sandwiching Lemma for Cumulative Asymptotics -/
 
 /-- **Monotone Sandwiching Lemma**:
-if $F(\Delta)$ can be sandwiched between approximating quantities $F_-(\Delta) \le F(\Delta) \le
-F_+(\Delta)$ whose limits $L_-, L_+$ lie within $\varepsilon$ of $L$ for every $\varepsilon > 0$,
-then $\lim_{\Delta \to \infty} F(\Delta) = L$. -/
+if $F(\Delta)$ can be sandwiched between approximating quantities
+$F_-(\Delta) \le F(\Delta) \le F_+(\Delta)$ whose limits $L_-, L_+$ lie within $\varepsilon$ of $L$
+for every $\varepsilon > 0$, then $\lim_{\Delta \to \infty} F(\Delta) = L$. -/
 theorem tendsto_of_le_of_ge_approx {F : ℝ → ℝ} {L : ℝ}
     (h_approx : ∀ ε > 0, ∃ F_minus F_plus : ℝ → ℝ, ∃ L_minus L_plus : ℝ,
       (∀ᶠ Δ in atTop, F_minus Δ ≤ F Δ ∧ F Δ ≤ F_plus Δ) ∧

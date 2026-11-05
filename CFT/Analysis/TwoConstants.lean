@@ -77,10 +77,12 @@ noncomputable def harmonicMajorantRe (x y : ℝ) : ℝ :=
 
 /-- Normalized harmonic measure on the strip $x \in [0, \pi]$, $y \in \mathbb{R}$, of the
 horizontal segment $[0, \pi] \times \{0\}$:
-$$\omega_{\mathrm{norm}}(x, y) = \begin{cases}
+$$
+\omega_{\mathrm{norm}}(x, y) = \begin{cases}
   1 & \text{if } y = 0, \\
   \frac{2}{\pi} \arctan\!\left(\frac{\sin x}{\sinh |y|}\right) & \text{if } y \ne 0.
-\end{cases}$$ -/
+\end{cases}
+$$ -/
 noncomputable def stripHarmonicMeasureNormalized (x y : ℝ) : ℝ :=
   if y = 0 then 1 else (2 / π) * Real.arctan (Real.sin x / Real.sinh |y|)
 
@@ -616,12 +618,14 @@ theorem norm_le_two_constants_normalized {f : ℂ → ℂ} {M δ : ℝ}
 
 /-- Harmonic measure on a general vertical strip $\sigma \in [\sigma_-, \sigma_+]$,
 $t \in \mathbb{R}$, of the horizontal segment $[\sigma_-, \sigma_+]$ on the real axis ($t = 0$):
-$$\omega(\sigma_-, \sigma_+, \sigma, t) = \begin{cases}
+$$
+\omega(\sigma_-, \sigma_+, \sigma, t) = \begin{cases}
   1 & \text{if } t = 0, \\
   \frac{2}{\pi} \arctan\!\left(
     \frac{\sin(\pi (\sigma - \sigma_-) / (\sigma_+ - \sigma_-))}
          {\sinh(\pi |t| / (\sigma_+ - \sigma_-))}\right) & \text{if } t \ne 0.
-\end{cases}$$ -/
+\end{cases}
+$$ -/
 noncomputable def stripHarmonicMeasure (σ_minus σ_plus σ t : ℝ) : ℝ :=
   if t = 0 then 1
   else (2 / π) * Real.arctan

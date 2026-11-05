@@ -381,10 +381,12 @@ lemma exists_abs_rpow_mul_pochhammerCoeff_add_sub_inv_gamma_le {b : ℝ} (hb : 0
 For any $a > 0$, $b > 0$, $\Delta_\phi \in \mathbb{R}$, and support bound $N \in \mathbb{N}$, there
 exists $C_N > 0$ such that for all $K \ge 1$ and all $\varphi : \mathbb{R} \to \mathbb{R}$ supported
 in $[-N, N]$ with $|\varphi(h)| \le M_\varphi$ ($M_\varphi \ge 0$),
-$$\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!}
+$$
+\left|K^{1 - b} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \frac{(b)_{n + K}}{(n + K)!}
     \varphi(\Delta_\phi + n) -
   \frac{1}{\Gamma(b)} \sum_{n=0}^{\infty} \frac{(a)_n}{n!} \varphi(\Delta_\phi + n)\right|
-  \le C_N \, K^{-1} \, M_\varphi.$$ -/
+  \le C_N \, K^{-1} \, M_\varphi.
+$$ -/
 theorem exists_const_abs_tsum_pochhammerCoeff_mixed_test_sub_le
     {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (Δ_phi : ℝ) (N : ℕ) :
     ∃ C > 0, ∀ {K : ℕ}, 1 ≤ K →
@@ -475,9 +477,11 @@ theorem exists_const_abs_tsum_pochhammerCoeff_mixed_test_sub_le
 For any $\Delta_\phi > 0$ and support bound $N \in \mathbb{N}$, there exists $C_N > 0$ such that
 for all $k \ge 1$ and all $\varphi : \mathbb{R} \to \mathbb{R}$ supported in $[-N, N]$ with
 $|\varphi(h)| \le M_\varphi$ ($M_\varphi \ge 0$),
-$$\left|(2k)^{1 - 2\Delta_\phi} \operatorname{identityMonomialPairing}(\Delta_\phi, 2k, \varphi) -
+$$
+\left|(2k)^{1 - 2\Delta_\phi} \operatorname{identityMonomialPairing}(\Delta_\phi, 2k, \varphi) -
   \operatorname{universalMonomialPairing}(\Delta_\phi, \varphi)\right|
-  \le C_N \, (2k)^{-1} \, M_\varphi.$$ -/
+  \le C_N \, (2k)^{-1} \, M_\varphi.
+$$ -/
 theorem exists_const_abs_identityMonomialPairing_sub_universal_le
     {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (N : ℕ) :
     ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
@@ -797,15 +801,15 @@ variable {ν Δ_phi : ℝ} (corr : FourPointData ν Δ_phi)
 
 /-- **Main Quantitative Monomial Lightcone Bootstrap Against the Exact `t`-Channel Identity
 (`FourPointData` version)**:
-For any reflection-positive CFT (`FourPointData ν Δ_phi` with `ν ≥ 0, Δ_phi > 1/2`) whose
-canonical monomial decomposition `corr.toMonomialFourPointData hν` has a twist gap `h_gap > 0`,
+For any reflection-positive CFT (`FourPointData ν Δ_phi` with `ν ≥ 0, Δ_phi > 1/2`) with a
+primary-spectrum twist gap `corr.HasTwistGap h_gap`,
 retaining the exact finite-spin `t`-channel identity binomial coefficients in
 `identityMonomialPairing Δ_phi (2k) φ` isolates the non-universal dynamical corrections with
 **zero $O(k^{-1})$ error** and yields the exponent range
 `0 < γ < min (2 * h_gap) (2 * Δ_phi - 1)`. -/
 theorem exists_const_abs_pairSpin_sub_identity_le {h_gap γ : ℝ}
     (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
-    (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
+    (hgap : corr.HasTwistGap h_gap)
     (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (2 * Δ_phi - 1))
     (N : ℕ) :
     ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
@@ -821,7 +825,7 @@ theorem exists_const_abs_pairSpin_sub_identity_le {h_gap γ : ℝ}
           identityMonomialPairing Δ_phi (2 * k) φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
   (corr.toMonomialFourPointData hν).exists_const_abs_pairSpin_sub_identity_le_contDiff
     corr hν hΔ (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
-    hgap hγ_pos hγ_lt N
+    (hgap.toMonomialFourPointData hν) hγ_pos hγ_lt N
 
 /-- **Quantitative Monomial Lightcone Bootstrap Against the Expanded Universal Sum
 (`FourPointData` version)**:
@@ -830,7 +834,7 @@ Combining `exists_const_abs_pairSpin_sub_identity_le` with the $O(k^{-1})$ large
 for every target exponent `0 < γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1))`. -/
 theorem exists_const_abs_pairSpin_sub_universal_le {h_gap γ : ℝ}
     (hν : 0 ≤ ν) (hΔ : 1 / 2 < Δ_phi)
-    (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
+    (hgap : corr.HasTwistGap h_gap)
     (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * h_gap) (min 1 (2 * Δ_phi - 1)))
     (N : ℕ) :
     ∃ C > 0, ∀ {k : ℕ}, 1 ≤ k →
@@ -845,6 +849,6 @@ theorem exists_const_abs_pairSpin_sub_universal_le {h_gap γ : ℝ}
         universalMonomialPairing Δ_phi φ| ≤ C * (2 * (k : ℝ)) ^ (-γ) * M_φ :=
   (corr.toMonomialFourPointData hν).exists_const_abs_pairSpin_sub_universal_le_contDiff
     corr hν hΔ (fun hwl hwr => corr.toMonomialFourPointData_eval hν hwl hwr)
-    hgap hγ_pos hγ_lt N
+    (hgap.toMonomialFourPointData hν) hγ_pos hγ_lt N
 
 end FourPointData

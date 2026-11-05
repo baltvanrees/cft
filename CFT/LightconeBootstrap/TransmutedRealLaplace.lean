@@ -36,9 +36,11 @@ lemma transmutedRatio_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) :
   positivity
 
 /-- Leading-twist ($n = 0$, $h = \Delta_\phi$) universal GFF lightcone-block primary coefficient:
-$$C^{\text{GFF, LC}}_0(\Delta_\phi) := \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2}
+$$
+C^{\text{GFF, LC}}_0(\Delta_\phi) := \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2}
   = \operatorname{transmutedRatio}(\Delta_\phi) \cdot
-    \operatorname{universalCoeff}(\Delta_\phi, 0).$$ -/
+    \operatorname{universalCoeff}(\Delta_\phi, 0).
+$$ -/
 noncomputable def universalPrimaryLeadingCoeff (Δ_phi : ℝ) : ℝ :=
   2 * (4 : ℝ) ^ (2 * Δ_phi) / (Real.Gamma Δ_phi) ^ 2
 
@@ -49,11 +51,13 @@ lemma universalPrimaryLeadingCoeff_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) :
   positivity
 
 /-- The transmuted universal large-spin Laplace transform on the negative real axis $\sigma < 0$:
-$$\operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma) :=
+$$
+\operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma) :=
   \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2} e^{\Delta_\phi \sigma}
     (1 - e^\sigma)^{-2\Delta_\phi}
   = \operatorname{transmutedRatio}(\Delta_\phi) \cdot
-    \operatorname{universalLaplaceReal}(\Delta_\phi, \sigma).$$ -/
+    \operatorname{universalLaplaceReal}(\Delta_\phi, \sigma).
+$$ -/
 noncomputable def transmutedUniversalLaplaceReal (Δ_phi σ : ℝ) : ℝ :=
   transmutedRatio Δ_phi * universalLaplaceReal Δ_phi σ
 
@@ -71,10 +75,12 @@ lemma transmutedUniversalLaplaceReal_nonneg {Δ_phi σ : ℝ} (hΔ : 0 < Δ_phi)
   mul_nonneg (transmutedRatio_pos hΔ).le (universalLaplaceReal_nonneg hΔ hσ)
 
 /-- The 1-term finite-spin transmuted $t$-channel identity Laplace transform at spin $K = 2k$:
-$$\operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma) :=
+$$
+\operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma) :=
   \frac{2 \cdot 4^{2\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2}
   e^{\Delta_\phi \sigma} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!}
-    \frac{(2\Delta_\phi + 1)_{n + K}}{(n + K)!} e^{n \sigma}.$$ -/
+    \frac{(2\Delta_\phi + 1)_{n + K}}{(n + K)!} e^{n \sigma}.
+$$ -/
 noncomputable def transmutedIdentityLaplaceReal (Δ_phi : ℝ) (K : ℕ) (σ : ℝ) : ℝ :=
   universalPrimaryLeadingCoeff Δ_phi * Real.Gamma (2 * Δ_phi + 1) * Real.exp (Δ_phi * σ) *
     ∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n * pochhammerCoeff (2 * Δ_phi + 1) (n + K) *
@@ -95,8 +101,10 @@ lemma transmutedIdentityLaplaceReal_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (K 
 `transmutedUniversalLaplaceReal` for All $\Delta_\phi > 0$**:
 For every $\Delta_\phi > 0$ and $\sigma_+ < 0$, there exists $C \ge 0$ such that for all $K \ge 1$
 and all $\sigma \le \sigma_+$,
-$$\left|K^{-2\Delta_\phi} \operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma)
-  - \operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma)\right| \le \frac{C}{K}.$$ -/
+$$
+\left|K^{-2\Delta_\phi} \operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma)
+  - \operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma)\right| \le \frac{C}{K}.
+$$ -/
 theorem exists_uniform_bound_transmutedIdentityLaplaceReal_sub_universal
     {Δ_phi σ_plus : ℝ} (hΔ : 0 < Δ_phi) (hσ_plus : σ_plus < 0) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ {σ : ℝ}, σ ≤ σ_plus →
@@ -142,9 +150,11 @@ theorem exists_uniform_bound_transmutedIdentityLaplaceReal_sub_universal
 /-! ## Section 2: Leading Transmuted $t$-Channel Identity Factor on `UcDisk` -/
 
 /-- The leading right-moving transmuted $t$-channel crossing factor on $\operatorname{UcDisk}$:
-$$\operatorname{crossFactorTransmuted}(\Delta_\phi, w) :=
+$$
+\operatorname{crossFactorTransmuted}(\Delta_\phi, w) :=
   \frac{\Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} \, 4^{\Delta_\phi} \,
-  e^{\Delta_\phi w} (1 - e^w)^{-(2\Delta_\phi + 1)}.$$ -/
+  e^{\Delta_\phi w} (1 - e^w)^{-(2\Delta_\phi + 1)}.
+$$ -/
 noncomputable def crossFactorTransmuted (Δ_phi : ℝ) (w : ℂ) : ℂ :=
   ((Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi : ℝ) : ℂ) *
     Complex.exp ((Δ_phi : ℂ) * w) * (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ))
