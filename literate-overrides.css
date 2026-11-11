@@ -1,0 +1,75 @@
+/* Literate overrides: collapsible proofs and clean declaration spacing */
+
+/* Hide the 1px protruding "Skip to content" banner */
+.skip-link {
+  display: none !important;
+}
+
+/* Add subtle separator between consecutive declarations inside a shared code-box */
+.code-box > code.hl.lean.block + code.hl.lean.block {
+  display: block;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--verso-border-color, #e1e4e8);
+}
+
+/* Inline toggle pill next to := in theorems/lemmas */
+.proof-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  font-family: var(--verso-structure-font-family, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--verso-muted-color, #586069);
+  background: var(--verso-copy-button-bg, #e9ecef);
+  border: 1px solid var(--verso-copy-button-border, #d1d5db);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.proof-toggle-btn:hover {
+  background: var(--verso-copy-button-hover-bg, #d1d5db);
+  color: var(--verso-text-color, #333);
+}
+
+.proof-body.collapsed {
+  display: none;
+}
+
+/* Top-of-page Show/Hide All Proofs button in the title bar */
+header.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.proof-global-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+
+.proof-global-btn {
+  padding: 0.25rem 0.65rem;
+  font-family: var(--verso-structure-font-family, sans-serif);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--verso-text-color, #333);
+  background: var(--verso-surface-color, #f8f9fa);
+  border: 1px solid var(--verso-border-color, #e1e4e8);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.proof-global-btn:hover {
+  background: var(--verso-copy-button-hover-bg, #d1d5db);
+}

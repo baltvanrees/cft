@@ -1,5 +1,4 @@
 /.lake
-/docbuild
 .DS_Store
 /CFT/Scratch.lean
 *.aux

@@ -1,0 +1,49 @@
+landing_page = "CFT"
+docstrings_as_text = true
+extra_css = ["literate-overrides.css"]
+extra_js = ["katex-markdown.js"]
+
+[metadata]
+title = "CFT in Lean 4"
+description = "Formalizing reflection-positive conformal field theories in Lean 4."
+
+[order_children]
+"CFT" = [
+  "CFT.CutPlane",
+  "CFT.Gegenbauers",
+  "CFT.Blocks_1d",
+  "CFT.Blocks",
+  "CFT.Blocks_pdisk",
+  "CFT.Corr",
+  "CFT.Corr_pdisk",
+]
+"CFT.LightconeBootstrap" = [
+  "CFT.LightconeBootstrap.MonomialDecomp",
+  "CFT.LightconeBootstrap.Gap",
+  "CFT.LightconeBootstrap.RealLaplaceBound",
+  "CFT.LightconeBootstrap.QuantitativeLargeSpin",
+  "CFT.LightconeBootstrap.Transmute1d",
+  "CFT.LightconeBootstrap.LightconeBlockDecomp",
+  "CFT.LightconeBootstrap.TransmutedRealLaplace",
+  "CFT.LightconeBootstrap.TransmutedEndpointBounds",
+  "CFT.LightconeBootstrap.ExactTransmutedRef",
+  "CFT.LightconeBootstrap.TransmutedCrossing",
+  "CFT.LightconeBootstrap.PrimaryAllTwists",
+]
+"CFT.ConeTauberian" = [
+  "CFT.ConeTauberian.ErdelyiKoberInversion",
+  "CFT.ConeTauberian.Branching2d",
+  "CFT.ConeTauberian.ConeAsymptotics",
+]
+"CFT.Analysis" = [
+  "CFT.Analysis.DominatedHolomorphy",
+  "CFT.Analysis.Vitali",
+  "CFT.Analysis.HermiteMeasure",
+  "CFT.Analysis.TwoConstants",
+  "CFT.Analysis.LaplaceTauberian",
+  "CFT.Analysis.Karamata2d",
+]
+
+# Keep dark mode code tokens readable on dark backgrounds
+[theme.dark]
+code_color = "var(--verso-text-color)"
