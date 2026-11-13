@@ -3,7 +3,7 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.MonomialDecomp
+import CFT.LightconeBootstrap.Monomial.Decomp
 
 /-!
 # Twist Gap, $t$-Channel Identity Dominance, and Cross-Channel Error Bounds
@@ -33,8 +33,6 @@ monomial lightcone bootstrap:
 
 open Real Complex Topology Set Metric MeasureTheory
 open scoped ComplexConjugate ENNReal
-
-namespace CFT.LightconeBootstrap
 
 /-!
 ## Inverse Radial Map `zOfW`, Crossed Coordinate `crossW`, and $t$-Channel Identity
@@ -899,10 +897,6 @@ theorem norm_eval_sub_crossIdentity_le_of_re_le {ν Δ_phi h_gap : ℝ}
     (mul_le_mul_of_nonneg_left h_mono (Real.exp_pos _).le) (norm_nonneg _))
 
 end MonomialFourPointData
-
-end CFT.LightconeBootstrap
-
-open CFT.LightconeBootstrap
 
 namespace FourPointData
 

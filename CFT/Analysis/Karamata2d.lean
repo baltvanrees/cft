@@ -10,60 +10,46 @@ import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Measure.WithDensity
 
 /-!
-# Quantitative Two-Variable Fourier-Laplace Tauberian Theorem on `(0, ∞)²`
+# Quantitative Two-Variable Fourier–Laplace Tauberian Theorem on $\mathbb{R}^2$
 
-This file establishes the non-asymptotic and quantitative `O(Δ^{-γ})` two-variable Fourier-Laplace
-Tauberian theorems for measures on `ℝ × ℝ`.
+This file establishes the non-asymptotic and quantitative $O(\Delta^{-\gamma})$ two-variable
+Fourier–Laplace Tauberian theorems for measures on $\mathbb{R}^2$. By exponentially tilting a
+measure $\mu$ by $e^{-A(p_1 + p_2)}$ and truncating the 2D Fourier inversion integral of the tilted
+test function $\varphi(p) = e^{A(p_1 + p_2)} \psi(p)$ to the frequency box $[-R, R]^2$, we bound
+the difference $\int \psi \thinspace d\mu - \int \psi \thinspace d\nu$ in terms of the complex Laplace transform
+difference on $\lbrace -A + i q_1, -A + i q_2 : q \in [-R, R]^2\rbrace$ and an $O(R^{-1})$ high-frequency tail.
 
-## Main Definitions & Results
-
-1. **Two-Variable Laplace Transforms & Exponential Tilting**:
-   - `laplaceTransform2d μ zl zr`: two-variable complex Laplace transform
-     `∫ p, exp(zl * p.1 + zr * p.2) ∂μ`.
-   - `laplaceTransformReal2d μ σl σr`: two-variable real Laplace transform
-     `∫ p, exp(σl * p.1 + σr * p.2) ∂μ`.
-   - `tiltedMeasure2d A μ` and `tiltedTest2d A ψ`: exponential tilting by `exp(∓A(p.1 + p.2))`.
-   - `fourier_tiltedMeasure2d_eq_laplaceTransform2d`: the 2D Fourier transform of
-     `tiltedMeasure2d A μ` at `(tl, tr)` equals `laplaceTransform2d μ (-A + i tl) (-A + i tr)`.
-
-2. **Bandlimited Fourier Truncation & Tail Decay**:
-   - `HasFourierDecay2d φ g C_g`: Fourier inversion representation of `φ : ℝ × ℝ → ℝ` with
-     `‖g q‖ ≤ C_g * (1 + q.1^2)⁻¹ * (1 + q.2^2)⁻¹`.
-   - `freqBox R` and `bandlimitedApprox2d g R`: frequency truncation to `[-R, R] × [-R, R]`.
-   - `norm_sub_bandlimitedApprox2d_le`: uniform `L^∞` tail bound `(4 * π * C_g) / R`.
-   - `integral_bandlimitedApprox2d_tiltedMeasure2d`: Fubini pairing identity relating the integral
-     of `bandlimitedApprox2d g R` against `tiltedMeasure2d A μ` to the integral of
-     `g q * laplaceTransform2d μ (-A + i q.1) (-A + i q.2)` over `freqBox R`.
-
-3. **Non-Asymptotic & Quantitative `O(Δ^{-γ})` 2D Tauberian Theorems**:
-   - `abs_integral_sub_le_of_laplace2d_bound`: non-asymptotic bound
-     `|(∫ ψ dμ) - (∫ ψ dν)| ≤ π^2 * C_g * ε + (4 * π * C_g * M) / R`.
-   - `exists_const_abs_integral_sub_le_rpow_2d`: quantitative `O(Δ^{-γ})` Tauberian theorem with
-     optimal frequency cutoff `R = Δ^γ` and `γ = α / (p_deg + 1)`.
+**Where this is used**:
+- `exists_const_abs_integral_sub_le_rpow_2d` is the 2D Tauberian engine of the high-energy cone
+  bootstrap: it is used in `CFT.ConeTauberian.ConeAsymptotics`
+  (`FourPointData.exists_const_abs_transmuted2d_sub_identity_le`) to convert two-variable complex
+  Laplace bounds on $\operatorname{UcPdisk}$ into quantitative high-energy ($\Delta \to \infty$ at
+  fixed spin-to-dimension ratio $\xi = \ell / \Delta$) asymptotics.
 -/
 
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped ENNReal
 
-namespace CFT.ConeTauberian
+/-!
+## 1. Two-Variable Laplace Transforms and Tilted Measures
 
-/-! ## Section 1: Two-Variable Complex & Real Laplace Transforms and Tilted Measures -/
+Tilting a measure $\mu$ on $\mathbb{R}^2$ by the exponential density $e^{-A(p_1 + p_2)}$
+(`tiltedMeasure2d A μ`) identifies its 2D Fourier transform at $(t_l, t_r) \in \mathbb{R}^2$ with
+the two-variable complex Laplace transform $L_\mu(-A + i t_l, -A + i t_r)$, while tilting a test
+function $\psi$ by $e^{A(p_1 + p_2)}$ (`tiltedTest2d A ψ`) preserves the integral pairing
+$\int \psi \thinspace d\mu = \int (e^{A(p_1 + p_2)}\psi) \thinspace d\mu_A$.
+-/
 
-/-- The two-variable complex Laplace transform `∫ p, exp(zl * p.1 + zr * p.2) dμ(p)` of a
-measure `μ` on `ℝ × ℝ`. -/
+/-- The two-variable complex Laplace transform
+$\int_{\mathbb{R}^2} e^{z_l p_1 + z_r p_2} \thinspace d\mu(p)$ of a measure $\mu$ on $\mathbb{R}^2$. -/
 noncomputable def laplaceTransform2d (μ : Measure (ℝ × ℝ)) (zl zr : ℂ) : ℂ :=
   ∫ p : ℝ × ℝ, Complex.exp (zl * (p.1 : ℂ) + zr * (p.2 : ℂ)) ∂μ
 
-/-- The two-variable real Laplace transform `∫ p, exp(σl * p.1 + σr * p.2) dμ(p)` of a
-measure `μ` on `ℝ × ℝ`. -/
+/-- The two-variable real Laplace transform
+$\int_{\mathbb{R}^2} e^{\sigma_l p_1 + \sigma_r p_2} \thinspace d\mu(p)$ of a measure $\mu$ on
+$\mathbb{R}^2$. -/
 noncomputable def laplaceTransformReal2d (μ : Measure (ℝ × ℝ)) (σl σr : ℝ) : ℝ :=
   ∫ p : ℝ × ℝ, Real.exp (σl * p.1 + σr * p.2) ∂μ
-
-lemma norm_exp_add_mul_ofReal (zl zr : ℂ) (p : ℝ × ℝ) :
-    ‖Complex.exp (zl * (p.1 : ℂ) + zr * (p.2 : ℂ))‖ =
-      Real.exp (zl.re * p.1 + zr.re * p.2) := by
-  rw [Complex.norm_exp]
-  simp [add_re, mul_re]
 
 lemma norm_laplaceTransform2d_le_laplaceTransformReal2d
     (μ : Measure (ℝ × ℝ)) (σl σr tl tr : ℝ) :
@@ -73,14 +59,14 @@ lemma norm_laplaceTransform2d_le_laplaceTransformReal2d
   refine (norm_integral_le_integral_norm _).trans (le_of_eq ?_)
   refine integral_congr_ae (ae_of_all _ fun p => ?_)
   dsimp
-  rw [norm_exp_add_mul_ofReal]
-  simp
+  rw [Complex.norm_exp]
+  simp [add_re, mul_re]
 
-/-- The exponentially tilted measure `dμ_A(p) = exp(-A * (p.1 + p.2)) dμ(p)` on `ℝ × ℝ`. -/
+/-- The exponentially tilted measure $d\mu_A(p) = e^{-A(p_1 + p_2)} \thinspace d\mu(p)$ on $\mathbb{R}^2$. -/
 noncomputable def tiltedMeasure2d (A : ℝ) (μ : Measure (ℝ × ℝ)) : Measure (ℝ × ℝ) :=
   μ.withDensity (fun p : ℝ × ℝ => ENNReal.ofReal (Real.exp (-A * (p.1 + p.2))))
 
-/-- The exponentially tilted test function `exp(A * (p.1 + p.2)) * ψ p` on `ℝ × ℝ`. -/
+/-- The exponentially tilted test function $e^{A(p_1 + p_2)} \psi(p)$ on $\mathbb{R}^2$. -/
 noncomputable def tiltedTest2d (A : ℝ) (ψ : ℝ × ℝ → ℝ) (p : ℝ × ℝ) : ℝ :=
   Real.exp (A * (p.1 + p.2)) * ψ p
 
@@ -103,10 +89,6 @@ lemma tiltedMeasure2d_univ_eq (A : ℝ) (μ : Measure (ℝ × ℝ)) :
   rw [h_eq, integral_eq_lintegral_of_nonneg_ae
     (ae_of_all _ fun p => (Real.exp_pos _).le)
     (continuous_exp_neg_mul_add A).aestronglyMeasurable]
-
-lemma tiltedMeasure2d_univ_le (A : ℝ) (μ : Measure (ℝ × ℝ)) :
-    (tiltedMeasure2d A μ).real univ ≤ laplaceTransformReal2d μ (-A) (-A) :=
-  (tiltedMeasure2d_univ_eq A μ).le
 
 lemma integral_tiltedMeasure2d_eq_integral_mul (A : ℝ) (μ : Measure (ℝ × ℝ))
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] (g : ℝ × ℝ → E) :
@@ -144,11 +126,21 @@ lemma fourier_tiltedMeasure2d_eq_laplaceTransform2d
   push_cast
   ring
 
-/-! ## Section 2: Bandlimited Fourier Truncation & Tail Decay on `[-R, R]²` -/
+/-!
+## 2. Bandlimited Fourier Truncation and Tail Decay on $[-R, R]^2$
 
-/-- A function `φ : ℝ × ℝ → ℝ` has a 2D Fourier inversion representation with integrable quadratic
-decay if `φ(p) = ∫ q, g(q) exp(i (q.1 p.1 + q.2 p.2))` with
-`‖g(q)‖ ≤ C_g (1 + q.1^2)⁻¹ (1 + q.2^2)⁻¹`. -/
+When $\varphi : \mathbb{R}^2 \to \mathbb{R}$ admits a Fourier inversion representation with
+integrable quadratic decay $\Vert g(q)\Vert \le C_g (1 + q_1^2)^{-1} (1 + q_2^2)^{-1}$
+(`HasFourierDecay2d`), truncating the frequency integral to the box $[-R, R]^2$ (`freqBox R`)
+produces a bandlimited approximation (`bandlimitedApprox2d g R`) with uniform $L^\infty$ tail error
+bounded by $4\pi C_g / R$, whose integral against $\mu_A$ swaps by Fubini's theorem to a frequency
+integral over $[-R, R]^2$.
+-/
+
+/-- A function $\varphi : \mathbb{R}^2 \to \mathbb{R}$ has a 2D Fourier inversion representation
+with integrable quadratic decay if
+$\varphi(p) = \int_{\mathbb{R}^2} g(q) \thinspace e^{i(q_1 p_1 + q_2 p_2)} \thinspace dq$ with
+$\Vert g(q)\Vert \le C_g (1 + q_1^2)^{-1} (1 + q_2^2)^{-1}$. -/
 structure HasFourierDecay2d (φ : ℝ × ℝ → ℝ) (g : ℝ × ℝ → ℂ) (C_g : ℝ) : Prop where
   C_g_nonneg : 0 ≤ C_g
   g_measurable : AEStronglyMeasurable g volume
@@ -157,14 +149,14 @@ structure HasFourierDecay2d (φ : ℝ × ℝ → ℝ) (g : ℝ × ℝ → ℂ) (
     (φ p : ℂ) =
       ∫ q : ℝ × ℝ, g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))
 
-/-- The truncated 2D frequency box `[-R, R] × [-R, R]`. -/
+/-- The truncated 2D frequency box $[-R, R] \times [-R, R]$. -/
 def freqBox (R : ℝ) : Set (ℝ × ℝ) :=
   Icc (-R) R ×ˢ Icc (-R) R
 
 lemma measurableSet_freqBox (R : ℝ) : MeasurableSet (freqBox R) :=
   measurableSet_Icc.prod measurableSet_Icc
 
-/-- The bandlimited approximation to `φ` obtained by restricting the Fourier integral to
+/-- The bandlimited approximation to $\varphi$ obtained by restricting the Fourier integral to
 `freqBox R`. -/
 noncomputable def bandlimitedApprox2d (g : ℝ × ℝ → ℂ) (R : ℝ) (p : ℝ × ℝ) : ℂ :=
   ∫ q in freqBox R, g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))
@@ -189,57 +181,11 @@ lemma integral_univ_inv_one_add_sq_prod :
     integral_univ_inv_one_add_sq]
   ring
 
-lemma integral_Icc_inv_one_add_sq {R : ℝ} (hR : 0 ≤ R) :
-    (∫ t in Icc (-R) R, (1 + t ^ 2)⁻¹) = 2 * Real.arctan R := by
-  rw [integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le (by linarith),
-    integral_inv_one_add_sq, Real.arctan_neg]
-  ring
-
-lemma integral_freqBox_inv_one_add_sq_prod {R : ℝ} (hR : 0 ≤ R) :
-    (∫ q in freqBox R, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) = (2 * Real.arctan R) ^ 2 := by
-  rw [freqBox, Measure.volume_eq_prod,
-    setIntegral_prod_mul (fun x : ℝ => (1 + x ^ 2)⁻¹) (fun y : ℝ => (1 + y ^ 2)⁻¹),
-    integral_Icc_inv_one_add_sq hR]
-  ring
-
 lemma integral_freqBox_inv_one_add_sq_prod_le (R : ℝ) :
     (∫ q in freqBox R, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) ≤ π ^ 2 := by
-  rw [ ← integral_univ_inv_one_add_sq_prod]
+  rw [← integral_univ_inv_one_add_sq_prod]
   exact setIntegral_le_integral integrable_inv_one_add_sq_prod
     (ae_of_all _ fun q => by positivity)
-
-lemma arctan_le_self_of_nonneg {x : ℝ} (hx : 0 ≤ x) : Real.arctan x ≤ x := by
-  have h_int : ∫ t in (0 : ℝ)..x, (1 + t ^ 2)⁻¹ ≤ ∫ _t in (0 : ℝ)..x, (1 : ℝ) :=
-    intervalIntegral.integral_mono_on hx
-      integrable_inv_one_add_sq.intervalIntegrable
-      intervalIntegrable_const
-      (fun t _ => inv_le_one_of_one_le₀ (by linarith [sq_nonneg t]))
-  simpa [integral_inv_one_add_sq] using h_int
-
-lemma pi_sub_two_mul_arctan_le {R : ℝ} (hR : 0 < R) :
-    π - 2 * Real.arctan R ≤ 2 / R := by
-  have h_inv : Real.arctan R⁻¹ = π / 2 - Real.arctan R := Real.arctan_inv_of_pos hR
-  have h_le : Real.arctan R⁻¹ ≤ R⁻¹ := arctan_le_self_of_nonneg (inv_nonneg.mpr hR.le)
-  rw [div_eq_mul_inv]
-  linarith
-
-lemma integral_compl_freqBox_inv_one_add_sq_prod_le {R : ℝ} (hR : 0 < R) :
-    (∫ q in (freqBox R)ᶜ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) ≤ 4 * π / R := by
-  have h_split := integral_add_compl (measurableSet_freqBox R) integrable_inv_one_add_sq_prod
-  rw [integral_freqBox_inv_one_add_sq_prod hR.le, integral_univ_inv_one_add_sq_prod] at h_split
-  have h_compl : (∫ q in (freqBox R)ᶜ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) =
-      (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R) := by
-    linarith [show (2 * Real.arctan R) ^ 2 +
-        (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R) = π ^ 2 by ring]
-  rw [h_compl]
-  have h_lt : Real.arctan R < π / 2 := Real.arctan_lt_pi_div_two R
-  have h_sum_le : π + 2 * Real.arctan R ≤ 2 * π := by linarith
-  have h_diff_nonneg : 0 ≤ π - 2 * Real.arctan R := by linarith
-  have h_diff_le : π - 2 * Real.arctan R ≤ 2 / R := pi_sub_two_mul_arctan_le hR
-  calc (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R)
-      ≤ (2 * π) * (2 / R) :=
-        mul_le_mul h_sum_le h_diff_le h_diff_nonneg (by positivity)
-    _ = 4 * π / R := by ring
 
 lemma HasFourierDecay2d.integrable_g_mul_exp {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ}
     (h : HasFourierDecay2d φ g C_g) (p : ℝ × ℝ) :
@@ -254,7 +200,8 @@ lemma HasFourierDecay2d.integrable_g_mul_exp {φ : ℝ × ℝ → ℝ} {g : ℝ 
   rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]
   exact h.norm_g_le q
 
-/-- Uniform pointwise `L^∞` tail bound for the bandlimited Fourier approximation on `freqBox R`. -/
+/-- Uniform pointwise $L^\infty$ tail bound for the bandlimited Fourier approximation on
+`freqBox R`. -/
 theorem norm_sub_bandlimitedApprox2d_le {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g R : ℝ}
     (h : HasFourierDecay2d φ g C_g) (hR : 0 < R) (p : ℝ × ℝ) :
     ‖(φ p : ℂ) - bandlimitedApprox2d g R p‖ ≤ (4 * π * C_g) / R := by
@@ -271,6 +218,37 @@ theorem norm_sub_bandlimitedApprox2d_le {φ : ℝ × ℝ → ℝ} {g : ℝ × �
   have h_bound_int : IntegrableOn
       (fun q : ℝ × ℝ => C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹)) (freqBox R)ᶜ volume :=
     (integrable_inv_one_add_sq_prod.const_mul C_g).integrableOn
+  have h_compl_le : (∫ q in (freqBox R)ᶜ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) ≤ 4 * π / R := by
+    have h_box : (∫ q in freqBox R, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) =
+        (2 * Real.arctan R) ^ 2 := by
+      have h_Icc : (∫ t in Icc (-R) R, (1 + t ^ 2)⁻¹) = 2 * Real.arctan R := by
+        rw [integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le (by linarith),
+          integral_inv_one_add_sq, Real.arctan_neg]
+        ring
+      rw [freqBox, Measure.volume_eq_prod,
+        setIntegral_prod_mul (fun x : ℝ => (1 + x ^ 2)⁻¹) (fun y : ℝ => (1 + y ^ 2)⁻¹), h_Icc]
+      ring
+    have h_split_dom := integral_add_compl (measurableSet_freqBox R) integrable_inv_one_add_sq_prod
+    rw [h_box, integral_univ_inv_one_add_sq_prod] at h_split_dom
+    have h_compl : (∫ q in (freqBox R)ᶜ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) =
+        (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R) := by
+      linarith [show (2 * Real.arctan R) ^ 2 +
+          (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R) = π ^ 2 by ring]
+    rw [h_compl]
+    have h_lt : Real.arctan R < π / 2 := Real.arctan_lt_pi_div_two R
+    have h_diff_le : π - 2 * Real.arctan R ≤ 2 / R := by
+      have h_inv : Real.arctan R⁻¹ = π / 2 - Real.arctan R := Real.arctan_inv_of_pos hR
+      have h_int : ∫ t in (0 : ℝ)..R⁻¹, (1 + t ^ 2)⁻¹ ≤ ∫ _t in (0 : ℝ)..R⁻¹, (1 : ℝ) :=
+        intervalIntegral.integral_mono_on (inv_nonneg.mpr hR.le)
+          integrable_inv_one_add_sq.intervalIntegrable intervalIntegrable_const
+          (fun t _ => inv_le_one_of_one_le₀ (by linarith [sq_nonneg t]))
+      have h_le : Real.arctan R⁻¹ ≤ R⁻¹ := by simpa [integral_inv_one_add_sq] using h_int
+      rw [div_eq_mul_inv]
+      linarith
+    calc (π + 2 * Real.arctan R) * (π - 2 * Real.arctan R)
+        ≤ (2 * π) * (2 / R) :=
+          mul_le_mul (by linarith) h_diff_le (by linarith) (by positivity)
+      _ = 4 * π / R := by ring
   calc ‖∫ q in (freqBox R)ᶜ,
         g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖
       ≤ ∫ q in (freqBox R)ᶜ,
@@ -285,76 +263,8 @@ theorem norm_sub_bandlimitedApprox2d_le {φ : ℝ × ℝ → ℝ} {g : ℝ × �
     _ = C_g * ∫ q in (freqBox R)ᶜ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹ :=
         MeasureTheory.integral_const_mul C_g _
     _ ≤ C_g * (4 * π / R) :=
-        mul_le_mul_of_nonneg_left (integral_compl_freqBox_inv_one_add_sq_prod_le hR) h.C_g_nonneg
+        mul_le_mul_of_nonneg_left h_compl_le h.C_g_nonneg
     _ = (4 * π * C_g) / R := by ring
-
-lemma HasFourierDecay2d.abs_le {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ}
-    (h : HasFourierDecay2d φ g C_g) (p : ℝ × ℝ) :
-    |φ p| ≤ π ^ 2 * C_g := by
-  rw [← Real.norm_eq_abs, ← Complex.norm_real, h.fourier_eq p]
-  calc ‖∫ q : ℝ × ℝ, g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖
-      ≤ ∫ q : ℝ × ℝ,
-          ‖g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖ :=
-        norm_integral_le_integral_norm _
-    _ ≤ ∫ q : ℝ × ℝ, C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) := by
-        refine integral_mono (h.integrable_g_mul_exp p).norm
-          (integrable_inv_one_add_sq_prod.const_mul C_g) (fun q => ?_)
-        dsimp
-        rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]
-        exact h.norm_g_le q
-    _ = C_g * ∫ q : ℝ × ℝ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹ :=
-        MeasureTheory.integral_const_mul C_g _
-    _ = π ^ 2 * C_g := by rw [integral_univ_inv_one_add_sq_prod]; ring
-
-lemma HasFourierDecay2d.norm_bandlimitedApprox2d_le {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ}
-    (h : HasFourierDecay2d φ g C_g) (R : ℝ) (p : ℝ × ℝ) :
-    ‖bandlimitedApprox2d g R p‖ ≤ π ^ 2 * C_g := by
-  unfold bandlimitedApprox2d
-  calc ‖∫ q in freqBox R,
-        g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖
-      ≤ ∫ q in freqBox R,
-          ‖g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖ :=
-        norm_integral_le_integral_norm _
-    _ ≤ ∫ q in freqBox R, C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) := by
-        refine integral_mono (h.integrable_g_mul_exp p).integrableOn.norm
-          (integrable_inv_one_add_sq_prod.const_mul C_g).integrableOn (fun q => ?_)
-        dsimp
-        rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]
-        exact h.norm_g_le q
-    _ = C_g * ∫ q in freqBox R, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹ :=
-        MeasureTheory.integral_const_mul C_g _
-    _ ≤ C_g * π ^ 2 :=
-        mul_le_mul_of_nonneg_left (integral_freqBox_inv_one_add_sq_prod_le R) h.C_g_nonneg
-    _ = π ^ 2 * C_g := by ring
-
-lemma HasFourierDecay2d.continuous_ofReal {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ}
-    (h : HasFourierDecay2d φ g C_g) : Continuous (fun p : ℝ × ℝ => (φ p : ℂ)) := by
-  have h_eq : (fun p : ℝ × ℝ => (φ p : ℂ)) =
-      fun p => ∫ q : ℝ × ℝ,
-        g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ))) :=
-    funext h.fourier_eq
-  rw [h_eq]
-  refine continuous_of_dominated
-    (bound := fun q : ℝ × ℝ => C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹))
-    (fun p => (h.integrable_g_mul_exp p).1)
-    (fun p => ae_of_all _ fun q => by
-      rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]
-      exact h.norm_g_le q)
-    (integrable_inv_one_add_sq_prod.const_mul C_g)
-    (ae_of_all _ fun q => by fun_prop)
-
-lemma HasFourierDecay2d.continuous_bandlimitedApprox2d {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ}
-    (h : HasFourierDecay2d φ g C_g) (R : ℝ) :
-    Continuous (bandlimitedApprox2d g R) := by
-  unfold bandlimitedApprox2d
-  refine continuous_of_dominated
-    (bound := fun q : ℝ × ℝ => C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹))
-    (fun p => (h.integrable_g_mul_exp p).integrableOn.1)
-    (fun p => ae_of_all _ fun q => by
-      rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]
-      exact h.norm_g_le q)
-    (integrable_inv_one_add_sq_prod.const_mul C_g).integrableOn
-    (ae_of_all _ fun q => by fun_prop)
 
 /-- Fubini pairing identity: integrating `bandlimitedApprox2d g R` against `tiltedMeasure2d A μ`
 swaps the order of integration to an integral over `freqBox R` against `laplaceTransform2d μ`. -/
@@ -392,7 +302,16 @@ theorem integral_bandlimitedApprox2d_tiltedMeasure2d
   dsimp [F, μ_A]
   rw [MeasureTheory.integral_const_mul, fourier_tiltedMeasure2d_eq_laplaceTransform2d]
 
-/-! ## Section 3: Non-Asymptotic & Quantitative `O(Δ^{-γ})` 2D Tauberian Theorems -/
+/-!
+## 3. Non-Asymptotic and Quantitative $O(\Delta^{-\gamma})$ 2D Tauberian Theorems
+
+Decomposing $\varphi = B_R + (\varphi - B_R)$ where $B_R$ is the bandlimited approximation on
+$[-R, R]^2$, the low-frequency term is bounded via Fubini's theorem by $\pi^2 C_g \varepsilon$ while
+the high-frequency tail is bounded by $(4\pi C_g M) / R$. Balancing the two terms when
+$\varepsilon = C_0 R^{p_{\mathrm{deg}}} \Delta^{-\alpha}$ by choosing $R = \Delta^\gamma$ with
+$\gamma = \alpha / (p_{\mathrm{deg}} + 1)$ yields the quantitative $O(\Delta^{-\gamma})$ Tauberian
+bound.
+-/
 
 lemma HasFourierDecay2d.integrable_ofReal_tiltedMeasure2d
     {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ} (h : HasFourierDecay2d φ g C_g)
@@ -400,10 +319,28 @@ lemma HasFourierDecay2d.integrable_ofReal_tiltedMeasure2d
     (hμ : Integrable (fun p : ℝ × ℝ => Real.exp (-A * (p.1 + p.2))) μ) :
     Integrable (fun p : ℝ × ℝ => (φ p : ℂ)) (tiltedMeasure2d A μ) := by
   have : IsFiniteMeasure (tiltedMeasure2d A μ) := isFiniteMeasure_tiltedMeasure2d hμ
-  refine Integrable.of_bound h.continuous_ofReal.aestronglyMeasurable (π ^ 2 * C_g)
-    (ae_of_all _ fun p => ?_)
-  rw [Complex.norm_real, Real.norm_eq_abs]
-  exact h.abs_le p
+  have h_cont : Continuous (fun p : ℝ × ℝ => (φ p : ℂ)) := by
+    rw [funext h.fourier_eq]
+    exact continuous_of_dominated
+      (bound := fun q : ℝ × ℝ => C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹))
+      (fun p => (h.integrable_g_mul_exp p).1)
+      (fun p => ae_of_all _ fun q => by
+        rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]; exact h.norm_g_le q)
+      (integrable_inv_one_add_sq_prod.const_mul C_g)
+      (ae_of_all _ fun q => by fun_prop)
+  refine Integrable.of_bound h_cont.aestronglyMeasurable (π ^ 2 * C_g) (ae_of_all _ fun p => ?_)
+  rw [ h.fourier_eq p]
+  calc ‖∫ q : ℝ × ℝ, g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖
+      ≤ ∫ q : ℝ × ℝ,
+          ‖g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖ :=
+        norm_integral_le_integral_norm _
+    _ ≤ ∫ q : ℝ × ℝ, C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) := by
+        refine integral_mono (h.integrable_g_mul_exp p).norm
+          (integrable_inv_one_add_sq_prod.const_mul C_g) (fun q => ?_)
+        dsimp; rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]; exact h.norm_g_le q
+    _ = C_g * ∫ q : ℝ × ℝ, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹ :=
+        MeasureTheory.integral_const_mul C_g _
+    _ = π ^ 2 * C_g := by rw [integral_univ_inv_one_add_sq_prod]; ring
 
 lemma HasFourierDecay2d.integrable_bandlimitedApprox2d_tiltedMeasure2d
     {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g : ℝ} (h : HasFourierDecay2d φ g C_g)
@@ -411,22 +348,31 @@ lemma HasFourierDecay2d.integrable_bandlimitedApprox2d_tiltedMeasure2d
     (hμ : Integrable (fun p : ℝ × ℝ => Real.exp (-A * (p.1 + p.2))) μ) :
     Integrable (bandlimitedApprox2d g R) (tiltedMeasure2d A μ) := by
   have : IsFiniteMeasure (tiltedMeasure2d A μ) := isFiniteMeasure_tiltedMeasure2d hμ
-  exact Integrable.of_bound (h.continuous_bandlimitedApprox2d R).aestronglyMeasurable
-    (π ^ 2 * C_g) (ae_of_all _ (h.norm_bandlimitedApprox2d_le R))
-
-lemma norm_integral_sub_bandlimitedApprox2d_tiltedMeasure2d_le
-    {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g R : ℝ} (h : HasFourierDecay2d φ g C_g)
-    (hR : 0 < R) (A : ℝ) {μ : Measure (ℝ × ℝ)}
-    (hμ : Integrable (fun p : ℝ × ℝ => Real.exp (-A * (p.1 + p.2))) μ) :
-    ‖∫ p : ℝ × ℝ, ((φ p : ℂ) - bandlimitedApprox2d g R p) ∂(tiltedMeasure2d A μ)‖ ≤
-      ((4 * π * C_g) / R) * laplaceTransformReal2d μ (-A) (-A) := by
-  have : IsFiniteMeasure (tiltedMeasure2d A μ) := isFiniteMeasure_tiltedMeasure2d hμ
-  have h1 := norm_integral_le_of_norm_le_const (μ := tiltedMeasure2d A μ)
-    (ae_of_all _ (norm_sub_bandlimitedApprox2d_le h hR))
-  have h_nonneg : 0 ≤ (4 * π * C_g) / R := by
-    have : 0 ≤ C_g := h.C_g_nonneg
-    positivity
-  exact h1.trans (mul_le_mul_of_nonneg_left (tiltedMeasure2d_univ_le A μ) h_nonneg)
+  have h_cont : Continuous (bandlimitedApprox2d g R) := by
+    unfold bandlimitedApprox2d
+    exact continuous_of_dominated
+      (bound := fun q : ℝ × ℝ => C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹))
+      (fun p => (h.integrable_g_mul_exp p).integrableOn.1)
+      (fun p => ae_of_all _ fun q => by
+        rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]; exact h.norm_g_le q)
+      (integrable_inv_one_add_sq_prod.const_mul C_g).integrableOn
+      (ae_of_all _ fun q => by fun_prop)
+  refine Integrable.of_bound h_cont.aestronglyMeasurable (π ^ 2 * C_g) (ae_of_all _ fun p => ?_)
+  unfold bandlimitedApprox2d
+  calc ‖∫ q in freqBox R,
+        g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖
+      ≤ ∫ q in freqBox R,
+          ‖g q * Complex.exp (I * ((q.1 : ℂ) * (p.1 : ℂ) + (q.2 : ℂ) * (p.2 : ℂ)))‖ :=
+        norm_integral_le_integral_norm _
+    _ ≤ ∫ q in freqBox R, C_g * ((1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹) := by
+        refine integral_mono (h.integrable_g_mul_exp p).integrableOn.norm
+          (integrable_inv_one_add_sq_prod.const_mul C_g).integrableOn (fun q => ?_)
+        dsimp; rw [norm_mul, norm_exp_I_mul_add_ofReal, mul_one]; exact h.norm_g_le q
+    _ = C_g * ∫ q in freqBox R, (1 + q.1 ^ 2)⁻¹ * (1 + q.2 ^ 2)⁻¹ :=
+        MeasureTheory.integral_const_mul C_g _
+    _ ≤ C_g * π ^ 2 :=
+        mul_le_mul_of_nonneg_left (integral_freqBox_inv_one_add_sq_prod_le R) h.C_g_nonneg
+    _ = π ^ 2 * C_g := by ring
 
 lemma norm_integral_bandlimitedApprox2d_sub_le
     {φ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ} {C_g R ε : ℝ} (h : HasFourierDecay2d φ g C_g)
@@ -513,11 +459,13 @@ lemma norm_integral_bandlimitedApprox2d_sub_le
           (mul_nonneg h.C_g_nonneg hε)
     _ = π ^ 2 * C_g * ε := by ring
 
-/-- **Non-Asymptotic 2D Fourier-Laplace Tauberian Bound**:
-Given two measures `μ, ν` on `ℝ × ℝ` whose real Laplace transforms at `(-A, -A)` sum to at most `M`
-and whose complex Laplace transforms on `freqBox R` (`R > 0`) agree to within `ε`, any test function
-`ψ : ℝ × ℝ → ℝ` whose tilted version `tiltedTest2d A ψ` satisfies `HasFourierDecay2d` with constant
-`C_g` obeys `|(∫ ψ dμ) - (∫ ψ dν)| ≤ π^2 * C_g * ε + (4 * π * C_g * M) / R`. -/
+/-- **Non-Asymptotic 2D Fourier–Laplace Tauberian Bound**:
+Given two measures $\mu, \nu$ on $\mathbb{R}^2$ whose real Laplace transforms at $(-A, -A)$ sum to
+at most $M$ and whose complex Laplace transforms on `freqBox R` ($R > 0$) agree to within
+$\varepsilon$, any test function $\psi : \mathbb{R}^2 \to \mathbb{R}$ whose tilted version
+`tiltedTest2d A ψ` satisfies `HasFourierDecay2d` with constant $C_g$ obeys
+$$\left|\int_{\mathbb{R}^2} \psi \thinspace d\mu - \int_{\mathbb{R}^2} \psi \thinspace d\nu\right|
+  \le \pi^2 C_g \varepsilon + \frac{4\pi C_g M}{R}.$$ -/
 theorem abs_integral_sub_le_of_laplace2d_bound
     {A M ε R C_g : ℝ} (hε : 0 ≤ ε) (hR : 0 < R)
     {μ ν : Measure (ℝ × ℝ)}
@@ -535,6 +483,8 @@ theorem abs_integral_sub_le_of_laplace2d_bound
   let B := bandlimitedApprox2d g R
   let μ_A := tiltedMeasure2d A μ
   let ν_A := tiltedMeasure2d A ν
+  have : IsFiniteMeasure μ_A := isFiniteMeasure_tiltedMeasure2d hμ
+  have : IsFiniteMeasure ν_A := isFiniteMeasure_tiltedMeasure2d hν
   rw [← integral_tiltedTest2d_tiltedMeasure2d A μ ψ,
     ← integral_tiltedTest2d_tiltedMeasure2d A ν ψ]
   rw [← Real.norm_eq_abs, ← Complex.norm_real, Complex.ofReal_sub,
@@ -562,8 +512,14 @@ theorem abs_integral_sub_le_of_laplace2d_bound
     ((∫ p, ((φ p : ℂ) - B p) ∂μ_A) - (∫ p, ((φ p : ℂ) - B p) ∂ν_A))
   have h_tri2 := norm_sub_le (∫ p, ((φ p : ℂ) - B p) ∂μ_A) (∫ p, ((φ p : ℂ) - B p) ∂ν_A)
   have h_band := norm_integral_bandlimitedApprox2d_sub_le hψ hε A hμ hν h_diff
-  have h_tail_μ := norm_integral_sub_bandlimitedApprox2d_tiltedMeasure2d_le hψ hR A hμ
-  have h_tail_ν := norm_integral_sub_bandlimitedApprox2d_tiltedMeasure2d_le hψ hR A hν
+  have h_tail_μ : ‖∫ p : ℝ × ℝ, ((φ p : ℂ) - B p) ∂μ_A‖ ≤
+      ((4 * π * C_g) / R) * laplaceTransformReal2d μ (-A) (-A) := by
+    rw [← tiltedMeasure2d_univ_eq A μ]
+    exact norm_integral_le_of_norm_le_const (ae_of_all _ (norm_sub_bandlimitedApprox2d_le hψ hR))
+  have h_tail_ν : ‖∫ p : ℝ × ℝ, ((φ p : ℂ) - B p) ∂ν_A‖ ≤
+      ((4 * π * C_g) / R) * laplaceTransformReal2d ν (-A) (-A) := by
+    rw [← tiltedMeasure2d_univ_eq A ν]
+    exact norm_integral_le_of_norm_le_const (ae_of_all _ (norm_sub_bandlimitedApprox2d_le hψ hR))
   have h_factor_nonneg : 0 ≤ (4 * π * C_g) / R := by
     have : 0 ≤ C_g := hψ.C_g_nonneg
     positivity
@@ -579,12 +535,15 @@ theorem abs_integral_sub_le_of_laplace2d_bound
       _ = (4 * π * C_g * M) / R := by ring
   linarith
 
-/-- **Quantitative `O(Δ^{-γ})` Power-Law 2D Tauberian Theorem**:
-Given `α > 0`, `p_deg ≥ 0`, `M > 0`, `C_0 > 0`, and `A : ℝ`, set `γ := α / (p_deg + 1) > 0`.
-For any test function `ψ : ℝ × ℝ → ℝ` whose tilted version `tiltedTest2d A ψ` satisfies
-`HasFourierDecay2d`, there exists `C_ψ > 0` such that for all `Δ ≥ 1` and all measures `μ, ν`
-whose complex Laplace transforms on `freqBox (Δ^γ)` agree to within
-`C_0 * (Δ^γ)^p_deg * Δ^{-α}`, we have `|(∫ ψ dμ) - (∫ ψ dν)| ≤ C_ψ * Δ^{-γ}`. -/
+/-- **Quantitative $O(\Delta^{-\gamma})$ Power-Law 2D Tauberian Theorem**:
+Given $\alpha > 0$, $p_{\mathrm{deg}} \ge 0$, $M > 0$, $C_0 > 0$, and $A \in \mathbb{R}$, set
+$\gamma := \alpha / (p_{\mathrm{deg}} + 1) > 0$. For any test function
+$\psi : \mathbb{R}^2 \to \mathbb{R}$ whose tilted version `tiltedTest2d A ψ` satisfies
+`HasFourierDecay2d`, there exists $C_\psi > 0$ such that for all $\Delta \ge 1$ and all measures
+$\mu, \nu$ whose complex Laplace transforms on `freqBox (Δ^γ)` agree to within
+$C_0 (\Delta^\gamma)^{p_{\mathrm{deg}}} \Delta^{-\alpha}$, we have
+$$\left|\int_{\mathbb{R}^2} \psi \thinspace d\mu - \int_{\mathbb{R}^2} \psi \thinspace d\nu\right|
+  \le C_\psi \Delta^{-\gamma}.$$ -/
 theorem exists_const_abs_integral_sub_le_rpow_2d
     {α p_deg M C_0 A C_g : ℝ} (hα : 0 < α) (hp : 0 ≤ p_deg) (hM : 0 < M) (hC_0 : 0 < C_0)
     {ψ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ}
@@ -639,4 +598,3 @@ theorem exists_const_abs_integral_sub_le_rpow_2d
         dsimp [C_ψ]
         linarith
 
-end CFT.ConeTauberian

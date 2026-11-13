@@ -3,7 +3,8 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.TransmutedRealLaplace
+import CFT.LightconeBootstrap.LightconeBlock.Decomp
+import CFT.LightconeBootstrap.Monomial.LaplaceBound
 
 /-!
 # Convergent Inner-Derivative Transmutation Operator and Endpoint Bounds
@@ -55,8 +56,6 @@ $$
 
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped BigOperators ENNReal
-
-namespace CFT.LightconeBootstrap
 
 /-! ## Section 1: Inner-Derivative Transmutation Operator -/
 
@@ -3957,5 +3956,3 @@ theorem transmuteOpInner_block1d_eq_transmuteOp {H : ℝ} (hH : 1 / 2 < H)
     transmuteOpInner (block1d H) w = transmuteOp (block1d H) w := by
   rw [transmuteOpInner_block1d_of_pos (by linarith : 0 < H) hw,
     transmuteOp_block1d hH hw]
-
-end CFT.LightconeBootstrap

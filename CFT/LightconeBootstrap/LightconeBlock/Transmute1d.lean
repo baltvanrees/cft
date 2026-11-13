@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.MeasureTheory.Integral.DominatedConvergence
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import CFT.Blocks_1d
-import CFT.LightconeBootstrap.RealLaplaceBound
+import CFT.LightconeBootstrap.Monomial.LaplaceBound
 
 /-!
 # 1D Fractional Transmutation of Collinear Conformal Blocks on `UcDisk`
@@ -59,8 +59,6 @@ $$
 
 open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped ComplexConjugate
-
-namespace CFT.LightconeBootstrap
 
 /-!
 ## 1. Half-Binomial Coefficients and the Partial-Fraction Identity
@@ -1306,5 +1304,3 @@ lemma measurable_transmutePosWeight : Measurable transmutePosWeight := by
     rfl
   rw [h_eq]
   exact continuousOn_transmuteWeight.measurable_piecewise continuousOn_const measurableSet_Ioi
-
-end CFT.LightconeBootstrap

@@ -73,3 +73,18 @@ header.title-bar {
 .proof-global-btn:hover {
   background: var(--verso-copy-button-hover-bg, #d1d5db);
 }
+
+/* Auto-linked inline code cross-references in prose and docstrings */
+a.doc-xref-link {
+  color: var(--verso-link-color, #0366d6);
+  text-decoration: none;
+}
+
+a.doc-xref-link > code {
+  color: inherit;
+  border-bottom: 1px dotted currentColor;
+}
+
+a.doc-xref-link:hover > code {
+  border-bottom-style: solid;
+}

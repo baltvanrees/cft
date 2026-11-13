@@ -3,8 +3,8 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.Transmute1d
-import CFT.LightconeBootstrap.MonomialDecomp
+import CFT.LightconeBootstrap.LightconeBlock.Transmute1d
+import CFT.LightconeBootstrap.Monomial.Decomp
 
 /-!
 # Lightcone Conformal Block Decomposition and Transmuted Monomial Data
@@ -33,8 +33,6 @@ blocks and constructs the associated transmuted monomial four-point data:
 
 open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped BigOperators ENNReal
-
-namespace CFT.LightconeBootstrap
 
 /-! ## Section 1: Action of `transmuteOp` on `ConformalBlockLightcone` -/
 
@@ -709,10 +707,6 @@ lemma MonomialFourPointData.HasTwistGap.mu_props
     linarith
   rw [h_compl]
   exact ENNReal.ofReal_le_ofReal (h_rem_le 0 n)
-
-end CFT.LightconeBootstrap
-
-open CFT.LightconeBootstrap
 
 namespace FourPointData
 

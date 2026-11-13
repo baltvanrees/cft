@@ -55,8 +55,6 @@ $$
 open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped ComplexConjugate ENNReal
 
-namespace CFT.LightconeBootstrap
-
 /-- A single complex monomial $e^{h w_l + (h + J) w_r}$ of left weight $h \in \mathbb{R}$ and spin
 $J = \bar{h} - h \in \mathbb{Z}$. -/
 noncomputable def monomialTerm (h : ℝ) (J : ℤ) (wl wr : ℂ) : ℂ :=
@@ -662,10 +660,6 @@ lemma geg_two_var_coeff_ofReal_re {ν : ℝ} (hν : 0 ≤ ν) (j a : ℕ) :
   apply Complex.ext
   · simp
   · simp [(gegenbauer.geg_two_var_coeff_nonneg ν hν j a).2]
-
-end CFT.LightconeBootstrap
-
-open CFT.LightconeBootstrap
 
 namespace FourPointData
 

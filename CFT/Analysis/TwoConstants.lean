@@ -16,35 +16,44 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 /-!
 # Nevanlinna's Two-Constants Theorem on a Vertical Strip
 
-This file formalizes Nevanlinna's Two-Constants Theorem on a vertical strip
-$\sigma \in [\sigma_-, \sigma_+]$ ($\sigma_- < \sigma_+$) and its specialization to the strip
-$[1 - 2A, -1]$ at the midpoint $\sigma = -A$ for $|t| \le T$.
+Suppose $E : \mathbb{C} \to \mathbb{C}$ is holomorphic on an open vertical strip
+$\lbrace\sigma + i t : \sigma \in (\sigma_-, \sigma_+),\thinspace t \in \mathbb{R}\rbrace$ ($\sigma_- < \sigma_+$)
+and continuous on its closure, satisfying a uniform bound $\Vert E(\sigma + i t)\Vert \le M$ on the full
+strip and a smaller bound $\Vert E(\sigma)\Vert \le \delta$ ($0 < \delta \le M$) along the real segment
+$[\sigma_-, \sigma_+]$. Nevanlinna's Two-Constants Theorem (`norm_le_two_constants_vertical_strip`)
+propagates this real-axis bound into the interior of the strip:
+$$\Vert E(\sigma + i t)\Vert \le M^{1 - \omega(\sigma, t)} \thinspace \delta^{\omega(\sigma, t)},$$
+where $\omega(\sigma, t) \in (0, 1]$ is the harmonic measure of the horizontal segment
+$[\sigma_-, \sigma_+]$ in the half-strip $[\sigma_-, \sigma_+] \times (0, \infty)$:
+$$\omega(\sigma, t) = \frac{2}{\pi} \arctan\left(
+  \frac{\sin\bigl(\pi(\sigma - \sigma_-)/(\sigma_+ - \sigma_-)\bigr)}
+       {\sinh\bigl(\pi |t|/(\sigma_+ - \sigma_-)\bigr)}\right) \quad (t \ne 0).$$
 
-## Mathematical Overview
+We prove this first on the normalized strip $[0, \pi] \times \mathbb{R}$ (Sections 1–3), extend it
+by affine rescaling to a general strip $[\sigma_-, \sigma_+]$ (Section 4), and finally specialize to
+the midpoint $\sigma = -A$ of the strip $[1 - 2A, -1]$ for $|t| \le T$ (Section 5,
+`norm_le_midpoint_two_constants`), which is the form used in the Tauberian theorems.
 
-1. **Normalized Half-Strip Majorant**:
-   On the open upper half-plane $\{\zeta \in \mathbb{C} \mid \operatorname{Im}\zeta > 0\}$, the
-   function
-   $$\Omega(\zeta) = -\frac{2i}{\pi} \log\!\left(\frac{1 + e^{i\zeta}}{1 - e^{i\zeta}}\right)$$
-   is holomorphic (since $\|e^{i\zeta}\| = e^{-\operatorname{Im}\zeta} < 1$ implies
-   $\operatorname{Re}\frac{1 + e^{i\zeta}}{1 - e^{i\zeta}} > 0$), and its real part is
-   $$\operatorname{Re}\Omega(x + iy) = \frac{2}{\pi} \arctan\!\left(\frac{\sin x}{\sinh y}\right).$$
-
-2. **The $+i\eta$ Shift and Maximum Modulus on $[0, \pi] \times [0, Y]$**:
-   Shifting by $+i\eta$ ($\eta > 0$) avoids the corner singularities at $(0, 0)$ and $(\pi, 0)$, so
-   $\zeta \mapsto \Omega(\zeta + i\eta)$ is holomorphic on a neighborhood of the closed rectangle
-   $[0, \pi] \times [0, Y]$. Applying `Complex.norm_le_of_forall_mem_frontier_norm_le` to
-   $f(\zeta) \exp(\log(M/\delta)\,\Omega(\zeta + i\eta))$ and taking $Y \to +\infty$ followed by
-   $\eta \to 0^+$ yields the Two-Constants bound for $y > 0$. The holomorphic reflection
-   $\zeta \mapsto \pi - \zeta$ extends the bound to $y < 0$, and real affine rescaling extends it
-   to any vertical strip $[\sigma_-, \sigma_+]$.
+**Where this is used**:
+- `norm_le_midpoint_two_constants` is used in `CFT.Analysis.LaplaceTauberian`
+  (`abs_integral_sub_le_of_laplaceReal_bound`) to propagate real-axis Laplace error bounds on
+  $[1 - 2A, -1]$ to the vertical segment $\operatorname{Re} z = -A$, $|\operatorname{Im} z| \le 2\pi$.
+- `exists_gt_one_le_mul_midpointHarmonicExp` is used in `CFT.LightconeBootstrap.MonomialBootstrap`
+  and `CFT.LightconeBootstrap.LightconeBlock.ReferencePairing` to choose the strip half-width $A > 1$
+  so that the harmonic-measure exponent $\omega_A(2\pi)$ is as close as needed to $1$.
 -/
 
 open Real Complex Topology Set Metric Filter
 open scoped ComplexConjugate
 
 /-!
-## Part 1: Elementary Properties of `sinh` and `harmonicMajorantRe`
+## 1. Normalized Half-Strip Harmonic Measure
+
+On the normalized open upper half-strip $(0, \pi) \times (0, \infty)$, the harmonic measure of the
+bottom segment $[0, \pi] \times \lbrace 0\rbrace$ is given by
+$$\omega(x, y) = \frac{2}{\pi} \arctan\left(\frac{\sin x}{\sinh y}\right),$$
+which vanishes on the vertical sides $x = 0$ and $x = \pi$, takes values in $[0, 1]$, and decreases
+monotonically with $y > 0$.
 -/
 
 lemma sinh_pos_of_pos {y : ℝ} (hy : 0 < y) : 0 < Real.sinh y := by
@@ -53,34 +62,18 @@ lemma sinh_pos_of_pos {y : ℝ} (hy : 0 < y) : 0 < Real.sinh y := by
   have h2 : 1 < Real.exp y := Real.one_lt_exp_iff.mpr hy
   linarith
 
-lemma sinh_mono {y₁ y₂ : ℝ} (hy : y₁ ≤ y₂) : Real.sinh y₁ ≤ Real.sinh y₂ := by
-  rw [Real.sinh_eq, Real.sinh_eq]
-  have h1 : Real.exp y₁ ≤ Real.exp y₂ := Real.exp_le_exp.mpr hy
-  have h2 : Real.exp (-y₂) ≤ Real.exp (-y₁) := Real.exp_le_exp.mpr (by linarith)
-  linarith
-
-lemma tendsto_sinh_atTop : Tendsto Real.sinh atTop atTop := by
-  have h_ev : ∀ᶠ y : ℝ in atTop, (Real.exp y - 1) / 2 ≤ Real.sinh y := by
-    filter_upwards [eventually_ge_atTop (0 : ℝ)] with y hy
-    rw [Real.sinh_eq]
-    have h1 : Real.exp (-y) ≤ 1 := Real.exp_le_one_iff.mpr (by linarith)
-    linarith
-  have h_lim : Tendsto (fun y : ℝ => (Real.exp y - 1) / 2) atTop atTop :=
-    (Real.tendsto_exp_atTop.atTop_add tendsto_const_nhds).atTop_div_const (by positivity)
-  exact tendsto_atTop_mono' atTop h_ev h_lim
-
-/-- Auxiliary smooth expression for the normalized strip harmonic measure on the open upper
-half-strip $x \in [0, \pi]$, $y > 0$:
-$$\omega(x, y) = \frac{2}{\pi} \arctan\!\left(\frac{\sin x}{\sinh y}\right).$$ -/
+/-- Smooth expression for the normalized strip harmonic measure on the open upper half-strip
+$x \in [0, \pi]$, $y > 0$:
+$$\omega(x, y) = \frac{2}{\pi} \arctan\left(\frac{\sin x}{\sinh y}\right).$$ -/
 noncomputable def harmonicMajorantRe (x y : ℝ) : ℝ :=
   (2 / π) * Real.arctan (Real.sin x / Real.sinh y)
 
 /-- Normalized harmonic measure on the strip $x \in [0, \pi]$, $y \in \mathbb{R}$, of the
-horizontal segment $[0, \pi] \times \{0\}$:
+horizontal segment $[0, \pi] \times \lbrace 0\rbrace$:
 $$
 \omega_{\mathrm{norm}}(x, y) = \begin{cases}
-  1 & \text{if } y = 0, \\
-  \frac{2}{\pi} \arctan\!\left(\frac{\sin x}{\sinh |y|}\right) & \text{if } y \ne 0.
+  1 & \text{if } y = 0, \\\\
+  \frac{2}{\pi} \arctan\left(\frac{\sin x}{\sinh |y|}\right) & \text{if } y \ne 0.
 \end{cases}
 $$ -/
 noncomputable def stripHarmonicMeasureNormalized (x y : ℝ) : ℝ :=
@@ -90,16 +83,6 @@ lemma stripHarmonicMeasureNormalized_of_pos {x y : ℝ} (hy : 0 < y) :
     stripHarmonicMeasureNormalized x y = harmonicMajorantRe x y := by
   unfold stripHarmonicMeasureNormalized harmonicMajorantRe
   rw [ite_eq_right_iff.mpr (fun h => absurd h (ne_of_gt hy)), abs_of_pos hy]
-
-lemma stripHarmonicMeasureNormalized_neg (x y : ℝ) :
-    stripHarmonicMeasureNormalized x (-y) = stripHarmonicMeasureNormalized x y := by
-  unfold stripHarmonicMeasureNormalized
-  simp [neg_eq_zero, abs_neg]
-
-lemma stripHarmonicMeasureNormalized_pi_sub (x y : ℝ) :
-    stripHarmonicMeasureNormalized (π - x) y = stripHarmonicMeasureNormalized x y := by
-  unfold stripHarmonicMeasureNormalized
-  rw [Real.sin_pi_sub]
 
 lemma harmonicMajorantRe_zero_left (y : ℝ) : harmonicMajorantRe 0 y = 0 := by
   simp [harmonicMajorantRe]
@@ -123,15 +106,6 @@ lemma harmonicMajorantRe_le_one (x y : ℝ) : harmonicMajorantRe x y ≤ 1 := by
       ≤ (2 / π) * (π / 2) := by gcongr
     _ = 1 := by field_simp
 
-lemma harmonicMajorantRe_lt_one (x y : ℝ) : harmonicMajorantRe x y < 1 := by
-  unfold harmonicMajorantRe
-  have h_lt : Real.arctan (Real.sin x / Real.sinh y) < π / 2 :=
-    Real.arctan_lt_pi_div_two _
-  have hpi : 0 < π := Real.pi_pos
-  calc (2 / π) * Real.arctan (Real.sin x / Real.sinh y)
-      < (2 / π) * (π / 2) := mul_lt_mul_of_pos_left h_lt (by positivity)
-    _ = 1 := by field_simp
-
 lemma harmonicMajorantRe_le_pi_div_two (x : ℝ) {y : ℝ} (hy : 0 < y) :
     harmonicMajorantRe x y ≤ harmonicMajorantRe (π / 2) y := by
   unfold harmonicMajorantRe
@@ -149,35 +123,44 @@ lemma harmonicMajorantRe_anti_right {x y₁ y₂ : ℝ} (hx : x ∈ Icc 0 π)
   have hpi : 0 ≤ 2 / π := by positivity
   have hsin : 0 ≤ Real.sin x := Real.sin_nonneg_of_mem_Icc hx
   have hsinh₁ : 0 < Real.sinh y₁ := sinh_pos_of_pos hy₁
-  have hsinh_le : Real.sinh y₁ ≤ Real.sinh y₂ := sinh_mono hy
+  have hsinh_le : Real.sinh y₁ ≤ Real.sinh y₂ := by
+    rw [Real.sinh_eq, Real.sinh_eq]
+    have h1 : Real.exp y₁ ≤ Real.exp y₂ := Real.exp_le_exp.mpr hy
+    have h2 : Real.exp (-y₂) ≤ Real.exp (-y₁) := Real.exp_le_exp.mpr (by linarith)
+    linarith
   apply mul_le_mul_of_nonneg_left _ hpi
   apply Real.arctan_strictMono.monotone
   exact div_le_div_of_nonneg_left hsin hsinh₁ hsinh_le
 
 /-!
-## Part 2: Holomorphic Harmonic Majorant on the Upper Half-Plane
+## 2. Holomorphic Harmonic Majorant on the Upper Half-Plane
+
+For $\operatorname{Im}\zeta > 0$, we have $\Vert e^{i\zeta}\Vert = e^{-\operatorname{Im}\zeta} < 1$, so the
+Möbius transform $(1 + e^{i\zeta})/(1 - e^{i\zeta})$ lies in the open right half-plane (and hence
+in the slit plane where the principal branch `Complex.log` is holomorphic). Consequently,
+$$\Omega(\zeta) = -\frac{2i}{\pi} \log\left(\frac{1 + e^{i\zeta}}{1 - e^{i\zeta}}\right)$$
+is holomorphic on $\lbrace\operatorname{Im}\zeta > 0\rbrace$ with real part
+$\omega(\operatorname{Re}\zeta, \operatorname{Im}\zeta)$.
 -/
 
 /-- Holomorphic harmonic majorant on the upper half-plane
-$\{\zeta \in \mathbb{C} \mid \operatorname{Im}\zeta > 0\}$ whose real part equals
+$\lbrace\zeta \in \mathbb{C} \mid \operatorname{Im}\zeta > 0\rbrace$ whose real part equals
 `harmonicMajorantRe ζ.re ζ.im`:
-$$\Omega(\zeta) = -\frac{2i}{\pi} \log\!\left(\frac{1 + e^{i\zeta}}{1 - e^{i\zeta}}\right).$$ -/
+$$\Omega(\zeta) = -\frac{2i}{\pi} \log\left(\frac{1 + e^{i\zeta}}{1 - e^{i\zeta}}\right).$$ -/
 noncomputable def harmonicMajorantHolomorphic (ζ : ℂ) : ℂ :=
   -(2 / (π : ℂ)) * I *
     Complex.log ((1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ)))
-
-lemma norm_exp_I_mul_lt_one {ζ : ℂ} (hζ : 0 < ζ.im) :
-    ‖Complex.exp (I * ζ)‖ < 1 := by
-  rw [Complex.norm_exp, mul_re, I_re, I_im]
-  simp only [zero_mul, one_mul, zero_sub, Real.exp_lt_one_iff, Left.neg_neg_iff]
-  exact hζ
 
 lemma one_sub_exp_I_mul_ne_zero {ζ : ℂ} (hζ : 0 < ζ.im) :
     1 - Complex.exp (I * ζ) ≠ 0 := by
   intro h
   have h_eq : Complex.exp (I * ζ) = 1 := (sub_eq_zero.mp h).symm
   have h_norm : ‖Complex.exp (I * ζ)‖ = 1 := by rw [h_eq, norm_one]
-  linarith [norm_exp_I_mul_lt_one hζ]
+  have h_lt : ‖Complex.exp (I * ζ)‖ < 1 := by
+    rw [Complex.norm_exp, mul_re, I_re, I_im]
+    simp only [zero_mul, one_mul, zero_sub, Real.exp_lt_one_iff, Left.neg_neg_iff]
+    exact hζ
+  linarith
 
 lemma re_mobius_exp_I_mul {ζ : ℂ} :
     ((1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ))).re =
@@ -204,25 +187,6 @@ lemma re_mobius_exp_I_mul {ζ : ℂ} :
     ring_nf
   linarith
 
-lemma im_mobius_exp_I_mul {ζ : ℂ} :
-    ((1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ))).im =
-      2 * Real.exp (-ζ.im) * Real.sin ζ.re /
-        Complex.normSq (1 - Complex.exp (I * ζ)) := by
-  set q := Complex.exp (I * ζ)
-  have h_im : ((1 + q) / (1 - q)).im =
-      2 * q.im / Complex.normSq (1 - q) := by
-    rw [Complex.div_im]
-    dsimp [Complex.normSq]
-    ring
-  rw [h_im]
-  congr 1
-  have hq_im : q.im = Real.exp (-ζ.im) * Real.sin ζ.re := by
-    dsimp [q]
-    rw [Complex.exp_im, mul_re, mul_im, I_re, I_im]
-    simp
-  rw [hq_im]
-  ring
-
 lemma re_mobius_exp_I_mul_pos {ζ : ℂ} (hζ : 0 < ζ.im) :
     0 < ((1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ))).re := by
   rw [re_mobius_exp_I_mul]
@@ -230,10 +194,6 @@ lemma re_mobius_exp_I_mul_pos {ζ : ℂ} (hζ : 0 < ζ.im) :
   have h_denom : 0 < Complex.normSq (1 - Complex.exp (I * ζ)) :=
     Complex.normSq_pos.mpr (one_sub_exp_I_mul_ne_zero hζ)
   positivity
-
-lemma mobius_exp_I_mul_mem_slitPlane {ζ : ℂ} (hζ : 0 < ζ.im) :
-    (1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ)) ∈ Complex.slitPlane :=
-  Complex.mem_slitPlane_iff.mpr (Or.inl (re_mobius_exp_I_mul_pos hζ))
 
 lemma differentiableAt_harmonicMajorantHolomorphic {ζ : ℂ} (hζ : 0 < ζ.im) :
     DifferentiableAt ℂ harmonicMajorantHolomorphic ζ := by
@@ -245,53 +205,66 @@ lemma differentiableAt_harmonicMajorantHolomorphic {ζ : ℂ} (hζ : 0 < ζ.im) 
     (h_exp.const_add 1).div (h_exp.const_sub 1) (one_sub_exp_I_mul_ne_zero hζ)
   have h_log : DifferentiableAt ℂ
       (fun z => Complex.log ((1 + Complex.exp (I * z)) / (1 - Complex.exp (I * z)))) ζ :=
-    h_mob.clog (mobius_exp_I_mul_mem_slitPlane hζ)
+    h_mob.clog (Complex.mem_slitPlane_iff.mpr (Or.inl (re_mobius_exp_I_mul_pos hζ)))
   exact h_log.const_mul (-(2 / (π : ℂ)) * I)
-
-lemma arg_eq_arctan_of_re_pos {w : ℂ} (hw : 0 < w.re) :
-    w.arg = Real.arctan (w.im / w.re) := by
-  have hw_ne : w ≠ 0 := by
-    intro h
-    rw [h, zero_re] at hw
-    exact lt_irrefl 0 hw
-  have hnorm : 0 < ‖w‖ := norm_pos_iff.mpr hw_ne
-  have him_lt : |w.im| < ‖w‖ := by
-    rw [← sq_lt_sq₀ (abs_nonneg w.im) hnorm.le, sq_abs,
-      ← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
-    nlinarith [hw]
-  have hdiv_lt : |w.im / ‖w‖| < 1 := by
-    rw [abs_div, abs_of_pos hnorm, div_lt_one hnorm]
-    exact him_lt
-  have hdiv_mem : w.im / ‖w‖ ∈ Ioo (-1 : ℝ) 1 := abs_lt.mp hdiv_lt
-  have harg_eq : w.arg = Real.arcsin (w.im / ‖w‖) :=
-    Complex.arg_of_re_nonneg hw.le
-  have harg_lt : w.arg < π / 2 := by
-    rw [harg_eq, Real.arcsin_lt_pi_div_two]
-    exact hdiv_mem.2
-  have harg_gt : -(π / 2) < w.arg := by
-    rw [harg_eq, Real.neg_pi_div_two_lt_arcsin]
-    exact hdiv_mem.1
-  rw [← Complex.tan_arg w, Real.arctan_tan harg_gt harg_lt]
 
 lemma re_harmonicMajorantHolomorphic {ζ : ℂ} (hζ : 0 < ζ.im) :
     (harmonicMajorantHolomorphic ζ).re = harmonicMajorantRe ζ.re ζ.im := by
   unfold harmonicMajorantHolomorphic harmonicMajorantRe
   set w := (1 + Complex.exp (I * ζ)) / (1 - Complex.exp (I * ζ))
+  have hw : 0 < w.re := re_mobius_exp_I_mul_pos hζ
   have h_re_mul : (-(2 / (π : ℂ)) * I * Complex.log w).re =
       (2 / π) * (Complex.log w).im := by
     have hpi : (2 / (π : ℂ)) = ((2 / π : ℝ) : ℂ) := by push_cast; rfl
     rw [hpi]
     simp [Complex.mul_re, Complex.mul_im]
-  rw [h_re_mul, Complex.log_im, arg_eq_arctan_of_re_pos (re_mobius_exp_I_mul_pos hζ)]
+  have h_arg : w.arg = Real.arctan (w.im / w.re) := by
+    have hw_ne : w ≠ 0 := by
+      intro h
+      rw [h, zero_re] at hw
+      exact lt_irrefl 0 hw
+    have hnorm : 0 < ‖w‖ := norm_pos_iff.mpr hw_ne
+    have him_lt : |w.im| < ‖w‖ := by
+      rw [← sq_lt_sq₀ (abs_nonneg w.im) hnorm.le, sq_abs,
+        ← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      nlinarith [hw]
+    have hdiv_lt : |w.im / ‖w‖| < 1 := by
+      rw [abs_div, abs_of_pos hnorm, div_lt_one hnorm]
+      exact him_lt
+    have hdiv_mem : w.im / ‖w‖ ∈ Ioo (-1 : ℝ) 1 := abs_lt.mp hdiv_lt
+    have harg_eq : w.arg = Real.arcsin (w.im / ‖w‖) := Complex.arg_of_re_nonneg hw.le
+    have harg_lt : w.arg < π / 2 := by rw [harg_eq, Real.arcsin_lt_pi_div_two]; exact hdiv_mem.2
+    have harg_gt : -(π / 2) < w.arg := by
+      rw [harg_eq, Real.neg_pi_div_two_lt_arcsin]; exact hdiv_mem.1
+    rw [← Complex.tan_arg w, Real.arctan_tan harg_gt harg_lt]
+  have h_im_mob : w.im = 2 * Real.exp (-ζ.im) * Real.sin ζ.re /
+      Complex.normSq (1 - Complex.exp (I * ζ)) := by
+    set q := Complex.exp (I * ζ)
+    have h_im : ((1 + q) / (1 - q)).im = 2 * q.im / Complex.normSq (1 - q) := by
+      rw [Complex.div_im]; dsimp [Complex.normSq]; ring
+    rw [h_im]
+    congr 1
+    have hq_im : q.im = Real.exp (-ζ.im) * Real.sin ζ.re := by
+      dsimp [q]; rw [Complex.exp_im, mul_re, mul_im, I_re, I_im]; simp
+    rw [hq_im]; ring
+  rw [h_re_mul, Complex.log_im, h_arg]
   congr 2
-  rw [im_mobius_exp_I_mul, re_mobius_exp_I_mul]
+  rw [h_im_mob, re_mobius_exp_I_mul]
   have h_denom : Complex.normSq (1 - Complex.exp (I * ζ)) ≠ 0 :=
     (Complex.normSq_pos.mpr (one_sub_exp_I_mul_ne_zero hζ)).ne'
   have h_exp : 2 * Real.exp (-ζ.im) ≠ 0 := by positivity
   rw [div_div_div_cancel_right₀ h_denom, mul_div_mul_left _ _ h_exp]
 
 /-!
-## Part 3: The $+i\eta$ Shift and Maximum Modulus on $[0, \pi] \times [0, Y]$
+## 3. The $+i\eta$ Shift and Maximum Modulus on $[0, \pi] \times [0, Y]$
+
+Shifting by $+i\eta$ ($\eta > 0$) avoids the logarithmic branch-point singularities of $\Omega$ at
+the bottom corners $(0, 0)$ and $(\pi, 0)$, so $\zeta \mapsto \Omega(\zeta + i\eta)$ is holomorphic
+on a neighborhood of the closed rectangle $[0, \pi] \times [0, Y]$. Applying the maximum modulus
+principle to $g_\eta(\zeta) = f(\zeta) \exp\bigl(\log(M/\delta)\thinspace\Omega(\zeta + i\eta)\bigr)$ on
+$[0, \pi] \times [0, Y]$ and taking $Y \to +\infty$ followed by $\eta \to 0^+$ yields the
+Two-Constants bound for $y > 0$; the holomorphic reflection $\zeta \mapsto \pi - \zeta$ then
+extends the bound to $y < 0$.
 -/
 
 /-- Open rectangle $(0, \pi) \times (0, Y)$ in $\mathbb{C}$. -/
@@ -302,95 +275,17 @@ def rectOpen (Y : ℝ) : Set ℂ :=
 def rectClosed (Y : ℝ) : Set ℂ :=
   {z : ℂ | z.re ∈ Icc 0 π ∧ z.im ∈ Icc 0 Y}
 
-lemma isOpen_rectOpen (Y : ℝ) : IsOpen (rectOpen Y) :=
-  (isOpen_Ioo.preimage Complex.continuous_re).inter
-    (isOpen_Ioo.preimage Complex.continuous_im)
-
-lemma isClosed_rectClosed (Y : ℝ) : IsClosed (rectClosed Y) :=
-  (isClosed_Icc.preimage Complex.continuous_re).inter
-    (isClosed_Icc.preimage Complex.continuous_im)
-
-lemma rectOpen_subset_rectClosed (Y : ℝ) : rectOpen Y ⊆ rectClosed Y :=
-  fun _ hz => ⟨Ioo_subset_Icc_self hz.1, Ioo_subset_Icc_self hz.2⟩
-
 lemma closure_rectOpen_subset_rectClosed (Y : ℝ) :
     closure (rectOpen Y) ⊆ rectClosed Y :=
-  closure_minimal (rectOpen_subset_rectClosed Y) (isClosed_rectClosed Y)
-
-lemma isBounded_rectOpen {Y : ℝ} (hY : 0 ≤ Y) : Bornology.IsBounded (rectOpen Y) := by
-  rw [isBounded_iff_forall_norm_le]
-  refine ⟨π + Y, fun z hz => ?_⟩
-  have hre : |z.re| ≤ π := abs_le.mpr ⟨by linarith [hz.1.1, Real.pi_pos], hz.1.2.le⟩
-  have him : |z.im| ≤ Y := abs_le.mpr ⟨by linarith [hz.2.1, hY], hz.2.2.le⟩
-  linarith [Complex.norm_le_abs_re_add_abs_im z]
-
-lemma mem_frontier_rectOpen_cases {Y : ℝ} {z : ℂ} (hz : z ∈ frontier (rectOpen Y)) :
-    z ∈ rectClosed Y ∧ (z.re = 0 ∨ z.re = π ∨ z.im = 0 ∨ z.im = Y) := by
-  rw [frontier, (isOpen_rectOpen Y).interior_eq] at hz
-  have hcl : z ∈ rectClosed Y := closure_rectOpen_subset_rectClosed Y hz.1
-  refine ⟨hcl, ?_⟩
-  have hnot : ¬ (0 < z.re ∧ z.re < π ∧ 0 < z.im ∧ z.im < Y) := by
-    intro h
-    exact hz.2 ⟨⟨h.1, h.2.1⟩, ⟨h.2.2.1, h.2.2.2⟩⟩
-  rcases eq_or_lt_of_le hcl.1.1 with h1 | h1
-  · exact Or.inl h1.symm
-  rcases eq_or_lt_of_le hcl.1.2 with h2 | h2
-  · exact Or.inr (Or.inl h2)
-  rcases eq_or_lt_of_le hcl.2.1 with h3 | h3
-  · exact Or.inr (Or.inr (Or.inl h3.symm))
-  rcases eq_or_lt_of_le hcl.2.2 with h4 | h4
-  · exact Or.inr (Or.inr (Or.inr h4))
-  exact absurd ⟨h1, h2, h3, h4⟩ hnot
+  closure_minimal
+    (fun _ hz => ⟨Ioo_subset_Icc_self hz.1, Ioo_subset_Icc_self hz.2⟩)
+    ((isClosed_Icc.preimage Complex.continuous_re).inter
+      (isClosed_Icc.preimage Complex.continuous_im))
 
 /-- The auxiliary holomorphic function on the rectangle with $+i\eta$ shift:
-$$g_\eta(\zeta) = f(\zeta) \exp\bigl(L \, \Omega(\zeta + i\eta)\bigr).$$ -/
+$$g_\eta(\zeta) = f(\zeta) \exp\bigl(L \thinspace \Omega(\zeta + i\eta)\bigr).$$ -/
 noncomputable def shiftedMajorantAux (f : ℂ → ℂ) (L η : ℝ) (ζ : ℂ) : ℂ :=
   f ζ * Complex.exp ((L : ℂ) * harmonicMajorantHolomorphic (ζ + (η : ℂ) * I))
-
-lemma norm_shiftedMajorantAux (f : ℂ → ℂ) (L : ℝ) {η : ℝ} {ζ : ℂ}
-    (h_im : 0 < ζ.im + η) :
-    ‖shiftedMajorantAux f L η ζ‖ =
-      ‖f ζ‖ * Real.exp (L * harmonicMajorantRe ζ.re (ζ.im + η)) := by
-  unfold shiftedMajorantAux
-  rw [norm_mul, Complex.norm_exp]
-  congr 2
-  have hζ_im : 0 < (ζ + (η : ℂ) * I).im := by
-    simp [add_im, mul_im, h_im]
-  have h_re_shift : (ζ + (η : ℂ) * I).re = ζ.re := by simp
-  have h_im_shift : (ζ + (η : ℂ) * I).im = ζ.im + η := by simp
-  rw [mul_re, ofReal_re, ofReal_im, zero_mul, sub_zero,
-    re_harmonicMajorantHolomorphic hζ_im, h_re_shift, h_im_shift]
-
-lemma diffContOnCl_shiftedMajorantAux {f : ℂ → ℂ} (L : ℝ) {η Y : ℝ} (hη : 0 < η)
-    (hf_diff : DifferentiableOn ℂ f {z : ℂ | z.re ∈ Ioo 0 π})
-    (hf_cont : ContinuousOn f {z : ℂ | z.re ∈ Icc 0 π}) :
-    DiffContOnCl ℂ (shiftedMajorantAux f L η) (rectOpen Y) := by
-  have hf_dc : DiffContOnCl ℂ f (rectOpen Y) :=
-    ⟨hf_diff.mono (fun z hz => hz.1),
-     hf_cont.mono (fun z hz => (closure_rectOpen_subset_rectClosed Y hz).1)⟩
-  have h_exp_diff : ∀ z ∈ closure (rectOpen Y),
-      DifferentiableAt ℂ
-        (fun w : ℂ =>
-          Complex.exp ((L : ℂ) * harmonicMajorantHolomorphic (w + (η : ℂ) * I))) z := by
-    intro z hz
-    have hz_cl := closure_rectOpen_subset_rectClosed Y hz
-    have h_im : 0 < (z + (η : ℂ) * I).im := by
-      simp only [add_im, ofReal_re, mul_im, I_re, mul_zero, ofReal_im, I_im, mul_one, add_zero]
-      linarith [hz_cl.2.1]
-    have h_shift : DifferentiableAt ℂ (fun w : ℂ => w + (η : ℂ) * I) z :=
-      differentiableAt_id.add (differentiableAt_const _)
-    have h_om : DifferentiableAt ℂ
-        (fun w : ℂ => harmonicMajorantHolomorphic (w + (η : ℂ) * I)) z :=
-      show DifferentiableAt ℂ
-          (harmonicMajorantHolomorphic ∘ fun w : ℂ => w + (η : ℂ) * I) z from
-        (differentiableAt_harmonicMajorantHolomorphic h_im).comp z h_shift
-    exact Complex.differentiableAt_exp.comp z (h_om.const_mul (L : ℂ))
-  have h_exp_dc : DiffContOnCl ℂ
-      (fun w : ℂ => Complex.exp ((L : ℂ) * harmonicMajorantHolomorphic (w + (η : ℂ) * I)))
-      (rectOpen Y) :=
-    ⟨fun z hz => (h_exp_diff z (subset_closure hz)).differentiableWithinAt,
-     fun z hz => (h_exp_diff z hz).continuousAt.continuousWithinAt⟩
-  exact ⟨hf_dc.1.mul h_exp_dc.1, hf_dc.2.mul h_exp_dc.2⟩
 
 /-- Rectangle bound with $+i\eta$ shift on $(0, \pi) \times (0, Y)$. -/
 lemma norm_shiftedMajorantAux_le_on_rect {f : ℂ → ℂ} {M δ η Y : ℝ}
@@ -409,18 +304,41 @@ lemma norm_shiftedMajorantAux_le_on_rect {f : ℂ → ℂ} {M δ η Y : ℝ}
   set C := M * Real.exp (L * harmonicMajorantRe (π / 2) (Y + η))
   have hM_le_C : M ≤ C := by
     dsimp [C]
-    have h_om_nonneg : 0 ≤ harmonicMajorantRe (π / 2) (Y + η) := by
-      apply harmonicMajorantRe_nonneg ⟨by positivity, by linarith [Real.pi_pos]⟩ (by linarith)
+    have h_om_nonneg : 0 ≤ harmonicMajorantRe (π / 2) (Y + η) :=
+      harmonicMajorantRe_nonneg ⟨by positivity, by linarith [Real.pi_pos]⟩ (by linarith)
     have h_exp : 1 ≤ Real.exp (L * harmonicMajorantRe (π / 2) (Y + η)) :=
       Real.one_le_exp (mul_nonneg hL_nonneg h_om_nonneg)
     nlinarith
+  have h_norm_aux : ∀ {ζ : ℂ}, 0 < ζ.im + η →
+      ‖shiftedMajorantAux f L η ζ‖ =
+        ‖f ζ‖ * Real.exp (L * harmonicMajorantRe ζ.re (ζ.im + η)) := by
+    intro ζ h_im
+    unfold shiftedMajorantAux
+    rw [norm_mul, Complex.norm_exp]
+    congr 2
+    have hζ_im : 0 < (ζ + (η : ℂ) * I).im := by simp [add_im, mul_im, h_im]
+    have h_re_shift : (ζ + (η : ℂ) * I).re = ζ.re := by simp
+    have h_im_shift : (ζ + (η : ℂ) * I).im = ζ.im + η := by simp
+    rw [mul_re, ofReal_re, ofReal_im, zero_mul, sub_zero,
+      re_harmonicMajorantHolomorphic hζ_im, h_re_shift, h_im_shift]
   have h_front : ∀ z ∈ frontier (rectOpen Y), ‖shiftedMajorantAux f L η z‖ ≤ C := by
     intro z hz
-    obtain ⟨hz_cl, h_side⟩ := mem_frontier_rectOpen_cases hz
+    have h_open : IsOpen (rectOpen Y) :=
+      (isOpen_Ioo.preimage Complex.continuous_re).inter
+        (isOpen_Ioo.preimage Complex.continuous_im)
+    rw [frontier, h_open.interior_eq] at hz
+    have hz_cl : z ∈ rectClosed Y := closure_rectOpen_subset_rectClosed Y hz.1
+    have h_side : z.re = 0 ∨ z.re = π ∨ z.im = 0 ∨ z.im = Y := by
+      have hnot : ¬ (0 < z.re ∧ z.re < π ∧ 0 < z.im ∧ z.im < Y) :=
+        fun h => hz.2 ⟨⟨h.1, h.2.1⟩, ⟨h.2.2.1, h.2.2.2⟩⟩
+      rcases eq_or_lt_of_le hz_cl.1.1 with h1 | h1; · exact Or.inl h1.symm
+      rcases eq_or_lt_of_le hz_cl.1.2 with h2 | h2; · exact Or.inr (Or.inl h2)
+      rcases eq_or_lt_of_le hz_cl.2.1 with h3 | h3; · exact Or.inr (Or.inr (Or.inl h3.symm))
+      rcases eq_or_lt_of_le hz_cl.2.2 with h4 | h4; · exact Or.inr (Or.inr (Or.inr h4))
+      exact absurd ⟨h1, h2, h3, h4⟩ hnot
     have hz_im_pos : 0 < z.im + η := by linarith [hz_cl.2.1]
-    rw [norm_shiftedMajorantAux f L hz_im_pos]
-    have hf_z : ‖f z‖ = ‖f ((z.re : ℂ) + (z.im : ℂ) * I)‖ := by
-      rw [Complex.re_add_im]
+    rw [h_norm_aux hz_im_pos]
+    have hf_z : ‖f z‖ = ‖f ((z.re : ℂ) + (z.im : ℂ) * I)‖ := by rw [Complex.re_add_im]
     rcases h_side with hre0 | hre_pi | him0 | himY
     · rw [hre0, harmonicMajorantRe_zero_left, mul_zero, Real.exp_zero, mul_one, hf_z]
       exact (hM_bound z.re hz_cl.1 z.im).trans hM_le_C
@@ -448,18 +366,48 @@ lemma norm_shiftedMajorantAux_le_on_rect {f : ℂ → ℂ} {M δ η Y : ℝ}
           Real.exp (L * harmonicMajorantRe (π / 2) (Y + η)) :=
         Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left h_om_le hL_nonneg)
       exact mul_le_mul (hM_bound z.re hz_cl.1 z.im) h_exp_le (by positivity) hM_pos.le
+  have h_bdd : Bornology.IsBounded (rectOpen Y) := by
+    rw [isBounded_iff_forall_norm_le]
+    refine ⟨π + Y, fun z hz => ?_⟩
+    have hre : |z.re| ≤ π := abs_le.mpr ⟨by linarith [hz.1.1, Real.pi_pos], hz.1.2.le⟩
+    have him : |z.im| ≤ Y := abs_le.mpr ⟨by linarith [hz.2.1, hY], hz.2.2.le⟩
+    linarith [Complex.norm_le_abs_re_add_abs_im z]
+  have h_dc : DiffContOnCl ℂ (shiftedMajorantAux f L η) (rectOpen Y) := by
+    have hf_dc : DiffContOnCl ℂ f (rectOpen Y) :=
+      ⟨hf_diff.mono (fun z hz => hz.1),
+       hf_cont.mono (fun z hz => (closure_rectOpen_subset_rectClosed Y hz).1)⟩
+    have h_exp_diff : ∀ z ∈ closure (rectOpen Y),
+        DifferentiableAt ℂ
+          (fun w : ℂ =>
+            Complex.exp ((L : ℂ) * harmonicMajorantHolomorphic (w + (η : ℂ) * I))) z := by
+      intro z hz
+      have hz_cl := closure_rectOpen_subset_rectClosed Y hz
+      have h_im : 0 < (z + (η : ℂ) * I).im := by
+        simp only [add_im, ofReal_re, mul_im, I_re, mul_zero, ofReal_im, I_im, mul_one, add_zero]
+        linarith [hz_cl.2.1]
+      have h_shift : DifferentiableAt ℂ (fun w : ℂ => w + (η : ℂ) * I) z :=
+        differentiableAt_id.add (differentiableAt_const _)
+      have h_om : DifferentiableAt ℂ
+          (fun w : ℂ => harmonicMajorantHolomorphic (w + (η : ℂ) * I)) z :=
+        show DifferentiableAt ℂ
+            (harmonicMajorantHolomorphic ∘ fun w : ℂ => w + (η : ℂ) * I) z from
+          (differentiableAt_harmonicMajorantHolomorphic h_im).comp z h_shift
+      exact Complex.differentiableAt_exp.comp z (h_om.const_mul (L : ℂ))
+    have h_exp_dc : DiffContOnCl ℂ
+        (fun w : ℂ => Complex.exp ((L : ℂ) * harmonicMajorantHolomorphic (w + (η : ℂ) * I)))
+        (rectOpen Y) :=
+      ⟨fun z hz => (h_exp_diff z (subset_closure hz)).differentiableWithinAt,
+       fun z hz => (h_exp_diff z hz).continuousAt.continuousWithinAt⟩
+    exact ⟨hf_dc.1.mul h_exp_dc.1, hf_dc.2.mul h_exp_dc.2⟩
   set z₀ : ℂ := (x : ℂ) + (y : ℂ) * I
   have hz₀_mem : z₀ ∈ rectOpen Y := by
     refine ⟨?_, ?_⟩ <;> simp [z₀, hx.1, hx.2, hy.1, hy.2]
   have h_max := Complex.norm_le_of_forall_mem_frontier_norm_le
-    (isBounded_rectOpen hY.le)
-    (diffContOnCl_shiftedMajorantAux L hη hf_diff hf_cont)
-    h_front
-    (subset_closure hz₀_mem)
+    h_bdd h_dc h_front (subset_closure hz₀_mem)
   have hz₀_re : z₀.re = x := by simp [z₀]
   have hz₀_im : z₀.im = y := by simp [z₀]
   have hz₀_im_pos : 0 < z₀.im + η := by linarith [hy.1, hz₀_im]
-  rw [norm_shiftedMajorantAux f L hz₀_im_pos, hz₀_re, hz₀_im] at h_max
+  rw [h_norm_aux hz₀_im_pos, hz₀_re, hz₀_im] at h_max
   exact h_max
 
 /-- Taking $Y \to +\infty$ and then $\eta \to 0^+$ yields the Two-Constants bound on the open
@@ -510,8 +458,15 @@ lemma norm_le_two_constants_normalized_pos {f : ℂ → ℂ} {M δ : ℝ}
     have h_tendsto_Y : Tendsto
         (fun Y : ℝ => M * Real.exp (L * harmonicMajorantRe (π / 2) (Y + η)))
         atTop (𝓝 M) := by
+      have h_sinh_top : Tendsto Real.sinh atTop atTop := by
+        have h_ev : ∀ᶠ t : ℝ in atTop, (Real.exp t - 1) / 2 ≤ Real.sinh t := by
+          filter_upwards [eventually_ge_atTop (0 : ℝ)] with t ht
+          rw [Real.sinh_eq]
+          linarith [Real.exp_le_one_iff.mpr (by linarith : -t ≤ 0)]
+        exact tendsto_atTop_mono' atTop h_ev
+          ((Real.tendsto_exp_atTop.atTop_add tendsto_const_nhds).atTop_div_const (by positivity))
       have h_sinh : Tendsto (fun Y : ℝ => Real.sinh (Y + η)) atTop atTop :=
-        tendsto_sinh_atTop.comp (tendsto_id.atTop_add tendsto_const_nhds)
+        h_sinh_top.comp (tendsto_id.atTop_add tendsto_const_nhds)
       have h_div : Tendsto (fun Y : ℝ => Real.sin (π / 2) / Real.sinh (Y + η)) atTop (𝓝 0) :=
         tendsto_const_nhds.div_atTop h_sinh
       have h_atan : Tendsto
@@ -599,8 +554,9 @@ theorem norm_le_two_constants_normalized {f : ℂ → ℂ} {M δ : ℝ}
       push_cast
       ring
     have h_om : harmonicMajorantRe (π - x) (-y) = stripHarmonicMeasureNormalized x y := by
-      rw [← stripHarmonicMeasureNormalized_of_pos hy',
-        stripHarmonicMeasureNormalized_pi_sub, stripHarmonicMeasureNormalized_neg]
+      rw [← stripHarmonicMeasureNormalized_of_pos hy']
+      unfold stripHarmonicMeasureNormalized
+      simp [Real.sin_pi_sub, neg_eq_zero, abs_neg]
     rw [h_arg, h_om] at h_bound
     exact h_bound
   · -- Case y = 0:
@@ -613,15 +569,20 @@ theorem norm_le_two_constants_normalized {f : ℂ → ℂ} {M δ : ℝ}
     exact norm_le_two_constants_normalized_pos hδ hδM hf_diff hf_cont hM_bound hδ_bound hx hy_pos
 
 /-!
-## Part 4: General Vertical Strip $[\sigma_-, \sigma_+]$
+## 4. General Vertical Strip $[\sigma_-, \sigma_+]$
+
+By the real affine change of variables $s = \sigma_- + \frac{\sigma_+ - \sigma_-}{\pi} z$, the
+normalized strip $[0, \pi] \times \mathbb{R}$ maps onto any vertical strip
+$[\sigma_-, \sigma_+] \times \mathbb{R}$ ($\sigma_- < \sigma_+$), transporting the harmonic measure
+and the Two-Constants bound.
 -/
 
 /-- Harmonic measure on a general vertical strip $\sigma \in [\sigma_-, \sigma_+]$,
 $t \in \mathbb{R}$, of the horizontal segment $[\sigma_-, \sigma_+]$ on the real axis ($t = 0$):
 $$
 \omega(\sigma_-, \sigma_+, \sigma, t) = \begin{cases}
-  1 & \text{if } t = 0, \\
-  \frac{2}{\pi} \arctan\!\left(
+  1 & \text{if } t = 0, \\\\
+  \frac{2}{\pi} \arctan\left(
     \frac{\sin(\pi (\sigma - \sigma_-) / (\sigma_+ - \sigma_-))}
          {\sinh(\pi |t| / (\sigma_+ - \sigma_-))}\right) & \text{if } t \ne 0.
 \end{cases}
@@ -659,54 +620,13 @@ lemma normalized_arg_mem_Icc {σ_minus σ_plus σ : ℝ} (hσ : σ_minus < σ_pl
   rw [div_le_iff₀ h_diff]
   exact mul_le_mul_of_nonneg_left (by linarith [h_mem.2]) Real.pi_pos.le
 
-theorem stripHarmonicMeasure_nonneg {σ_minus σ_plus σ : ℝ} (hσ : σ_minus < σ_plus)
-    (h_mem : σ ∈ Icc σ_minus σ_plus) (t : ℝ) :
-    0 ≤ stripHarmonicMeasure σ_minus σ_plus σ t := by
-  rw [stripHarmonicMeasure_eq_normalized hσ]
-  set x := π * (σ - σ_minus) / (σ_plus - σ_minus)
-  set y := π * t / (σ_plus - σ_minus)
-  have hx : x ∈ Icc 0 π := normalized_arg_mem_Icc hσ h_mem
-  unfold stripHarmonicMeasureNormalized
-  split_ifs with hy
-  · positivity
-  · exact harmonicMajorantRe_nonneg hx (abs_pos.mpr hy)
-
-theorem stripHarmonicMeasure_le_one (σ_minus σ_plus σ t : ℝ) :
-    stripHarmonicMeasure σ_minus σ_plus σ t ≤ 1 := by
-  unfold stripHarmonicMeasure
-  split_ifs
-  · exact le_rfl
-  · exact harmonicMajorantRe_le_one _ _
-
-theorem stripHarmonicMeasure_anti_abs_t {σ_minus σ_plus σ t₁ t₂ : ℝ}
-    (hσ : σ_minus < σ_plus) (h_mem : σ ∈ Icc σ_minus σ_plus)
-    (ht : |t₁| ≤ |t₂|) :
-    stripHarmonicMeasure σ_minus σ_plus σ t₂ ≤
-      stripHarmonicMeasure σ_minus σ_plus σ t₁ := by
-  by_cases ht₁ : t₁ = 0
-  · subst ht₁
-    have h1 : stripHarmonicMeasure σ_minus σ_plus σ 0 = 1 := by simp [stripHarmonicMeasure]
-    rw [h1]
-    exact stripHarmonicMeasure_le_one σ_minus σ_plus σ t₂
-  · have ht₁_abs : 0 < |t₁| := abs_pos.mpr ht₁
-    have ht₂_abs : 0 < |t₂| := lt_of_lt_of_le ht₁_abs ht
-    have ht₂ : t₂ ≠ 0 := abs_pos.mp ht₂_abs
-    unfold stripHarmonicMeasure
-    rw [ite_eq_right_iff.mpr (fun h => absurd h ht₂),
-        ite_eq_right_iff.mpr (fun h => absurd h ht₁)]
-    have h_diff : 0 < σ_plus - σ_minus := sub_pos.mpr hσ
-    have hy₁ : 0 < π * |t₁| / (σ_plus - σ_minus) := by positivity
-    have hy_le : π * |t₁| / (σ_plus - σ_minus) ≤ π * |t₂| / (σ_plus - σ_minus) := by
-      gcongr
-    exact harmonicMajorantRe_anti_right (normalized_arg_mem_Icc hσ h_mem) hy₁ hy_le
-
 /-- **Nevanlinna's Two-Constants Theorem on a Vertical Strip**:
 If $E : \mathbb{C} \to \mathbb{C}$ is differentiable on the open strip
-$\{\operatorname{Re} s \in (\sigma_-, \sigma_+)\}$, continuous on the closed strip
-$\{\operatorname{Re} s \in [\sigma_-, \sigma_+]\}$, bounded by $M$ on the closed strip, and bounded
+$\lbrace\operatorname{Re} s \in (\sigma_-, \sigma_+)\rbrace$, continuous on the closed strip
+$\lbrace\operatorname{Re} s \in [\sigma_-, \sigma_+]\rbrace$, bounded by $M$ on the closed strip, and bounded
 by $\delta \in (0, M]$ on the real segment $[\sigma_-, \sigma_+]$, then for all
 $\sigma \in [\sigma_-, \sigma_+]$ and $t \in \mathbb{R}$,
-$$\|E(\sigma + it)\| \le M^{1 - \omega(\sigma, t)} \, \delta^{\omega(\sigma, t)}.$$ -/
+$$\Vert E(\sigma + it)\Vert \le M^{1 - \omega(\sigma, t)} \thinspace \delta^{\omega(\sigma, t)}.$$ -/
 theorem norm_le_two_constants_vertical_strip {E : ℂ → ℂ} {σ_minus σ_plus M δ : ℝ}
     (hσ : σ_minus < σ_plus) (hδ : 0 < δ) (hδM : δ ≤ M)
     (hE_diff : DifferentiableOn ℂ E {s : ℂ | s.re ∈ Ioo σ_minus σ_plus})
@@ -793,12 +713,17 @@ theorem norm_le_two_constants_vertical_strip {E : ℂ → ℂ} {σ_minus σ_plus
   exact h_norm
 
 /-!
-## Part 5: Midpoint Harmonic Measure Exponent on $[1 - 2A, -1]$
+## 5. Midpoint Harmonic Measure Exponent on $[1 - 2A, -1]$
+
+Specializing to the strip $[1 - 2A, -1]$ ($A > 1$) at its midpoint $\sigma = -A$ gives a uniform
+bound on the vertical segment $\lbrace -A + it : |t| \le T\rbrace$ with exponent
+$\theta(A, T) = \frac{2}{\pi} \arctan\bigl(1 / \sinh(\pi T / (2(A - 1)))\bigr) \in (0, 1)$, which
+approaches $1$ as the strip half-width $A - 1 \to +\infty$.
 -/
 
 /-- The harmonic measure exponent at the midpoint $\sigma = -A$ of the vertical strip
 $[1 - 2A, -1]$ at height $T > 0$:
-$$\theta(A, T) = \frac{2}{\pi} \arctan\!\left(\frac{1}{\sinh(\pi T / (2 (A - 1)))}\right).$$ -/
+$$\theta(A, T) = \frac{2}{\pi} \arctan\left(\frac{1}{\sinh(\pi T / (2 (A - 1)))}\right).$$ -/
 noncomputable def midpointHarmonicExp (A T : ℝ) : ℝ :=
   (2 / π) * Real.arctan (1 / Real.sinh (π * T / (2 * (A - 1))))
 
@@ -822,22 +747,6 @@ theorem midpointHarmonicExp_lt_one (A T : ℝ) :
   calc (2 / π) * Real.arctan (1 / Real.sinh (π * T / (2 * (A - 1))))
       < (2 / π) * (π / 2) := mul_lt_mul_of_pos_left h_lt (by positivity)
     _ = 1 := by field_simp
-
-theorem stripHarmonicMeasure_midpoint {A T : ℝ} (hA : 1 < A) (hT : 0 < T) :
-    stripHarmonicMeasure (1 - 2 * A) (-1) (-A) T = midpointHarmonicExp A T := by
-  unfold stripHarmonicMeasure midpointHarmonicExp
-  rw [ite_eq_right_iff.mpr (fun h => absurd h hT.ne'), abs_of_pos hT]
-  congr 3
-  · have h_arg : π * (-A - (1 - 2 * A)) / (-1 - (1 - 2 * A)) = π / 2 := by
-      have hA_ne : A - 1 ≠ 0 := (sub_pos.mpr hA).ne'
-      have h1 : -A - (1 - 2 * A) = A - 1 := by ring
-      have h2 : -1 - (1 - 2 * A) = 2 * (A - 1) := by ring
-      rw [h1, h2]
-      field_simp
-    rw [h_arg, Real.sin_pi_div_two]
-  · congr 1
-    have h2 : -1 - (1 - 2 * A) = 2 * (A - 1) := by ring
-    rw [h2]
 
 /-- As the strip half-width $A - 1 \to +\infty$, the midpoint harmonic measure exponent
 $\theta(A, T) \to 1$. -/
@@ -881,10 +790,10 @@ theorem tendsto_midpointHarmonicExp_atTop {T : ℝ} (hT : 0 < T) :
 
 /-- **Midpoint Two-Constants Corollary on $[1 - 2A, -1]$**:
 For $A > 1$, $T > 0$, and $0 < \delta \le M$, if $E : \mathbb{C} \to \mathbb{C}$ is holomorphic
-on the open strip $\{\operatorname{Re} s \in (1 - 2A, -1)\}$, continuous on the closed strip
-$\{\operatorname{Re} s \in [1 - 2A, -1]\}$, bounded by $M$ on the closed strip, and bounded by
+on the open strip $\lbrace\operatorname{Re} s \in (1 - 2A, -1)\rbrace$, continuous on the closed strip
+$\lbrace\operatorname{Re} s \in [1 - 2A, -1]\rbrace$, bounded by $M$ on the closed strip, and bounded by
 $\delta$ on the real interval $[1 - 2A, -1]$, then for all $t \in [-T, T]$:
-$$\|E(-A + it)\| \le M^{1 - \theta(A, T)} \, \delta^{\theta(A, T)}.$$ -/
+$$\Vert E(-A + it)\Vert \le M^{1 - \theta(A, T)} \thinspace \delta^{\theta(A, T)}.$$ -/
 theorem norm_le_midpoint_two_constants {E : ℂ → ℂ} {A T M δ : ℝ}
     (hA : 1 < A) (hT : 0 < T) (hδ : 0 < δ) (hδM : δ ≤ M)
     (hE_diff : DifferentiableOn ℂ E {s : ℂ | s.re ∈ Ioo (1 - 2 * A) (-1)})
@@ -900,12 +809,34 @@ theorem norm_le_midpoint_two_constants {E : ℂ → ℂ} {A T M δ : ℝ}
   have h_strip := norm_le_two_constants_vertical_strip hσ hδ hδM
     hE_diff hE_cont hM_bound hδ_bound h_mid t
   push_cast at h_strip
-  have ht_abs : |t| ≤ |T| := by
-    rw [abs_of_pos hT]
-    exact abs_le.mpr ht
+  have ht_abs : |t| ≤ T := abs_le.mpr ht
   have h_om_le : midpointHarmonicExp A T ≤ stripHarmonicMeasure (1 - 2 * A) (-1) (-A) t := by
-    rw [← stripHarmonicMeasure_midpoint hA hT]
-    exact stripHarmonicMeasure_anti_abs_t hσ h_mid ht_abs
+    have h_mid_eq : stripHarmonicMeasure (1 - 2 * A) (-1) (-A) T = midpointHarmonicExp A T := by
+      unfold stripHarmonicMeasure midpointHarmonicExp
+      rw [ite_eq_right_iff.mpr (fun h => absurd h hT.ne'), abs_of_pos hT]
+      congr 3
+      · have h_arg : π * (-A - (1 - 2 * A)) / (-1 - (1 - 2 * A)) = π / 2 := by
+          have hA_ne : A - 1 ≠ 0 := (sub_pos.mpr hA).ne'
+          have h1 : -A - (1 - 2 * A) = A - 1 := by ring
+          have h2 : -1 - (1 - 2 * A) = 2 * (A - 1) := by ring
+          rw [h1, h2]; field_simp
+        rw [h_arg, Real.sin_pi_div_two]
+      · congr 1; ring
+    rw [← h_mid_eq]
+    by_cases ht₀ : t = 0
+    · subst ht₀
+      simp only [stripHarmonicMeasure, ↓reduceIte]
+      split_ifs
+      · exact le_rfl
+      · exact harmonicMajorantRe_le_one _ _
+    · have ht_pos : 0 < |t| := abs_pos.mpr ht₀
+      unfold stripHarmonicMeasure
+      rw [ite_eq_right_iff.mpr (fun h => absurd h hT.ne'),
+          ite_eq_right_iff.mpr (fun h => absurd h ht₀), abs_of_pos hT]
+      have h_diff : 0 < (-1 : ℝ) - (1 - 2 * A) := sub_pos.mpr hσ
+      have hy₁ : 0 < π * |t| / (-1 - (1 - 2 * A)) := by positivity
+      have hy_le : π * |t| / (-1 - (1 - 2 * A)) ≤ π * T / (-1 - (1 - 2 * A)) := by gcongr
+      exact harmonicMajorantRe_anti_right (normalized_arg_mem_Icc hσ h_mid) hy₁ hy_le
   set ω_t := stripHarmonicMeasure (1 - 2 * A) (-1) (-A) t
   set ω_T := midpointHarmonicExp A T
   have hM_pos : 0 < M := lt_of_lt_of_le hδ hδM

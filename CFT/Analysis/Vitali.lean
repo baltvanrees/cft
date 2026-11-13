@@ -11,6 +11,10 @@ import CFT.CutPlane
 /-!
 # Real-Interval Vitali-Type Convergence Theorems for Bounded Holomorphic Families
 
+> **Note:** This module is currently unused by the rest of the library (which uses the quantitative
+> Nevanlinna Two-Constants theorem in `CFT.Analysis.TwoConstants` instead), and is kept for
+> possible future use.
+
 This file establishes a real-interval Vitali-type convergence theorem for uniformly bounded
 families of holomorphic functions on connected open subsets of $\mathbb{C}$.
 
@@ -20,62 +24,17 @@ Compared to the classical Vitali–Porter theorem, our formulation makes two sim
   $(a, b) \subseteq U$ (rather than on an arbitrary subset with an accumulation point in $U$).
 - The proof bypasses Montel's normal-family theorem and Arzelà–Ascoli entirely, using instead
   Tychonoff compactness in the pointwise product topology together with Cauchy's derivative
-  estimate:
-
-1. **Cauchy Derivative & Local Lipschitz Bound (`norm_sub_le_of_differentiableOn_of_norm_le`)**:
-   Using `Complex.cderiv_eq_deriv` and `Complex.norm_cderiv_le` on closed balls inside an open
-   set $U \subseteq \mathbb{C}$, any holomorphic function bounded by $M$ on $\overline{B}(z_0, r)$
-   has derivative bounded by $2M/r$ on $B(z_0, r/2)$ and is therefore $(2M/r)$-Lipschitz on
-   $B(z_0, r/2)$.
-2. **Locally Uniform Convergence from Pointwise Convergence
-   (`tendstoLocallyUniformlyOn_of_differentiableOn_of_norm_le`)**:
-   By the uniform local Lipschitz bound on $B(z_0, r/2)$, pointwise convergence of a uniformly
-   bounded holomorphic family on an open set $U$ automatically upgrades to locally uniform
-   convergence on $U$, and its limit is holomorphic by `TendstoLocallyUniformlyOn.differentiableOn`.
-3. **Real-Interval Vitali-Type Theorem (`vitali_porter_real_interval`, `vitali_porter_ucDisk`)**:
-   Instead of invoking Montel's theorem in $C(U, \mathbb{C})$, we work in the pointwise product
-   space $\prod_{z \in U} \overline{B}(0, M)$, which is compact by Tychonoff's theorem
-   (`isCompact_univ_pi`). By `IsCompact.tendsto_nhds_of_unique_mapClusterPt` and
-   `mapClusterPt_iff_ultrafilter`, it suffices to show that every ultrafilter cluster point $g$ in
-   the product topology equals $f$. Along any such ultrafilter, pointwise convergence $F_i \to g$ on
-   $U$ upgrades to locally uniform convergence by Step 2, so $g$ is holomorphic on $U$ by
-   Weierstrass's theorem (`TendstoLocallyUniformlyOn.differentiableOn`). Since $g = f$ on the real
-   interval $(a, b) \subseteq U$, the real-interval identity theorem
-   (`eqOn_of_differentiableOn_of_eqOn_real_interval`) forces $g = f$ throughout $U$.
+  estimate and the real-interval identity theorem.
 -/
 
 noncomputable section
 
 open Complex Metric Set Filter Topology
 
-namespace CFT
-
-/-- **Cauchy Derivative Estimate on an Open Ball**:
-If $f$ is holomorphic on $U$, $\overline{B}(z_0, r) \subseteq U$ with $r > 0$, and $\|f(z)\| \le M$
-on $\overline{B}(z_0, r)$, then for every $w \in B(z_0, r/2)$ we have
-$\|f'(w)\| \le M / (r/2)$. -/
-lemma norm_deriv_le_of_differentiableOn_of_norm_le {U : Set ℂ} (hU : IsOpen U)
-    {f : ℂ → ℂ} (hf : DifferentiableOn ℂ f U) {z₀ : ℂ} {r M : ℝ} (hr : 0 < r)
-    (h_sub : closedBall z₀ r ⊆ U) (hM : ∀ z ∈ closedBall z₀ r, ‖f z‖ ≤ M)
-    {w : ℂ} (hw : w ∈ ball z₀ (r / 2)) :
-    ‖deriv f w‖ ≤ M / (r / 2) := by
-  have hr2 : 0 < r / 2 := half_pos hr
-  have hw_sub : closedBall w (r / 2) ⊆ closedBall z₀ r := by
-    intro z hz
-    rw [mem_closedBall] at hz ⊢
-    rw [mem_ball] at hw
-    calc
-      dist z z₀ ≤ dist z w + dist w z₀ := dist_triangle z w z₀
-      _ ≤ r / 2 + r / 2 := add_le_add hz hw.le
-      _ = r := add_halves r
-  have h_cderiv := Complex.cderiv_eq_deriv hU hf hr2 (hw_sub.trans h_sub)
-  rw [← h_cderiv]
-  refine Complex.norm_cderiv_le hr2 (fun z hz => hM z (hw_sub (sphere_subset_closedBall hz)))
-
 /-- **Local Lipschitz Estimate for Bounded Holomorphic Functions**:
 If $f$ is holomorphic on an open set $U$, $\overline{B}(z_0, r) \subseteq U$ with $r > 0$, and
-$\|f(z)\| \le M$ on $\overline{B}(z_0, r)$, then for every $w \in B(z_0, r/2)$ we have
-$\|f(w) - f(z_0)\| \le (M / (r / 2)) \|w - z_0\|$. -/
+$\Vert f(z)\Vert \le M$ on $\overline{B}(z_0, r)$, then for every $w \in B(z_0, r/2)$ we have
+$\Vert f(w) - f(z_0)\Vert \le (M / (r / 2)) \Vert w - z_0\Vert$. -/
 lemma norm_sub_le_of_differentiableOn_of_norm_le {U : Set ℂ} (hU : IsOpen U)
     {f : ℂ → ℂ} (hf : DifferentiableOn ℂ f U) {z₀ : ℂ} {r M : ℝ} (hr : 0 < r)
     (h_sub : closedBall z₀ r ⊆ U) (hM : ∀ z ∈ closedBall z₀ r, ‖f z‖ ≤ M)
@@ -86,8 +45,18 @@ lemma norm_sub_le_of_differentiableOn_of_norm_le {U : Set ℂ} (hU : IsOpen U)
     (ball_subset_closedBall.trans (closedBall_subset_closedBall (half_le_self hr.le))).trans h_sub
   have hf_diff : ∀ z ∈ ball z₀ (r / 2), DifferentiableAt ℂ f z :=
     fun z hz => (hf z (h_ball_sub hz)).differentiableAt (hU.mem_nhds (h_ball_sub hz))
-  have hf_deriv : ∀ z ∈ ball z₀ (r / 2), ‖deriv f z‖ ≤ M / (r / 2) :=
-    fun z hz => norm_deriv_le_of_differentiableOn_of_norm_le hU hf hr h_sub hM hz
+  have hf_deriv : ∀ z ∈ ball z₀ (r / 2), ‖deriv f z‖ ≤ M / (r / 2) := by
+    intro z hz
+    have hz_sub : closedBall z (r / 2) ⊆ closedBall z₀ r := by
+      intro ζ hζ
+      rw [mem_closedBall] at hζ ⊢
+      rw [mem_ball] at hz
+      calc
+        dist ζ z₀ ≤ dist ζ z + dist z z₀ := dist_triangle ζ z z₀
+        _ ≤ r / 2 + r / 2 := add_le_add hζ hz.le
+        _ = r := add_halves r
+    rw [← Complex.cderiv_eq_deriv hU hf hr2 (hz_sub.trans h_sub)]
+    exact Complex.norm_cderiv_le hr2 (fun ζ hζ => hM ζ (hz_sub (sphere_subset_closedBall hζ)))
   exact Convex.norm_image_sub_le_of_norm_deriv_le hf_diff hf_deriv (convex_ball z₀ (r / 2))
     (mem_ball_self hr2) hw
 
@@ -224,8 +193,8 @@ theorem vitali_porter_real_interval
 
 /-- **Real-Interval Vitali-Type Theorem on `UcDisk`**:
 If $F_i$ is eventually holomorphic on
-$\operatorname{UcDisk} = \{w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\}$, uniformly bounded on
-every left half-plane $\{w \mid \operatorname{Re}(w) < \sigma\}$ ($\sigma < 0$), $f$ is
+$\operatorname{UcDisk} = \lbrace w \in \mathbb{C} \mid \operatorname{Re}(w) < 0\rbrace$, uniformly bounded on
+every left half-plane $\lbrace w \mid \operatorname{Re}(w) < \sigma\rbrace$ ($\sigma < 0$), $f$ is
 holomorphic on $\operatorname{UcDisk}$, and $F_i(\sigma) \to f(\sigma)$ for all real $\sigma < 0$,
 then $F_i(w) \to f(w)$ for every $w \in \operatorname{UcDisk}$. -/
 theorem vitali_porter_ucDisk
@@ -258,5 +227,5 @@ theorem vitali_porter_ucDisk
     (fun x hx => h_real x (lt_trans hx.2 hσ_neg))
   exact h_loc.tendsto_at hw_U
 
-end CFT
+end
 

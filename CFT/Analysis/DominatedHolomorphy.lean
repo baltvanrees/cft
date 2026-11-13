@@ -9,41 +9,35 @@ import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.Calculus.SmoothSeries
 
 /-!
-# Cauchy Fréchet Derivative Bounds and Holomorphy of Parametric Integrals and Series
+# Holomorphy of Locally Dominated Parametric Integrals and Series
 
-This file establishes standalone complex-analysis criteria for the holomorphy of locally uniformly
-dominated parametric integrals and series:
+In real analysis, differentiating under an integral or summation sign requires bounding the
+derivative of the integrand or summands. For holomorphic functions, Cauchy's integral formula
+eliminates this extra hypothesis: a local uniform bound on $\Vert f\Vert$ on closed balls automatically
+bounds the Fréchet derivative on smaller balls, which suffices to establish holomorphy of locally
+dominated parametric integrals and series.
 
-1. **Cauchy Fréchet Derivative Estimate (`norm_fderiv_le_of_differentiableOn_of_norm_le`)**:
-   By restricting a holomorphic function $f : E \to \mathbb{C}$ on a normed $\mathbb{C}$-space $E$
-   to complex lines $t \mapsto w_0 + t \cdot v$, Cauchy's 1D derivative estimate on closed balls
-   $\overline{B}(w_0, r) \subseteq U$ yields $\|\operatorname{fderiv} \mathbb{C} f w_0\| \le M / r$.
-2. **Local Lipschitz Bound on Open Balls (`lipschitzOnWith_of_differentiableOn_of_norm_le`)**:
-   Applying the mean value inequality on $B(w_0, r/2)$ gives a Lipschitz constant $M / (r/2)$ on
-   $B(w_0, r/2)$ whenever $\|f\| \le M$ on $\overline{B}(w_0, r)$.
-3. **Joint Holomorphy of Locally Dominated Parametric Integrals on $\mathbb{C} \times \mathbb{C}$
-   (`differentiableOn_integral_of_differentiableOn_of_norm_le`)**:
-   Combining `lipschitzOnWith_of_differentiableOn_of_norm_le` and difference-quotient
-   measurability of $\operatorname{fderiv}$ (`aestronglyMeasurable_fderiv_prod`) with Mathlib's
-   `hasFDerivAt_integral_of_dominated_loc_of_lip` proves holomorphy of
-   $w \mapsto \int F(w, a)\,d\mu$ from a local norm bound alone.
-4. **Holomorphy of Locally Dominated Series
-   (`differentiableOn_tsum_of_differentiableOn_of_norm_le`)**:
-   Combining `norm_fderiv_le_of_differentiableOn_of_norm_le` with Mathlib's
-   `hasFDerivAt_tsum_of_isPreconnected` proves holomorphy of $w \mapsto \sum_{n=0}^\infty F_n(w)$
-   from a local summable norm bound alone.
+**Where this is used**:
+- `differentiableOn_tsum_of_differentiableOn_of_norm_le` is used in `CFT.Blocks_pdisk`
+  (`ConformalBlock.differentiableOn_evalPdisk`) to prove joint holomorphy of analytically continued
+  conformal blocks on the universal cover of the punctured polydisk $\operatorname{UcPdisk}$.
+- `differentiableOn_integral_of_differentiableOn_of_norm_le` is used in `CFT.Corr_pdisk`
+  (`FourPointData.differentiableOn_correlator_pdisk`) to prove joint holomorphy of the four-point
+  correlator on $\operatorname{UcPdisk}$, enabling the analytic continuation of $s \leftrightarrow t$
+  crossing symmetry (`FourPointData.crossing_correlator`) from the Euclidean section $z_r = \bar{z}_l$.
 -/
 
 noncomputable section
 
 open Complex Metric Set Filter Topology MeasureTheory
 
-namespace CFT
+/-!
+## Cauchy Derivative and Local Lipschitz Bounds
+-/
 
-/-- **Cauchy Fréchet Derivative Estimate on a Normed $\mathbb{C}$-Space**:
-If $f : E \to \mathbb{C}$ is holomorphic on an open set $U \subseteq E$,
-$\overline{B}(w_0, r) \subseteq U$ with $r > 0$, and $\|f(w)\| \le M$ on $\overline{B}(w_0, r)$,
-then $\|\operatorname{fderiv} \mathbb{C} f w_0\| \le M / r$. -/
+/-- **Cauchy Fréchet Derivative Estimate**: if $f : E \to \mathbb{C}$ is holomorphic on an open set
+$U \subseteq E$ and bounded in norm by $M$ on a closed ball $\overline{B}(w_0, r) \subseteq U$
+($r > 0$), then $\Vert\operatorname{fderiv} \mathbb{C} f w_0\Vert \le M / r$. -/
 lemma norm_fderiv_le_of_differentiableOn_of_norm_le
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
     {U : Set E} (hU : IsOpen U) {f : E → ℂ} (hf : DifferentiableOn ℂ f U)
@@ -91,10 +85,9 @@ lemma norm_fderiv_le_of_differentiableOn_of_norm_le
       dsimp [R]
       rw [div_div_eq_mul_div, mul_comm M, mul_div_assoc, mul_comm ‖v‖]
 
-/-- **Local Lipschitz Bound on Open Balls for Bounded Holomorphic Functions**:
-If $f : E \to \mathbb{C}$ is holomorphic on an open set $U \subseteq E$,
-$\overline{B}(w_0, r) \subseteq U$ with $r > 0$, and $\|f(w)\| \le M$ on $\overline{B}(w_0, r)$,
-then $f$ is Lipschitz on $B(w_0, r/2)$ with constant $M / (r/2)$. -/
+/-- Applying the Cauchy derivative bound on $\overline{B}(w, r/2) \subseteq \overline{B}(w_0, r)$
+together with the mean value inequality shows that $f$ is Lipschitz on $B(w_0, r/2)$ with constant
+$M / (r/2)$. -/
 lemma lipschitzOnWith_of_differentiableOn_of_norm_le
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
     {U : Set E} (hU : IsOpen U) {f : E → ℂ} (hf : DifferentiableOn ℂ f U)
@@ -121,20 +114,14 @@ lemma lipschitzOnWith_of_differentiableOn_of_norm_le
     exact norm_fderiv_le_of_differentiableOn_of_norm_le hU hf hr2 (hw_sub.trans h_sub)
       (fun z hz => hM z (hw_sub hz))
 
-private lemma clm_prod_eq (L : (ℂ × ℂ) →L[ℂ] ℂ) :
-    L = (ContinuousLinearMap.fst ℂ ℂ ℂ).smulRight (L (1, 0)) +
-        (ContinuousLinearMap.snd ℂ ℂ ℂ).smulRight (L (0, 1)) := by
-  apply ContinuousLinearMap.ext
-  rintro ⟨z₁, z₂⟩
-  have hdecomp : (z₁, z₂) =
-      z₁ • ((1 : ℂ), (0 : ℂ)) + z₂ • ((0 : ℂ), (1 : ℂ)) := by
-    ext <;> simp
-  conv_lhs => rw [hdecomp, map_add, map_smul, map_smul]
-  simp
+/-!
+## Parametric Integrals and Series
+-/
 
-/-- Measurability of the Fréchet derivative of a measurable family of holomorphic functions on
-$\mathbb{C} \times \mathbb{C}$, obtained as the pointwise limit of difference quotients along
-the coordinate axes. -/
+/-- If $F(w, a)$ is measurable in $a$ for each $w$ in an open set $U \subseteq \mathbb{C} \times \mathbb{C}$
+and holomorphic in $w \in U$ for $\mu$-a.e. $a$, then for each $w_0 \in U$ its Fréchet derivative
+$a \mapsto \operatorname{fderiv} \mathbb{C} (w \mapsto F(w, a))\thinspace w_0$ is $\mu$-measurable, obtained
+as the pointwise limit of difference quotients along the coordinate axes. -/
 lemma aestronglyMeasurable_fderiv_prod
     {α : Type*} [MeasurableSpace α] {μ : Measure α}
     {U : Set (ℂ × ℂ)} (hU : IsOpen U) {F : (ℂ × ℂ) → α → ℂ}
@@ -201,7 +188,13 @@ lemma aestronglyMeasurable_fderiv_prod
                (ContinuousLinearMap.snd ℂ ℂ ℂ).smulRight
                  (fderiv ℂ (fun w => F w a) w₀ (0, 1)) := by
     ext a : 1
-    exact clm_prod_eq _
+    apply ContinuousLinearMap.ext
+    rintro ⟨z₁, z₂⟩
+    have hdecomp : (z₁, z₂) =
+        z₁ • ((1 : ℂ), (0 : ℂ)) + z₂ • ((0 : ℂ), (1 : ℂ)) := by
+      ext <;> simp
+    conv_lhs => rw [hdecomp, map_add, map_smul, map_smul]
+    simp
   rw [h_eq]
   have h1 : Continuous (fun c : ℂ => (ContinuousLinearMap.fst ℂ ℂ ℂ).smulRight c) :=
     ContinuousLinearMap.smulRightL ℂ (ℂ × ℂ) ℂ
@@ -212,11 +205,9 @@ lemma aestronglyMeasurable_fderiv_prod
   exact (h1.comp_aestronglyMeasurable (h_dir (1, 0))).add
     (h2.comp_aestronglyMeasurable (h_dir (0, 1)))
 
-/-- **Joint Holomorphy of Locally Dominated Parametric Integrals on
-$\mathbb{C} \times \mathbb{C}$**:
-If $F(w, a)$ is measurable in $a$ for each $w \in U$, holomorphic in $w \in U$ for $\mu$-a.e. $a$,
-and locally uniformly bounded in norm by an $L^1(\mu)$ function on closed balls in $U$, then
-$w \mapsto \int F(w, a)\, d\mu(a)$ is holomorphic on $U$. -/
+/-- Combining derivative measurability with the local Lipschitz bound shows that if $F(w, a)$ is
+also locally uniformly bounded in norm by an $L^1(\mu)$ function on closed balls in $U$, then the
+parametric integral $w \mapsto \int F(w, a)\thinspace d\mu(a)$ is holomorphic on $U$. -/
 theorem differentiableOn_integral_of_differentiableOn_of_norm_le
     {α : Type*} [MeasurableSpace α] {μ : Measure α}
     {U : Set (ℂ × ℂ)} (hU : IsOpen U) {F : (ℂ × ℂ) → α → ℂ}
@@ -253,10 +244,9 @@ theorem differentiableOn_integral_of_differentiableOn_of_norm_le
     hF'_meas h_lip h_lip_int h_diff_w₀
   exact h_res.2.differentiableAt.differentiableWithinAt
 
-/-- **Holomorphy of Locally Dominated Series on a Normed $\mathbb{C}$-Space**:
-If each term $F_n : E \to \mathbb{C}$ is holomorphic on an open set $U \subseteq E$ and locally
-uniformly bounded in norm by a summable sequence on closed balls in $U$, then
-$w \mapsto \sum_{n=0}^\infty F_n(w)$ is holomorphic on $U$. -/
+/-- Similarly, if each term $F_n : E \to \mathbb{C}$ of a series is holomorphic on an open set
+$U \subseteq E$ and locally uniformly bounded in norm by a summable sequence on closed balls in $U$,
+then $w \mapsto \sum_{n=0}^\infty F_n(w)$ is holomorphic on $U$. -/
 theorem differentiableOn_tsum_of_differentiableOn_of_norm_le
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
     {U : Set E} (hU : IsOpen U) {F : ℕ → E → ℂ}
@@ -294,4 +284,4 @@ theorem differentiableOn_tsum_of_differentiableOn_of_norm_le
     (convex_ball w₀ (r / 2)).isPreconnected h_hasFDeriv h_fderiv_le (mem_ball_self hr2)
     h_sum_w₀ (mem_ball_self hr2)).differentiableAt.differentiableWithinAt
 
-end CFT
+end

@@ -31,7 +31,7 @@ We establish three main results:
    coordinates satisfy $\operatorname{Re}(w_l), \operatorname{Re}(w_r) \le \sigma < 0$, the
    integrand is uniformly dominated by the integrable Euclidean block
    $G_{\Delta, l}(e^\sigma)$. Applying
-   `CFT.differentiableOn_integral_of_differentiableOn_of_norm_le` from
+   `differentiableOn_integral_of_differentiableOn_of_norm_le` from
    `CFT/Analysis/DominatedHolomorphy.lean` proves joint holomorphy on $\operatorname{UcPdisk}$.
 3. **Analytic Continuation of Crossing Symmetry (`FourPointData.crossing_correlator`)**:
    Starting from Euclidean crossing symmetry on the conjugate section $z_r = \bar{z}_l$
@@ -165,7 +165,7 @@ $\operatorname{UcPdisk}$. -/
 theorem differentiableOn_correlator_pdisk (hν : 0 ≤ ν) :
     DifferentiableOn ℂ (fun w : ℂ × ℂ => corr.correlator_pdisk w.1 w.2) UcPdisk := by
   dsimp [correlator_pdisk, eval_correlator_pdisk]
-  refine CFT.differentiableOn_integral_of_differentiableOn_of_norm_le isOpen_UcPdisk
+  refine differentiableOn_integral_of_differentiableOn_of_norm_le isOpen_UcPdisk
     (fun w _ => (measurable_evalPdisk (ν := ν) w.1 w.2).aestronglyMeasurable)
     (corr.ae_unitary.mono fun p hp => (conformalBlock ν p.1 p.2).differentiableOn_evalPdisk hν hp) ?_
   intro w₀ hw₀

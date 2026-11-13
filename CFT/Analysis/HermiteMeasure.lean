@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Balt van Rees
+Authors: AI-generated, edited by Balt van Rees
 -/
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 import Mathlib.Analysis.Calculus.ParametricIntervalIntegral
@@ -17,14 +17,22 @@ Given two finite positive measures `μ, ν` on `ℝ` such that `ν` is supported
 Fourier transforms differ by at most `ε` on `[-2π, 2π]`, we bound
 `|∫ ψ dμ - ∫ ψ dν|` for any compactly supported `C^2` test function `ψ`
 by `C_N * ε * M_ψ`.
+
+**Where this is used**:
+- `abs_integral_sub_le_of_fourier_bound` is used in `CFT.Analysis.LaplaceTauberian`
+  (`abs_integral_sub_le_of_laplaceReal_bound`) to convert imaginary-axis Fourier agreement on
+  $[-2\pi, 2\pi]$ into quantitative bounds for compactly supported $C^2$ test functions against
+  exponentially tilted discrete measures on $\mathbb{Z}$.
 -/
 
 open MeasureTheory Set Filter TopologicalSpace intervalIntegral
 open scoped Real Topology
 
-namespace CFT.LightconeBootstrap
+/-! ## 1. Lattice Distance and Trigonometric Lower Bound
 
-/-! ## 1. Lattice Distance and Trigonometric Lower Bound -/
+The distance $\operatorname{dist}(u, \mathbb{Z}) = |u - \operatorname{round}(u)| \le 1/2$ satisfies
+the quadratic lower bound $8\thinspace\operatorname{dist}(u, \mathbb{Z})^2 \le 1 - \cos(2\pi u)$, which
+controls how much mass a measure $\mu$ can place away from the integer lattice $\mathbb{Z}$. -/
 
 /-- Distance from `u : ℝ` to the nearest integer `round u`. -/
 noncomputable def distInt (u : ℝ) : ℝ := |u - round u|
@@ -49,45 +57,35 @@ lemma measurable_distInt : Measurable distInt := by
     measurable_id.sub (hfloor.comp (measurable_id.add_const (1 / 2)))
   exact continuous_abs.measurable.comp hsub
 
-lemma two_mul_le_sin_pi_mul {x : ℝ} (hx0 : 0 ≤ x) (hx1 : x ≤ 1 / 2) :
-    2 * x ≤ Real.sin (π * x) := by
-  have h1 : 0 ≤ π * x := mul_nonneg Real.pi_nonneg hx0
-  have h2 : π * x ≤ π / 2 := by
-    calc π * x ≤ π * (1 / 2) := mul_le_mul_of_nonneg_left hx1 Real.pi_nonneg
-    _ = π / 2 := by ring
-  have h3 := Real.mul_le_sin h1 h2
-  have hpi : π ≠ 0 := Real.pi_ne_zero
-  calc 2 * x = 2 / π * (π * x) := by field_simp
-  _ ≤ Real.sin (π * x) := h3
-
-lemma four_mul_sq_le_sin_pi_mul_sq {x : ℝ} (hx : |x| ≤ 1 / 2) :
-    4 * x ^ 2 ≤ (Real.sin (π * x)) ^ 2 := by
-  have h := two_mul_le_sin_pi_mul (abs_nonneg x) hx
-  have habs : |Real.sin (π * |x|)| = |Real.sin (π * x)| := by
-    rcases le_total 0 x with h0 | h0
-    · rw [abs_of_nonneg h0]
-    · rw [abs_of_nonpos h0, mul_neg, Real.sin_neg, abs_neg]
-  have h2 : 2 * |x| ≤ |Real.sin (π * x)| := by
-    rw [← habs]
-    exact h.trans (le_abs_self _)
-  have h3 : (2 * |x|) ^ 2 ≤ |Real.sin (π * x)| ^ 2 :=
-    sq_le_sq.mpr (by rw [abs_abs, abs_of_nonneg (by positivity)]; exact h2)
-  calc 4 * x ^ 2 = (2 * |x|) ^ 2 := by ring_nf; rw [sq_abs]
-  _ ≤ |Real.sin (π * x)| ^ 2 := h3
-  _ = (Real.sin (π * x)) ^ 2 := sq_abs _
-
-lemma one_sub_cos_two_pi_mul_eq (u : ℝ) :
-    1 - Real.cos (2 * π * u) = 2 * (Real.sin (π * (u - round u))) ^ 2 := by
-  have h1 : 2 * π * u = 2 * (π * (u - round u)) + (round u : ℤ) * (2 * π) := by ring
-  rw [h1, Real.cos_add_int_mul_two_pi, Real.cos_two_mul', Real.cos_sq']
-  ring
-
 lemma eight_mul_distInt_sq_le (u : ℝ) :
     8 * (distInt u) ^ 2 ≤ 1 - Real.cos (2 * π * u) := by
-  rw [one_sub_cos_two_pi_mul_eq]
-  have h := four_mul_sq_le_sin_pi_mul_sq (distInt_le_half u)
-  unfold distInt at *
-  linarith [sq_abs (u - round u)]
+  have hcos : 1 - Real.cos (2 * π * u) = 2 * (Real.sin (π * (u - round u))) ^ 2 := by
+    have h1 : 2 * π * u = 2 * (π * (u - round u)) + (round u : ℤ) * (2 * π) := by ring
+    rw [h1, Real.cos_add_int_mul_two_pi, Real.cos_two_mul', Real.cos_sq']
+    ring
+  have hx0 : 0 ≤ distInt u := distInt_nonneg u
+  have hx1 : distInt u ≤ 1 / 2 := distInt_le_half u
+  have hsin : 2 * distInt u ≤ Real.sin (π * distInt u) := by
+    have h1 : 0 ≤ π * distInt u := mul_nonneg Real.pi_nonneg hx0
+    have h2 : π * distInt u ≤ π / 2 := by
+      calc π * distInt u ≤ π * (1 / 2) := mul_le_mul_of_nonneg_left hx1 Real.pi_nonneg
+      _ = π / 2 := by ring
+    have h3 := Real.mul_le_sin h1 h2
+    have hpi : π ≠ 0 := Real.pi_ne_zero
+    calc 2 * distInt u = 2 / π * (π * distInt u) := by field_simp
+    _ ≤ Real.sin (π * distInt u) := h3
+  have habs : |Real.sin (π * distInt u)| = |Real.sin (π * (u - round u))| := by
+    dsimp [distInt]
+    rcases le_total 0 (u - round u) with h0 | h0
+    · rw [abs_of_nonneg h0]
+    · rw [abs_of_nonpos h0, mul_neg, Real.sin_neg, abs_neg]
+  have h2 : 2 * distInt u ≤ |Real.sin (π * (u - round u))| := by
+    rw [← habs]
+    exact hsin.trans (le_abs_self _)
+  have h3 : (2 * distInt u) ^ 2 ≤ (Real.sin (π * (u - round u))) ^ 2 := by
+    rw [← sq_abs (Real.sin _)]
+    exact sq_le_sq.mpr (by rw [abs_abs, abs_of_nonneg (by positivity)]; exact h2)
+  linarith
 
 lemma integral_eq_zero_of_forall_int_eq_zero {ν : Measure ℝ}
     (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0) {f : ℝ → ℝ}
@@ -100,7 +98,10 @@ lemma integral_eq_zero_of_forall_int_eq_zero {ν : Measure ℝ}
     exact hu (hf n)
   exact integral_eq_zero_of_ae hae
 
-/-! ## 2. Parametric Differentiation on `[0, 2π]` and Fejér Kernels -/
+/-! ## 2. Parametric Differentiation on `[0, 2π]` and Fejér Kernels
+
+We define the Fejér kernel and slope kernel via their Fourier integrals on $[0, 2\pi]$ to avoid the
+$0/0$ singularity of their closed forms at $u = 0$. -/
 
 lemma hasDerivAt_integral_mul_cos {g : ℝ → ℝ} (hg : Continuous g) (u : ℝ) :
     HasDerivAt (fun x => ∫ t in (0 : ℝ)..(2 * π), g t * Real.cos (t * x))
@@ -205,29 +206,17 @@ lemma hasDerivAt_fejerSlopeKernelDeriv (u : ℝ) :
     HasDerivAt fejerSlopeKernelDeriv (fejerSlopeKernelDeriv2 u) u :=
   (hasDerivAt_integral_mul_cos (continuous_const.mul continuous_id) u).const_mul (2 * π ^ 2)⁻¹
 
-@[simp]
-lemma deriv_fejerKernel : deriv fejerKernel = fejerKernelDeriv := by
-  ext u; exact (hasDerivAt_fejerKernel u).deriv
-
-@[simp]
-lemma deriv_fejerKernelDeriv : deriv fejerKernelDeriv = fejerKernelDeriv2 := by
-  ext u; exact (hasDerivAt_fejerKernelDeriv u).deriv
-
-@[simp]
-lemma deriv_fejerSlopeKernel : deriv fejerSlopeKernel = fejerSlopeKernelDeriv := by
-  ext u; exact (hasDerivAt_fejerSlopeKernel u).deriv
-
-@[simp]
-lemma deriv_fejerSlopeKernelDeriv : deriv fejerSlopeKernelDeriv = fejerSlopeKernelDeriv2 := by
-  ext u; exact (hasDerivAt_fejerSlopeKernelDeriv u).deriv
-
 lemma continuous_fejerKernel : Continuous fejerKernel :=
   Differentiable.continuous (fun u => (hasDerivAt_fejerKernel u).differentiableAt)
 
 lemma continuous_fejerSlopeKernel : Continuous fejerSlopeKernel :=
   Differentiable.continuous (fun u => (hasDerivAt_fejerSlopeKernel u).differentiableAt)
 
-/-! ## 3. Closed Forms, Integer Interpolation Values, and Global Bounds -/
+/-! ## 3. Closed Forms, Integer Interpolation Values, and Global Bounds
+
+Evaluating the Fourier integrals gives the Hermite interpolation properties on $\mathbb{Z}$
+($K(m) = \delta_{m,0}$, $S(m) = 0$, $K'(m) = 0$, $S'(m) = \delta_{m,0}$) and uniform $L^\infty$
+bounds on $K$, $S$, $K''$, and $S''$. -/
 
 lemma integral_two_pi_sub :
     ∫ t in (0 : ℝ)..(2 * π), (2 * π - t) = 2 * π ^ 2 := by
@@ -242,44 +231,6 @@ lemma integral_two_pi_sub :
     ring
   rw [integral_eq_sub_of_hasDerivAt hderiv
     ((continuous_const.sub continuous_id).intervalIntegrable _ _)]
-  ring
-
-lemma integral_one_two_pi :
-    ∫ _t in (0 : ℝ)..(2 * π), (1 : ℝ) = 2 * π := by
-  simp [intervalIntegral.integral_const]
-
-lemma integral_id_two_pi :
-    ∫ t in (0 : ℝ)..(2 * π), t = 2 * π ^ 2 := by
-  have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
-      HasDerivAt (fun x : ℝ => x ^ 2 / 2) t t := by
-    intro t _
-    convert (hasDerivAt_pow 2 t).div_const 2 using 1
-    ring
-  rw [integral_eq_sub_of_hasDerivAt hderiv (continuous_id.intervalIntegrable _ _)]
-  ring
-
-lemma integral_sq_two_pi :
-    ∫ t in (0 : ℝ)..(2 * π), t ^ 2 = 8 * π ^ 3 / 3 := by
-  have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
-      HasDerivAt (fun x : ℝ => x ^ 3 / 3) (t ^ 2) t := by
-    intro t _
-    convert (hasDerivAt_pow 3 t).div_const 3 using 1
-    ring
-  rw [integral_eq_sub_of_hasDerivAt hderiv ((continuous_pow 2).intervalIntegrable _ _)]
-  ring
-
-lemma integral_two_pi_sub_mul_sq :
-    ∫ t in (0 : ℝ)..(2 * π), (2 * π - t) * t ^ 2 = 4 * π ^ 4 / 3 := by
-  have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
-      HasDerivAt (fun x : ℝ => 2 * π * (x ^ 3 / 3) - x ^ 4 / 4) ((2 * π - t) * t ^ 2) t := by
-    intro t _
-    have h1 := ((hasDerivAt_pow 3 t).div_const 3).const_mul (2 * π)
-    have h2 := (hasDerivAt_pow 4 t).div_const 4
-    convert h1.sub h2 using 1
-    ring
-  have hcont : Continuous (fun t : ℝ => (2 * π - t) * t ^ 2) :=
-    (continuous_const.sub continuous_id).mul (continuous_pow 2)
-  rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
   ring
 
 @[simp]
@@ -302,27 +253,17 @@ lemma fejerSlopeKernel_zero : fejerSlopeKernel 0 = 0 := by
 @[simp]
 lemma fejerSlopeKernelDeriv_zero : fejerSlopeKernelDeriv 0 = 1 := by
   unfold fejerSlopeKernelDeriv
-  simp only [mul_zero, Real.cos_zero, mul_one, one_mul, integral_id_two_pi]
+  have hint : ∫ t in (0 : ℝ)..(2 * π), t = 2 * π ^ 2 := by
+    have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
+        HasDerivAt (fun x : ℝ => x ^ 2 / 2) t t := by
+      intro t _
+      convert (hasDerivAt_pow 2 t).div_const 2 using 1
+      ring
+    rw [integral_eq_sub_of_hasDerivAt hderiv (continuous_id.intervalIntegrable _ _)]
+    ring
+  simp only [mul_zero, Real.cos_zero, mul_one, one_mul, hint]
   have hpi : π ≠ 0 := Real.pi_ne_zero
   field_simp
-
-lemma fejerSlopeKernel_eq_of_ne_zero {u : ℝ} (hu : u ≠ 0) :
-    fejerSlopeKernel u = (1 - Real.cos (2 * π * u)) / (2 * π ^ 2 * u) := by
-  unfold fejerSlopeKernel
-  have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
-      HasDerivAt (fun x : ℝ => -Real.cos (x * u) / u) (1 * Real.sin (t * u)) t := by
-    intro t _
-    have h1 : HasDerivAt (fun x : ℝ => x * u) (1 * u) t := (hasDerivAt_id t).mul_const u
-    have h2 := h1.cos.neg.div_const u
-    convert h2 using 1
-    field_simp
-  have hcont : Continuous (fun t : ℝ => 1 * Real.sin (t * u)) :=
-    continuous_const.mul (Real.continuous_sin.comp (continuous_id.mul continuous_const))
-  rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
-  simp only [zero_mul, Real.cos_zero]
-  have hpi : π ≠ 0 := Real.pi_ne_zero
-  field_simp
-  ring
 
 lemma fejerKernel_eq_of_ne_zero {u : ℝ} (hu : u ≠ 0) :
     fejerKernel u = (1 - Real.cos (2 * π * u)) / (2 * π ^ 2 * u ^ 2) := by
@@ -356,58 +297,29 @@ lemma fejerSlopeKernel_eq_mul_fejerKernel (u : ℝ) :
     fejerSlopeKernel u = u * fejerKernel u := by
   rcases eq_or_ne u 0 with rfl | hu
   · simp
-  · rw [fejerSlopeKernel_eq_of_ne_zero hu, fejerKernel_eq_of_ne_zero hu]
+  · have hS : fejerSlopeKernel u = (1 - Real.cos (2 * π * u)) / (2 * π ^ 2 * u) := by
+      unfold fejerSlopeKernel
+      have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
+          HasDerivAt (fun x : ℝ => -Real.cos (x * u) / u) (1 * Real.sin (t * u)) t := by
+        intro t _
+        have h1 : HasDerivAt (fun x : ℝ => x * u) (1 * u) t := (hasDerivAt_id t).mul_const u
+        have h2 := h1.cos.neg.div_const u
+        convert h2 using 1
+        field_simp
+      have hcont : Continuous (fun t : ℝ => 1 * Real.sin (t * u)) :=
+        continuous_const.mul (Real.continuous_sin.comp (continuous_id.mul continuous_const))
+      rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
+      simp only [zero_mul, Real.cos_zero]
+      have hpi : π ≠ 0 := Real.pi_ne_zero
+      field_simp
+      ring
+    rw [hS, fejerKernel_eq_of_ne_zero hu]
     have hpi : π ≠ 0 := Real.pi_ne_zero
     field_simp
-
-lemma fejerSlopeKernelDeriv_eq_add (u : ℝ) :
-    fejerSlopeKernelDeriv u = fejerKernel u + u * fejerKernelDeriv u := by
-  have h1 := hasDerivAt_fejerSlopeKernel u
-  have h2 : HasDerivAt (fun x => x * fejerKernel x)
-      (1 * fejerKernel u + u * fejerKernelDeriv u) u :=
-    (hasDerivAt_id u).mul (hasDerivAt_fejerKernel u)
-  have heq : fejerSlopeKernel = fun x => x * fejerKernel x :=
-    funext fejerSlopeKernel_eq_mul_fejerKernel
-  rw [heq] at h1
-  linarith [h1.unique h2]
-
-lemma fejerSlopeKernelDeriv_eq_of_ne_zero {u : ℝ} (hu : u ≠ 0) :
-    fejerSlopeKernelDeriv u =
-      (2 * π * u * Real.sin (2 * π * u) + Real.cos (2 * π * u) - 1) / (2 * π ^ 2 * u ^ 2) := by
-  unfold fejerSlopeKernelDeriv
-  have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
-      HasDerivAt (fun x : ℝ => x * (Real.sin (x * u) / u) + Real.cos (x * u) / u ^ 2)
-        ((1 * t) * Real.cos (t * u)) t := by
-    intro t _
-    have h1 : HasDerivAt (fun x : ℝ => x * u) (1 * u) t := (hasDerivAt_id t).mul_const u
-    have hsin : HasDerivAt (fun x : ℝ => Real.sin (x * u) / u) (Real.cos (t * u)) t := by
-      convert h1.sin.div_const u using 1
-      field_simp
-    have hcos : HasDerivAt (fun x : ℝ => Real.cos (x * u) / u ^ 2)
-        (-Real.sin (t * u) / u) t := by
-      convert h1.cos.div_const (u ^ 2) using 1
-      field_simp
-    have hid : HasDerivAt (fun x : ℝ => x) 1 t := hasDerivAt_id t
-    have hsum : HasDerivAt (fun x : ℝ => x * (Real.sin (x * u) / u) + Real.cos (x * u) / u ^ 2)
-        (1 * (Real.sin (t * u) / u) + t * Real.cos (t * u) + -Real.sin (t * u) / u) t :=
-      (hid.mul hsin).add hcos
-    convert hsum using 1
-    ring
-  have hcont : Continuous (fun t : ℝ => (1 * t) * Real.cos (t * u)) :=
-    (continuous_const.mul continuous_id).mul
-      (Real.continuous_cos.comp (continuous_id.mul continuous_const))
-  rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
-  simp only [zero_mul, Real.sin_zero, zero_div, Real.cos_zero, zero_add]
-  have hpi : π ≠ 0 := Real.pi_ne_zero
-  field_simp
 
 lemma cos_two_pi_mul_intCast (m : ℤ) : Real.cos (2 * π * (m : ℝ)) = 1 := by
   have h : 2 * π * (m : ℝ) = (m : ℝ) * (2 * π) := by ring
   rw [h, Real.cos_int_mul_two_pi]
-
-lemma sin_two_pi_mul_intCast (m : ℤ) : Real.sin (2 * π * (m : ℝ)) = 0 := by
-  have h : 2 * π * (m : ℝ) = ((2 * m : ℤ) : ℝ) * π := by push_cast; ring
-  rw [h, Real.sin_int_mul_pi]
 
 lemma fejerKernel_intCast_of_ne_zero {m : ℤ} (hm : m ≠ 0) :
     fejerKernel (m : ℝ) = 0 := by
@@ -423,8 +335,45 @@ lemma fejerSlopeKernel_intCast (m : ℤ) :
 
 lemma fejerSlopeKernelDeriv_intCast_of_ne_zero {m : ℤ} (hm : m ≠ 0) :
     fejerSlopeKernelDeriv (m : ℝ) = 0 := by
-  have hm' : (m : ℝ) ≠ 0 := Int.cast_ne_zero.mpr hm
-  rw [fejerSlopeKernelDeriv_eq_of_ne_zero hm', sin_two_pi_mul_intCast, cos_two_pi_mul_intCast]
+  have hu : (m : ℝ) ≠ 0 := Int.cast_ne_zero.mpr hm
+  have hS' : fejerSlopeKernelDeriv (m : ℝ) =
+      (2 * π * (m : ℝ) * Real.sin (2 * π * (m : ℝ)) + Real.cos (2 * π * (m : ℝ)) - 1) /
+        (2 * π ^ 2 * (m : ℝ) ^ 2) := by
+    unfold fejerSlopeKernelDeriv
+    have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
+        HasDerivAt (fun x : ℝ => x * (Real.sin (x * (m : ℝ)) / (m : ℝ)) +
+            Real.cos (x * (m : ℝ)) / (m : ℝ) ^ 2)
+          ((1 * t) * Real.cos (t * (m : ℝ))) t := by
+      intro t _
+      have h1 : HasDerivAt (fun x : ℝ => x * (m : ℝ)) (1 * (m : ℝ)) t :=
+        (hasDerivAt_id t).mul_const (m : ℝ)
+      have hsin : HasDerivAt (fun x : ℝ => Real.sin (x * (m : ℝ)) / (m : ℝ))
+          (Real.cos (t * (m : ℝ))) t := by
+        convert h1.sin.div_const (m : ℝ) using 1
+        field_simp
+      have hcos : HasDerivAt (fun x : ℝ => Real.cos (x * (m : ℝ)) / (m : ℝ) ^ 2)
+          (-Real.sin (t * (m : ℝ)) / (m : ℝ)) t := by
+        convert h1.cos.div_const ((m : ℝ) ^ 2) using 1
+        field_simp
+      have hid : HasDerivAt (fun x : ℝ => x) 1 t := hasDerivAt_id t
+      have hsum : HasDerivAt (fun x : ℝ => x * (Real.sin (x * (m : ℝ)) / (m : ℝ)) +
+            Real.cos (x * (m : ℝ)) / (m : ℝ) ^ 2)
+          (1 * (Real.sin (t * (m : ℝ)) / (m : ℝ)) + t * Real.cos (t * (m : ℝ)) +
+            -Real.sin (t * (m : ℝ)) / (m : ℝ)) t :=
+        (hid.mul hsin).add hcos
+      convert hsum using 1
+      ring
+    have hcont : Continuous (fun t : ℝ => (1 * t) * Real.cos (t * (m : ℝ))) :=
+      (continuous_const.mul continuous_id).mul
+        (Real.continuous_cos.comp (continuous_id.mul continuous_const))
+    rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
+    simp only [zero_mul, Real.sin_zero, zero_div, Real.cos_zero, zero_add]
+    have hpi : π ≠ 0 := Real.pi_ne_zero
+    field_simp
+  have hsin_int : Real.sin (2 * π * (m : ℝ)) = 0 := by
+    have h : 2 * π * (m : ℝ) = ((2 * m : ℤ) : ℝ) * π := by push_cast; ring
+    rw [h, Real.sin_int_mul_pi]
+  rw [hS', hsin_int, cos_two_pi_mul_intCast]
   ring
 
 @[simp]
@@ -432,7 +381,16 @@ lemma fejerKernelDeriv_intCast (m : ℤ) :
     fejerKernelDeriv (m : ℝ) = 0 := by
   rcases eq_or_ne m 0 with rfl | hm
   · simp
-  · have h := fejerSlopeKernelDeriv_eq_add (m : ℝ)
+  · have h1 := hasDerivAt_fejerSlopeKernel (m : ℝ)
+    have h2 : HasDerivAt (fun x => x * fejerKernel x)
+        (1 * fejerKernel (m : ℝ) + (m : ℝ) * fejerKernelDeriv (m : ℝ)) (m : ℝ) :=
+      (hasDerivAt_id (m : ℝ)).mul (hasDerivAt_fejerKernel (m : ℝ))
+    have heq : fejerSlopeKernel = fun x => x * fejerKernel x :=
+      funext fejerSlopeKernel_eq_mul_fejerKernel
+    rw [heq] at h1
+    have h : fejerSlopeKernelDeriv (m : ℝ) =
+        fejerKernel (m : ℝ) + (m : ℝ) * fejerKernelDeriv (m : ℝ) := by
+      linarith [h1.unique h2]
     rw [fejerSlopeKernelDeriv_intCast_of_ne_zero hm, fejerKernel_intCast_of_ne_zero hm,
       zero_add] at h
     exact (mul_eq_zero.mp h.symm).resolve_left (Int.cast_ne_zero.mpr hm)
@@ -471,7 +429,7 @@ lemma abs_fejerSlopeKernel_le (u : ℝ) : |fejerSlopeKernel u| ≤ 1 / π := by
       (continuous_const.mul (Real.continuous_sin.comp (continuous_id.mul continuous_const)))
       continuous_const (fun t _ => ?_)
     simpa using Real.abs_sin_le_one (t * u)
-  rw [integral_one_two_pi] at hle
+  simp only [intervalIntegral.integral_const, sub_zero, smul_eq_mul, mul_one] at hle
   have hpi : π ≠ 0 := Real.pi_ne_zero
   calc (2 * π ^ 2)⁻¹ * |∫ t in (0 : ℝ)..(2 * π), 1 * Real.sin (t * u)|
     ≤ (2 * π ^ 2)⁻¹ * (2 * π) := mul_le_mul_of_nonneg_left hle (by positivity)
@@ -492,7 +450,19 @@ lemma abs_fejerKernelDeriv2_le (u : ℝ) : |fejerKernelDeriv2 u| ≤ 2 * π ^ 2 
         -((2 * π - t) * t ^ 2) * Real.cos (t * u) := by ring
     rw [hrew, abs_mul, abs_neg, abs_of_nonneg hnonneg]
     exact mul_le_of_le_one_right hnonneg (Real.abs_cos_le_one _)
-  rw [integral_two_pi_sub_mul_sq] at hle
+  have hint : ∫ t in (0 : ℝ)..(2 * π), (2 * π - t) * t ^ 2 = 4 * π ^ 4 / 3 := by
+    have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
+        HasDerivAt (fun x : ℝ => 2 * π * (x ^ 3 / 3) - x ^ 4 / 4) ((2 * π - t) * t ^ 2) t := by
+      intro t _
+      have h1 := ((hasDerivAt_pow 3 t).div_const 3).const_mul (2 * π)
+      have h2 := (hasDerivAt_pow 4 t).div_const 4
+      convert h1.sub h2 using 1
+      ring
+    have hcont : Continuous (fun t : ℝ => (2 * π - t) * t ^ 2) :=
+      (continuous_const.sub continuous_id).mul (continuous_pow 2)
+    rw [integral_eq_sub_of_hasDerivAt hderiv (hcont.intervalIntegrable _ _)]
+    ring
+  rw [hint] at hle
   have hpi : π ≠ 0 := Real.pi_ne_zero
   calc (2 * π ^ 2)⁻¹ *
       |∫ t in (0 : ℝ)..(2 * π), (-((2 * π - t) * t) * t) * Real.cos (t * u)|
@@ -511,13 +481,25 @@ lemma abs_fejerSlopeKernelDeriv2_le (u : ℝ) : |fejerSlopeKernelDeriv2 u| ≤ 4
     have hrew : -((1 * t) * t) * Real.sin (t * u) = -(t ^ 2) * Real.sin (t * u) := by ring
     rw [hrew, abs_mul, abs_neg, abs_of_nonneg (sq_nonneg t)]
     exact mul_le_of_le_one_right (sq_nonneg t) (Real.abs_sin_le_one _)
-  rw [integral_sq_two_pi] at hle
+  have hint : ∫ t in (0 : ℝ)..(2 * π), t ^ 2 = 8 * π ^ 3 / 3 := by
+    have hderiv : ∀ t ∈ uIcc (0 : ℝ) (2 * π),
+        HasDerivAt (fun x : ℝ => x ^ 3 / 3) (t ^ 2) t := by
+      intro t _
+      convert (hasDerivAt_pow 3 t).div_const 3 using 1
+      ring
+    rw [integral_eq_sub_of_hasDerivAt hderiv ((continuous_pow 2).intervalIntegrable _ _)]
+    ring
+  rw [hint] at hle
   have hpi : π ≠ 0 := Real.pi_ne_zero
   calc (2 * π ^ 2)⁻¹ * |∫ t in (0 : ℝ)..(2 * π), -((1 * t) * t) * Real.sin (t * u)|
     ≤ (2 * π ^ 2)⁻¹ * (8 * π ^ 3 / 3) := mul_le_mul_of_nonneg_left hle (by positivity)
   _ = 4 * π / 3 := by field_simp; ring
 
-/-! ## 4. Fourier Difference Bounds and Bandlimited Pairing via Fubini -/
+/-! ## 4. Fourier Difference Bounds and Bandlimited Pairing via Fubini
+
+When the Fourier transforms of $\mu$ and $\nu$ differ by at most $\varepsilon$ on $[0, 2\pi]$,
+Fubini's theorem bounds both the off-lattice mass $\int \operatorname{dist}(u, \mathbb{Z})^2\thinspace d\mu
+\le \varepsilon / 4$ and the integrals of translated Fejér kernels against $\mu - \nu$. -/
 
 lemma integrable_of_continuous_bounded {ρ : Measure ℝ} [IsFiniteMeasure ρ]
     {f : ℝ → ℝ} (hf : Continuous f) {M : ℝ} (hb : ∀ u, |f u| ≤ M) :
@@ -611,36 +593,6 @@ lemma abs_integral_sin_sub_le {μ ν : Measure ℝ} [IsFiniteMeasure μ] [IsFini
   rw [← him]
   exact (Complex.abs_im_le_norm _).trans (norm_integral_exp_sub_shift_le a ht)
 
-lemma integral_one_sub_cos_two_pi_le {μ ν : Measure ℝ} [IsFiniteMeasure μ] [IsFiniteMeasure ν]
-    (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0) {ε : ℝ}
-    (h0 : ‖(∫ u : ℝ, Complex.exp (Complex.I * ((0 : ℝ) : ℂ) * (u : ℂ)) ∂μ) -
-      (∫ u : ℝ, Complex.exp (Complex.I * ((0 : ℝ) : ℂ) * (u : ℂ)) ∂ν)‖ ≤ ε)
-    (h2pi : ‖(∫ u : ℝ, Complex.exp (Complex.I * ((2 * π : ℝ) : ℂ) * (u : ℂ)) ∂μ) -
-      (∫ u : ℝ, Complex.exp (Complex.I * ((2 * π : ℝ) : ℂ) * (u : ℂ)) ∂ν)‖ ≤ ε) :
-    ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂μ ≤ 2 * ε := by
-  have hc0 := abs_integral_cos_sub_le 0 h0
-  simp only [sub_zero, zero_mul, Real.cos_zero] at hc0
-  have hc2pi := abs_integral_cos_sub_le 0 h2pi
-  simp only [sub_zero] at hc2pi
-  have hν_zero : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂ν = 0 := by
-    refine integral_eq_zero_of_forall_int_eq_zero hν (fun n => ?_)
-    rw [cos_two_pi_mul_intCast, sub_self]
-  have hint_one : ∀ ρ : Measure ℝ, [IsFiniteMeasure ρ] →
-      Integrable (fun _ : ℝ => (1 : ℝ)) ρ :=
-    fun ρ _ => integrable_const 1
-  have hint_cos : ∀ ρ : Measure ℝ, [IsFiniteMeasure ρ] →
-      Integrable (fun u : ℝ => Real.cos (2 * π * u)) ρ :=
-    fun ρ _ => integrable_of_continuous_bounded
-      (Real.continuous_cos.comp (continuous_const.mul continuous_id))
-      (fun u => Real.abs_cos_le_one (2 * π * u))
-  have hμ_sub : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂μ =
-      (∫ _ : ℝ, (1 : ℝ) ∂μ) - ∫ u : ℝ, Real.cos (2 * π * u) ∂μ :=
-    integral_sub (hint_one μ) (hint_cos μ)
-  have hν_sub : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂ν =
-      (∫ _ : ℝ, (1 : ℝ) ∂ν) - ∫ u : ℝ, Real.cos (2 * π * u) ∂ν :=
-    integral_sub (hint_one ν) (hint_cos ν)
-  linarith [abs_le.mp hc0, abs_le.mp hc2pi]
-
 lemma eight_mul_integral_distInt_sq_le {μ ν : Measure ℝ}
     [IsFiniteMeasure μ] [IsFiniteMeasure ν]
     (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0) {ε : ℝ}
@@ -654,15 +606,36 @@ lemma eight_mul_integral_distInt_sq_le {μ ν : Measure ℝ}
       ((1 / 2) ^ 2) (ae_of_all _ fun u => ?_)
     rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
     exact pow_le_pow_left₀ (distInt_nonneg u) (distInt_le_half u) 2
-  have hint_cos : Integrable (fun u : ℝ => 1 - Real.cos (2 * π * u)) μ :=
-    (integrable_const (1 : ℝ)).sub (integrable_of_continuous_bounded
+  have hint_one : ∀ ρ : Measure ℝ, [IsFiniteMeasure ρ] →
+      Integrable (fun _ : ℝ => (1 : ℝ)) ρ :=
+    fun ρ _ => integrable_const 1
+  have hint_cos_fn : ∀ ρ : Measure ℝ, [IsFiniteMeasure ρ] →
+      Integrable (fun u : ℝ => Real.cos (2 * π * u)) ρ :=
+    fun ρ _ => integrable_of_continuous_bounded
       (Real.continuous_cos.comp (continuous_const.mul continuous_id))
-      (fun u => Real.abs_cos_le_one (2 * π * u)))
+      (fun u => Real.abs_cos_le_one (2 * π * u))
+  have hint_cos : Integrable (fun u : ℝ => 1 - Real.cos (2 * π * u)) μ :=
+    (hint_one μ).sub (hint_cos_fn μ)
+  have h_one_sub_cos : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂μ ≤ 2 * ε := by
+    have hc0 := abs_integral_cos_sub_le 0 h0
+    simp only [sub_zero, zero_mul, Real.cos_zero] at hc0
+    have hc2pi := abs_integral_cos_sub_le 0 h2pi
+    simp only [sub_zero] at hc2pi
+    have hν_zero : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂ν = 0 := by
+      refine integral_eq_zero_of_forall_int_eq_zero hν (fun n => ?_)
+      rw [cos_two_pi_mul_intCast, sub_self]
+    have hμ_sub : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂μ =
+        (∫ _ : ℝ, (1 : ℝ) ∂μ) - ∫ u : ℝ, Real.cos (2 * π * u) ∂μ :=
+      integral_sub (hint_one μ) (hint_cos_fn μ)
+    have hν_sub : ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂ν =
+        (∫ _ : ℝ, (1 : ℝ) ∂ν) - ∫ u : ℝ, Real.cos (2 * π * u) ∂ν :=
+      integral_sub (hint_one ν) (hint_cos_fn ν)
+    linarith [abs_le.mp hc0, abs_le.mp hc2pi]
   calc 8 * ∫ u : ℝ, (distInt u) ^ 2 ∂μ
     = ∫ u : ℝ, 8 * (distInt u) ^ 2 ∂μ := (MeasureTheory.integral_const_mul 8 _).symm
   _ ≤ ∫ u : ℝ, (1 - Real.cos (2 * π * u)) ∂μ :=
       integral_mono (hint_dist.const_mul 8) hint_cos eight_mul_distInt_sq_le
-  _ ≤ 2 * ε := integral_one_sub_cos_two_pi_le hν h0 h2pi
+  _ ≤ 2 * ε := h_one_sub_cos
 
 lemma integral_intervalIntegral_swap {ρ : Measure ℝ} [IsFiniteMeasure ρ]
     {w : ℝ → ℝ} (hw : Continuous w) {M : ℝ}
@@ -816,17 +789,11 @@ lemma abs_integral_fejerSlopeKernel_sub_le {μ ν : Measure ℝ}
     ≤ (2 * π ^ 2)⁻¹ * (2 * π * ε) := mul_le_mul_of_nonneg_left hnorm (by positivity)
   _ = ε / π := by field_simp
 
-/-! ## 5. Second-Order Mean Value Remainder Bound at Nearest Integer -/
+/-! ## 5. Second-Order Mean Value Remainder Bound at Nearest Integer
 
-lemma abs_sub_le_of_mem_uIcc {a b x : ℝ} (hx : x ∈ uIcc a b) :
-    |x - a| ≤ |b - a| := by
-  rcases le_total a b with hab | hab
-  · rw [uIcc_of_le hab] at hx
-    rw [abs_of_nonneg (sub_nonneg.mpr hx.1), abs_of_nonneg (sub_nonneg.mpr hab)]
-    linarith [hx.2]
-  · rw [uIcc_of_ge hab] at hx
-    rw [abs_of_nonpos (sub_nonpos.mpr hx.2), abs_of_nonpos (sub_nonpos.mpr hab)]
-    linarith [hx.1]
+If a twice-differentiable remainder $R$ vanishes along with its first derivative at every integer,
+applying the mean value inequality twice on the interval between $u$ and $\operatorname{round}(u)$
+bounds $|R(u)| \le \Vert R''\Vert_\infty\thinspace\operatorname{dist}(u, \mathbb{Z})^2$. -/
 
 lemma abs_le_mul_distInt_sq_of_vanish_on_int {R R' R'' : ℝ → ℝ}
     {M₂ : ℝ} (hM₂ : 0 ≤ M₂)
@@ -846,14 +813,27 @@ lemma abs_le_mul_distInt_sq_of_vanish_on_int {R R' R'' : ℝ → ℝ}
       (fun y _ => by simpa [Real.norm_eq_abs] using hR'' y) ha hx
     rw [hR'_int (round u), sub_zero] at hstep
     refine hstep.trans (mul_le_mul_of_nonneg_left ?_ hM₂)
-    simpa [Real.norm_eq_abs, distInt, a] using abs_sub_le_of_mem_uIcc hx
+    rw [Real.norm_eq_abs]
+    dsimp [distInt, a]
+    dsimp [s, a] at hx
+    rcases le_total (round u : ℝ) u with hab | hab
+    · rw [uIcc_of_le hab] at hx
+      rw [abs_of_nonneg (sub_nonneg.mpr hx.1), abs_of_nonneg (sub_nonneg.mpr hab)]
+      linarith [hx.2]
+    · rw [uIcc_of_ge hab] at hx
+      rw [abs_of_nonpos (sub_nonpos.mpr hx.2), abs_of_nonpos (sub_nonpos.mpr hab)]
+      linarith [hx.1]
   have hstep2 := hs.norm_image_sub_le_of_norm_hasDerivWithin_le
     (fun y _ => (hR y).hasDerivWithinAt) hR'_bound ha hu
   rw [hR_int (round u), sub_zero, Real.norm_eq_abs, Real.norm_eq_abs] at hstep2
   calc |R u| ≤ (M₂ * distInt u) * |u - a| := hstep2
   _ = M₂ * (distInt u) ^ 2 := by unfold distInt a; ring
 
-/-! ## 6. Fejér–Hermite Interpolant and Main Measure Estimate -/
+/-! ## 6. Fejér–Hermite Interpolant and Main Measure Estimate
+
+For a test function $\psi$ supported in $[-N, N]$, we decompose $\psi = H + R$, where $H$ is the
+bandlimited Fejér–Hermite interpolant matching $\psi$ and $\psi'$ on $\mathbb{Z}$, and combine the
+Fourier pairing bound on $H$ with the quadratic distance bound on $R = \psi - H$. -/
 
 /-- The finite Fejér–Hermite interpolant of `ψ` on `[-N, N] ∩ ℤ`. -/
 noncomputable def hermiteInterp (N : ℕ) (ψ : ℝ → ℝ) (u : ℝ) : ℝ :=
@@ -1208,5 +1188,3 @@ theorem abs_integral_sub_le_of_fourier_bound {μ ν : Measure ℝ}
   unfold hermiteConstant
   dsimp [M₂] at hR_μ
   linarith
-
-end CFT.LightconeBootstrap

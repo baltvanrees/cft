@@ -3,7 +3,7 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.Transmute1d
+import CFT.LightconeBootstrap.LightconeBlock.Transmute1d
 import Mathlib.MeasureTheory.Function.JacobianOneDim
 
 /-!
@@ -51,8 +51,6 @@ $$
 
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped BigOperators ENNReal
-
-namespace CFT.ConeTauberian
 
 /-! ## Section 1: General Real Beta Integral & Change of Variables on `Ioo` -/
 
@@ -514,5 +512,3 @@ theorem tendsto_of_le_of_ge_approx {F : ℝ → ℝ} {L : ℝ}
   filter_upwards [h_sand, hm_ev, hp_ev] with Δ ⟨h1, h2⟩ hm hp
   rw [Real.dist_eq, abs_lt]
   exact ⟨by linarith, by linarith⟩
-
-end CFT.ConeTauberian

@@ -54,14 +54,12 @@ $$
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped BigOperators ENNReal
 
-namespace CFT.ConeTauberian
-
 /-! ## Section 1: 2D Bilaterally Transmuted Measures & Crossing Theorems -/
 
 /-- For each $\Delta \ge 1$, the rescaled 2D bilaterally transmuted OPE measure of
 `corr : FourPointData ν Δ_phi` on $(u_l, u_r) = (h'/\Delta, \bar{h}'/\Delta) \in \mathbb{R}^2$,
 normalized by $\Delta^{-2 - 4\Delta_\phi}$. -/
-noncomputable opaque _root_.FourPointData.transmutedMeasure2d {ν Δ_phi : ℝ}
+noncomputable opaque FourPointData.transmutedMeasure2d {ν Δ_phi : ℝ}
     (corr : FourPointData ν Δ_phi) (Δ : ℝ) : Measure (ℝ × ℝ)
 
 /-- For each $\Delta \ge 1$, the exact universal rescaled 2D bilaterally transmuted $t$-channel
@@ -71,7 +69,7 @@ noncomputable opaque transmutedIdentityMeasure2d (Δ_phi Δ : ℝ) : Measure (�
 variable {ν Δ_phi h_gap : ℝ} (corr : FourPointData ν Δ_phi)
 
 /-- Exponential integrability of `corr.transmutedMeasure2d Δ` at $(-1, -1)$ for all $\Delta \ge 1$. -/
-theorem _root_.FourPointData.integrable_transmutedMeasure2d
+theorem FourPointData.integrable_transmutedMeasure2d
     (_hν : 0 ≤ ν) (_hΔ : 0 < Δ_phi) {Δ : ℝ} (_hΔ1 : 1 ≤ Δ) :
     Integrable (fun p : ℝ × ℝ => Real.exp (-1 * (p.1 + p.2))) (corr.transmutedMeasure2d Δ) := by
   sorry
@@ -91,7 +89,7 @@ transforms of `corr.transmutedMeasure2d Δ` and the exact universal $t$-channel 
 `transmutedIdentityMeasure2d Δ_phi Δ` are uniformly bounded at $t_l = t_r = 0$ and agree on
 `freqBox R` up to the non-identity $t$-channel remainder
 $O\bigl(R^{4\Delta_\phi} \Delta^{-2 h_{\text{gap}}}\bigr)$ for all $\Delta \ge 1$. -/
-theorem _root_.FourPointData.exists_laplace2d_sub_identity_bound
+theorem FourPointData.exists_laplace2d_sub_identity_bound
     (_hν : 0 ≤ ν) (_hΔ : 0 < Δ_phi) (_hh_gap : 0 < h_gap)
     (_hgap : (corr.toMonomialFourPointData _hν).HasTwistGap h_gap) :
     ∃ M > 0, ∃ C_0 > 0, ∀ {Δ : ℝ}, 1 ≤ Δ →
@@ -118,7 +116,7 @@ $O(\Delta^{-\gamma})$ with exponent
 $$\gamma := \frac{2 h_{\text{gap}}}{4\Delta_\phi + 1} > 0$$
 controlled **purely by $2 h_{\text{gap}}$** (with no $\Delta^{-1}$ Stirling barrier and no
 $\Delta^{-2\Delta_\phi}$ outer-contour barrier). -/
-theorem _root_.FourPointData.exists_const_abs_transmuted2d_sub_identity_le
+theorem FourPointData.exists_const_abs_transmuted2d_sub_identity_le
     {C_g : ℝ} (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi) (hh_gap : 0 < h_gap)
     (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
     {ψ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ}
@@ -147,7 +145,7 @@ theorem _root_.FourPointData.exists_const_abs_transmuted2d_sub_identity_le
 /-- Asymptotic convergence corollary: as $\Delta \to \infty$, the difference
 between the rescaled 2D transmuted OPE pairing and the exact universal $t$-channel identity
 pairing tends to $0$. -/
-theorem _root_.FourPointData.tendsto_transmuted2d_sub_identity
+theorem FourPointData.tendsto_transmuted2d_sub_identity
     {C_g : ℝ} (hν : 0 ≤ ν) (hΔ : 0 < Δ_phi) (hh_gap : 0 < h_gap)
     (hgap : (corr.toMonomialFourPointData hν).HasTwistGap h_gap)
     {ψ : ℝ × ℝ → ℝ} {g : ℝ × ℝ → ℂ}
@@ -179,7 +177,7 @@ $$
   \int \chi\!\left(\frac{\Delta'}{\Delta},\, \frac{\ell}{\Delta'}\right)
   d\mu_{\text{OPE}}(\Delta', \ell).
 $$ -/
-noncomputable def _root_.FourPointData.primaryConePairing
+noncomputable def FourPointData.primaryConePairing
     (χ : ℝ × ℝ → ℝ) (Δ : ℝ) : ℝ :=
   Δ ^ (2 * ν - 4 * Δ_phi) *
     ∫ p : ℝ × ℕ, χ (p.1 / Δ, (p.2 : ℝ) / p.1) ∂corr.mu_measure
@@ -203,7 +201,7 @@ branching error between `corr.primaryConePairing χ Δ` and
 `∫ ψ d(corr.transmutedMeasure2d Δ)` and the universal Stirling error between
 `∫ ψ d(transmutedIdentityMeasure2d Δ_phi Δ)` and `continuumPrimaryPairing ν Δ_phi χ` are
 $O(\Delta^{-1})$. -/
-theorem _root_.FourPointData.exists_test2d_of_smooth_compactSupport
+theorem FourPointData.exists_test2d_of_smooth_compactSupport
     (_hν : 0 < ν) (_hΔ : 0 < Δ_phi)
     {χ : ℝ × ℝ → ℝ} (_hχ_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
     (_hχ_supp : HasCompactSupport χ)
@@ -227,7 +225,7 @@ reduction yields, with
 $$\gamma := \min\!\left(\frac{2 h_{\text{gap}}}{4\Delta_\phi + 1},\; 1\right) > 0,$$
 an explicit $O(\Delta^{-\gamma})$ bound between the rescaled unweighted primary OPE pairing and the
 continuum primary spectral density pairing for all $\Delta \ge 1$. -/
-theorem _root_.FourPointData.exists_const_abs_primaryCone_sub_le
+theorem FourPointData.exists_const_abs_primaryCone_sub_le
     (hν : 0 < ν) (hΔ : 0 < Δ_phi) (hh_gap : 0 < h_gap)
     (hgap : (corr.toMonomialFourPointData hν.le).HasTwistGap h_gap)
     {χ : ℝ × ℝ → ℝ} (hχ_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
@@ -290,7 +288,7 @@ $$
   = \int_0^\infty \int_0^1 \chi(u, \xi) \, \rho^{\text{prim}}_{\nu, \Delta_\phi}(u, \xi)
     \, d\xi \, du.
 $$ -/
-theorem _root_.FourPointData.tendsto_primaryConePairing
+theorem FourPointData.tendsto_primaryConePairing
     (hν : 0 < ν) (hΔ : 0 < Δ_phi) (hh_gap : 0 < h_gap)
     (hgap : (corr.toMonomialFourPointData hν.le).HasTwistGap h_gap)
     {χ : ℝ × ℝ → ℝ} (hχ_smooth : ContDiff ℝ (⊤ : ℕ∞) χ)
@@ -343,7 +341,7 @@ $$
 \operatorname{cumulativePrimaryWeight}(\text{corr}, \Delta) :=
   \int_{0 < \Delta' \le \Delta} d\mu_{\text{OPE}}(\Delta', \ell).
 $$ -/
-noncomputable def _root_.FourPointData.cumulativePrimaryWeight (Δ : ℝ) : ℝ :=
+noncomputable def FourPointData.cumulativePrimaryWeight (Δ : ℝ) : ℝ :=
   ∫ p : ℝ × ℕ, (Ioc (0 : ℝ) 1).indicator (fun _ => (1 : ℝ)) (p.1 / Δ) ∂corr.mu_measure
 
 /-- Smooth inner/outer approximation of the unit cylinder indicator `(0, 1] × [0, 1)` on the
@@ -351,7 +349,7 @@ unitary OPE cone: for every $\varepsilon > 0$, there exist smooth test functions
 compactly supported in $(0, \infty) \times (0, 1)$ that sandwich `corr.cumulativePrimaryWeight Δ`
 for large $\Delta$ and whose continuum integrals lie within $\varepsilon$ of
 `continuumPrimaryPairing ν Δ_phi unitCylinderIndicator`. -/
-theorem _root_.FourPointData.exists_smooth_sandwich_unitCylinder
+theorem FourPointData.exists_smooth_sandwich_unitCylinder
     (_hν : 0 < ν) (_hΔ : ν / 2 + 1 / 4 < Δ_phi) (_hh_gap : 0 < h_gap)
     (_hgap : (corr.toMonomialFourPointData _hν.le).HasTwistGap h_gap)
     {ε : ℝ} (_hε : 0 < ε) :
@@ -379,7 +377,7 @@ $$
   \operatorname{cumulativePrimaryWeight}(\text{corr}, \Delta)
   = \mathcal{C}^{\text{prim}}_\nu(\Delta_\phi).
 $$ -/
-theorem _root_.FourPointData.tendsto_cumulativePrimaryWeight
+theorem FourPointData.tendsto_cumulativePrimaryWeight
     (hν : 0 < ν) (hΔ : ν / 2 + 1 / 4 < Δ_phi) (hh_gap : 0 < h_gap)
     (hgap : (corr.toMonomialFourPointData hν.le).HasTwistGap h_gap) :
     Tendsto
@@ -396,5 +394,3 @@ theorem _root_.FourPointData.tendsto_cumulativePrimaryWeight
     corr.tendsto_primaryConePairing hν hΔ_pos hh_gap hgap hsm_m hsp_m hcn_m,
     corr.tendsto_primaryConePairing hν hΔ_pos hh_gap hgap hsm_p hsp_p hcn_p,
     hLm, hLp⟩
-
-end CFT.ConeTauberian

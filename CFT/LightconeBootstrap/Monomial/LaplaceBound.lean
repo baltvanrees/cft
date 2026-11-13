@@ -9,7 +9,7 @@ import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
 import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
-import CFT.LightconeBootstrap.Gap
+import CFT.LightconeBootstrap.Monomial.TwistGap
 
 /-!
 # Uniform Real-Axis Laplace Error Bounds for the Lightcone Bootstrap
@@ -40,8 +40,6 @@ This file establishes uniform quantitative error bounds on compact negative inte
 
 open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped ComplexConjugate
-
-namespace CFT.LightconeBootstrap
 
 /-!
 ## 1. Universal Asymptotic Spin-`J` Laplace Transform and Binomial Series
@@ -2528,5 +2526,3 @@ theorem exists_uniform_laplaceSpinReal_sub_identity_bounds {ν Δ_phi h_gap : �
           mul_le_mul_of_nonneg_right (le_max_right _ _) (by positivity)
 
 end MonomialFourPointData
-
-end CFT.LightconeBootstrap

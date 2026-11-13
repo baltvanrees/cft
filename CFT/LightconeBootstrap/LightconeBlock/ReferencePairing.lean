@@ -3,70 +3,66 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.QuantitativeLargeSpin
-import CFT.LightconeBootstrap.TransmutedEndpointBounds
+import CFT.LightconeBootstrap.MonomialBootstrap
+import CFT.LightconeBootstrap.LightconeBlock.EndpointBounds
 
 /-!
 # Exact Transmuted $t$-Channel Identity Reference ($S_0$ and $M^0_{2k}$)
 
-This file develops the exact 3-term transmuted $t$-channel identity reference and its spin-$2k$
-Fourier-Laplace projection and Tauberian pairing:
+When the 1D collinear block transmutation operator is applied directly to the $t$-channel identity
+contribution $\operatorname{crossFactor}(\Delta_\phi, w_l) \operatorname{crossFactor}(\Delta_\phi, w_r)$,
+the right-moving factor produces a 3-term linear combination of shifted binomial series rather than
+a single $(1 - e^{w_r})^{-(2\Delta_\phi + 1)}$ power. This file constructs that exact 3-term
+transmuted $t$-channel identity reference $S_0(\Delta_\phi, w_r)$, its spin-$2k$ spectral pairing
+$M^0_{2k}[\varphi]$, and the Tauberian bootstrap theorems comparing the $s$-channel lightcone-block
+measure against $M^0_{2k}[\varphi]$:
 
-1. **Pochhammer Identities & Exact Transmuted Coefficient (`exactTransmutedPochhammer`)**:
-   We define the 3-term linear combination of shifted Pochhammer coefficients
-$$
-\operatorname{exactTransmutedPochhammer}(\Delta_\phi, m) :=
-  \frac{(2\Delta_\phi + 1)_m}{m!} - \frac{(2\Delta_\phi)_m}{m!}
-    + \frac{\Delta_\phi - 1/2}{4\Delta_\phi} \frac{(2\Delta_\phi - 1)_m}{m!}
-$$
-   arising from termwise transmutation of the 1D GFF collinear block expansion of
-   $\operatorname{crossFactor}(\Delta_\phi, w_r)$.
-   We prove the exact single-term factorization for $m = k + 1 \ge 1$
-   (`exactTransmutedPochhammer_succ`):
-$$
-\operatorname{exactTransmutedPochhammer}(\Delta_\phi, k + 1) =
-  \frac{(\Delta_\phi + k + 1/2)^2}{2\Delta_\phi (k + 1)} \frac{(2\Delta_\phi)_k}{k!},
-$$
-   which is manifestly strictly positive for all $\Delta_\phi > 0$ and $m \ge 1$
-   (`exactTransmutedPochhammer_pos`, `exactTransmutedPochhammer_nonneg`).
-
-2. **Closed-Form Generating Function `crossFactorExactTransmuted` on `UcDisk`**:
-   We define the exact transmuted right-moving $t$-channel identity factor
-$$
-\operatorname{crossFactorExactTransmuted}(\Delta_\phi, w) :=
-  \operatorname{crossFactorTransmuted}(\Delta_\phi, w)
-    \left[1 - (1 - e^w) + \frac{\Delta_\phi - 1/2}{4\Delta_\phi}(1 - e^w)^2\right]
-$$
-   and prove its series expansion (`hasSum_crossFactorExactTransmuted`) on $\operatorname{UcDisk}$.
-
-3. **Exact Finite-Spin Reference Laplace Transform & Pairing
-   (`exactTransmutedIdentityLaplaceReal`, `exactTransmutedIdentityPairing`)**:
-   We define the exact finite-spin reference Laplace transform and test-function pairing using
-   `exactTransmutedPochhammer Δ_phi (n + K)` and prove that at spin $K = 2k$, their rescaled
-   difference from `transmutedIdentityPairing` and `transmutedUniversalPairing` is $O((2k)^{-1})$
-   (`exists_const_abs_exactTransmutedIdentityPairing_sub_transmutedIdentityPairing_le`,
-   `exists_const_abs_exactTransmutedIdentityPairing_sub_universal_le`).
-
-4. **Outer-Contour Bounds, Effective-Gap Monotonicity (`withGap`), and Inner-Transmutation
-   Crossing Assembly (`HasInnerTransmutedCrossing`)**:
-   We bound the outer-contour discrepancy of `crossIdentityExactTransmuted` on
-   $[-\pi, -\pi/2] \cup [\pi/2, \pi]$ via two-step angular integration by parts, define the
-   effective-gap restriction `LightconeBlockFourPointData.withGap` to avoid logarithmic resonances
-   at $2(h' - \Delta_\phi) \in \{0, 1\}$, and deduce the 1D lightcone-block bootstrap theorem
+1. **Section 1 (`exactTransmutedPochhammer`)**: Defines the 3-term transmuted Pochhammer combination
+   and proves its single-term factorization (`exactTransmutedPochhammer_succ`), which makes its
+   strict positivity for $m \ge 1$ manifest (`exactTransmutedPochhammer_pos`).
+2. **Section 2 (`crossFactorExactTransmuted`)**: Defines the closed-form right-moving generating
+   function $S_0(\Delta_\phi, w)$ on `UcDisk` and proves its power series expansion
+   (`hasSum_crossFactorExactTransmuted`).
+3. **Section 3 (`exactTransmutedIdentityLaplaceReal`, `exactTransmutedIdentityPairing`)**: Defines
+   the exact finite-spin reference Laplace transform, spectral pairing, and discrete atomic measure
+   (`exactTransmutedIdentityShiftedMeasure`), and proves their $O(K^{-1})$ proximity to the 1-term
+   and universal double-twist references.
+4. **Section 4 (`exactTransmutedIdentityProjSpin`, `exactTransmutedIdentityProjSpinFull`)**: Relates
+   the full $[-\pi, \pi]$ Fourier projection of `crossIdentityExactTransmuted` to
+   `exactTransmutedIdentityLaplaceReal` and bounds the outer-contour tail on
+   $[-\pi, -\pi/2] \cup [\pi/2, \pi]$.
+5. **Section 5 (`HasExactTransmutedCrossingGap`)**: Establishes the 1D lightcone-block Tauberian
+   bootstrap (`exists_const_abs_muLC_sub_exactIdentity_le`) from real-axis Laplace agreement with
+   `exactTransmutedIdentityLaplaceReal`.
+6. **Section 6 (`withGap`, `HasInnerTransmutedCrossing`)**: Introduces effective-gap restriction
+   `withGap` to bypass logarithmic endpoint resonances at $2(h' - \Delta_\phi) \in \lbrace 0, 1\rbrace$
+   and combines the folded inner-transmutation estimate with the outer-contour bound to prove
    `exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing`.
 -/
 
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped BigOperators ENNReal
 
-namespace CFT.LightconeBootstrap
+/-!
+## Section 1: Pochhammer Identities & `exactTransmutedPochhammer`
 
-/-! ## Section 1: Pochhammer Identities & `exactTransmutedPochhammer` -/
-
-lemma pochhammerCoeff_pos {a : ℝ} (ha : 0 < a) (n : ℕ) :
-    0 < pochhammerCoeff a n := by
-  dsimp [pochhammerCoeff]
-  exact div_pos (realPochhammer_pos ha n) (Nat.cast_pos.mpr (Nat.factorial_pos n))
+Termwise transmutation of the 1D collinear block expansion of $\operatorname{crossFactor}(\Delta_\phi, w_r)$
+replaces the binomial coefficient $\frac{(2\Delta_\phi)_m}{m!}$ by the 3-term linear combination
+$$
+\operatorname{exactTransmutedPochhammer}(\Delta_\phi, m) :=
+  \frac{(2\Delta_\phi + 1)_m}{m!} - \frac{(2\Delta_\phi)_m}{m!} +
+    \frac{\Delta_\phi - 1/2}{4\Delta_\phi} \frac{(2\Delta_\phi - 1)_m}{m!}.
+$$
+Using the shift identities `mul_pochhammerCoeff_add_one` and `pochhammerCoeff_succ_eq`, we prove in
+`exactTransmutedPochhammer_succ` that for $m = k + 1 \ge 1$ these three terms collapse into a single
+manifestly positive product:
+$$
+\operatorname{exactTransmutedPochhammer}(\Delta_\phi, k + 1) =
+  \frac{(\Delta_\phi + k + 1/2)^2}{2\Delta_\phi (k + 1)} \frac{(2\Delta_\phi)_k}{k!}.
+$$
+This factorization guarantees that the exact finite-spin reference measure at spin $K = 2k \ge 2$
+has strictly positive weights (`exactTransmutedPochhammer_pos`), as required by the Tauberian theorem.
+-/
 
 /-- Shifting the parameter $x \mapsto x + 1$ in `pochhammerCoeff`:
 $x \, \frac{(x + 1)_m}{m!} = (x + m) \, \frac{(x)_m}{m!}$. -/
@@ -97,8 +93,8 @@ lemma pochhammerCoeff_succ_eq (x : ℝ) (k : ℕ) :
 /-- The exact 3-term transmuted Pochhammer combination:
 $$
 \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m) :=
-  \frac{(2\Delta_\phi + 1)_m}{m!} - \frac{(2\Delta_\phi)_m}{m!}
-    + \frac{\Delta_\phi - 1/2}{4\Delta_\phi} \frac{(2\Delta_\phi - 1)_m}{m!}.
+  \frac{(2\Delta_\phi + 1)_m}{m!} - \frac{(2\Delta_\phi)_m}{m!} +
+    \frac{\Delta_\phi - 1/2}{4\Delta_\phi} \frac{(2\Delta_\phi - 1)_m}{m!}.
 $$ -/
 noncomputable def exactTransmutedPochhammer (Δ_phi : ℝ) (m : ℕ) : ℝ :=
   pochhammerCoeff (2 * Δ_phi + 1) m - pochhammerCoeff (2 * Δ_phi) m +
@@ -172,7 +168,8 @@ theorem exactTransmutedPochhammer_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {m : ℕ
   rw [exactTransmutedPochhammer_succ hΔ.ne' k]
   have h1 : 0 < Δ_phi + (k : ℝ) + 1 / 2 := by positivity
   have h2 : 0 < 2 * Δ_phi * ((k + 1 : ℕ) : ℝ) := by positivity
-  have h3 : 0 < pochhammerCoeff (2 * Δ_phi) k := pochhammerCoeff_pos (by positivity) k
+  have h3 : 0 < pochhammerCoeff (2 * Δ_phi) k :=
+    div_pos (realPochhammer_pos (by positivity) k) (Nat.cast_pos.mpr (Nat.factorial_pos k))
   positivity
 
 lemma exactTransmutedPochhammer_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {m : ℕ} (hm : 1 ≤ m) :
@@ -233,7 +230,109 @@ lemma abs_exactTransmutedPochhammer_sub_pochhammerCoeff_le {Δ_phi : ℝ} (hΔ :
         rw [abs_one, abs_of_nonneg h_ratio_nonneg]
     _ ≤ 1 + (Δ_phi - 1 / 2) ^ 2 / (4 * Δ_phi ^ 2) := by linarith
 
-/-! ## Section 2: Closed-Form Generating Function `crossFactorExactTransmuted` on `UcDisk` -/
+/-!
+## Section 2: Closed-Form Generating Functions `crossFactorTransmuted` and `crossFactorExactTransmuted` on `UcDisk`
+
+Summing the leading Pochhammer coefficients $(2\Delta_\phi + 1)_m / m!$ against
+$e^{(\Delta_\phi + m) w}$ produces the leading right-moving transmuted $t$-channel singularity
+`crossFactorTransmuted`. Summing the full 3-term `exactTransmutedPochhammer` coefficients yields the
+exact transmuted right-moving $t$-channel identity factor `crossFactorExactTransmuted`, obtained by
+multiplying `crossFactorTransmuted` by the quadratic polynomial $P_{\text{exact}}(\Delta_\phi, w)$
+in $(1 - e^w)$.
+-/
+
+/-- The leading right-moving transmuted $t$-channel crossing factor on $\operatorname{UcDisk}$:
+$$
+\operatorname{crossFactorTransmuted}(\Delta_\phi, w) :=
+  \frac{\Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2} \, 4^{\Delta_\phi} \,
+  e^{\Delta_\phi w} (1 - e^w)^{-(2\Delta_\phi + 1)}.
+$$ -/
+noncomputable def crossFactorTransmuted (Δ_phi : ℝ) (w : ℂ) : ℂ :=
+  ((Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi : ℝ) : ℂ) *
+    Complex.exp ((Δ_phi : ℂ) * w) * (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ))
+
+lemma continuousOn_crossFactorTransmuted (Δ_phi : ℝ) :
+    ContinuousOn (crossFactorTransmuted Δ_phi) UcDisk := by
+  intro w hw
+  have h_exp : DifferentiableAt ℂ (fun z => Complex.exp ((Δ_phi : ℂ) * z)) w :=
+    (differentiableAt_id.const_mul (Δ_phi : ℂ)).cexp
+  have h_sub : DifferentiableAt ℂ (fun z => 1 - Complex.exp z) w :=
+    (differentiableAt_const 1).sub differentiableAt_id.cexp
+  have h_cpow :
+      DifferentiableAt ℂ
+        (fun z => (1 - Complex.exp z) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ))) w :=
+    h_sub.cpow_const (one_sub_exp_mem_slitPlane hw)
+  exact ((h_exp.const_mul _).mul h_cpow).continuousAt.continuousWithinAt
+
+/-- Exact modulus of `crossFactorTransmuted Δ_phi w` for $w \in \operatorname{UcDisk}$. -/
+theorem norm_crossFactorTransmuted_eq {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) {w : ℂ} (hw : w ∈ UcDisk) :
+    ‖crossFactorTransmuted Δ_phi w‖ =
+      (Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi) *
+        Real.exp (Δ_phi * w.re) * ‖1 - Complex.exp w‖ ^ (- (2 * Δ_phi + 1)) := by
+  dsimp [crossFactorTransmuted]
+  have hG1 : 0 < Real.Gamma (2 * Δ_phi + 1) := Real.Gamma_pos_of_pos (by positivity)
+  have hG2 : 0 < Real.Gamma Δ_phi := Real.Gamma_pos_of_pos hΔ
+  rw [norm_mul, norm_mul, Complex.norm_real,
+    Real.norm_of_nonneg (by positivity), Complex.norm_exp]
+  have hexp_re : ((Δ_phi : ℂ) * w).re = Δ_phi * w.re := by simp [Complex.mul_re]
+  have h1q_ne : 1 - Complex.exp w ≠ 0 :=
+    slitPlane_ne_zero (one_sub_exp_mem_slitPlane hw)
+  have h1q :
+      ‖(1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ))‖ =
+        ‖1 - Complex.exp w‖ ^ (- (2 * Δ_phi + 1)) := by
+    rw [cpow_def_of_ne_zero h1q_ne, Complex.norm_exp]
+    have hre : (Complex.log (1 - Complex.exp w) * -((2 * Δ_phi + 1 : ℝ) : ℂ)).re =
+        Real.log ‖1 - Complex.exp w‖ * (- (2 * Δ_phi + 1)) := by
+      simp [Complex.mul_re, Complex.log_re]
+    rw [hre, Real.rpow_def_of_pos (norm_pos_iff.mpr h1q_ne)]
+  rw [hexp_re, h1q]
+
+/-- Upper bound on $\|\operatorname{crossFactorTransmuted}(\Delta_\phi, w)\|$ when
+$\operatorname{Re}(w) \le a < 0$. -/
+theorem norm_crossFactorTransmuted_le_of_re_le {Δ_phi a : ℝ} (hΔ : 0 < Δ_phi) (ha : a < 0)
+    {w : ℂ} (hw : w ∈ UcDisk) (hwa : w.re ≤ a) :
+    ‖crossFactorTransmuted Δ_phi w‖ ≤
+      (Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi) *
+        (1 - Real.exp a) ^ (- (2 * Δ_phi + 1)) := by
+  rw [norm_crossFactorTransmuted_eq hΔ hw]
+  have hG1 : 0 < Real.Gamma (2 * Δ_phi + 1) := Real.Gamma_pos_of_pos (by positivity)
+  have hG2 : 0 < Real.Gamma Δ_phi := Real.Gamma_pos_of_pos hΔ
+  have hexp_le1 : Real.exp (Δ_phi * w.re) ≤ 1 :=
+    Real.exp_le_one_iff.mpr (mul_nonpos_of_nonneg_of_nonpos hΔ.le (hwa.trans ha.le))
+  have h1a_pos : 0 < 1 - Real.exp a := sub_pos.mpr (Real.exp_lt_one_iff.mpr ha)
+  have h1w_ge : 1 - Real.exp a ≤ ‖1 - Complex.exp w‖ := by
+    calc
+      1 - Real.exp a ≤ 1 - Real.exp w.re := sub_le_sub_left (Real.exp_le_exp.mpr hwa) 1
+      _ = ‖(1 : ℂ)‖ - ‖Complex.exp w‖ := by rw [norm_one, Complex.norm_exp]
+      _ ≤ ‖(1 : ℂ) - Complex.exp w‖ := norm_sub_norm_le 1 (Complex.exp w)
+  have hrpow_le :
+      ‖1 - Complex.exp w‖ ^ (- (2 * Δ_phi + 1)) ≤ (1 - Real.exp a) ^ (- (2 * Δ_phi + 1)) :=
+    Real.rpow_le_rpow_of_nonpos h1a_pos h1w_ge (by linarith)
+  calc
+    (Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi) *
+        Real.exp (Δ_phi * w.re) * ‖1 - Complex.exp w‖ ^ (- (2 * Δ_phi + 1))
+      ≤ (Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi) * 1 *
+          (1 - Real.exp a) ^ (- (2 * Δ_phi + 1)) :=
+        mul_le_mul (mul_le_mul_of_nonneg_left hexp_le1 (by positivity))
+          hrpow_le (by positivity) (by positivity)
+    _ = (Real.Gamma (2 * Δ_phi + 1) / (Real.Gamma Δ_phi) ^ 2 * (4 : ℝ) ^ Δ_phi) *
+          (1 - Real.exp a) ^ (- (2 * Δ_phi + 1)) := by ring
+
+/-- Real binomial series expansion for the domination of `crossFactorTransmuted Δ_phi`. -/
+lemma hasSum_exp_mul_one_sub_exp_rpow_neg_transmuted (Δ_phi : ℝ) {σ : ℝ} (hσ : σ < 0) :
+    HasSum
+      (fun m : ℕ =>
+        pochhammerCoeff (2 * Δ_phi + 1) m * Real.exp ((Δ_phi + (m : ℝ)) * σ))
+      (Real.exp (Δ_phi * σ) * (1 - Real.exp σ) ^ (- (2 * Δ_phi + 1))) := by
+  have h_abs : |Real.exp σ| < 1 := by
+    rw [abs_of_pos (Real.exp_pos σ)]
+    exact Real.exp_lt_one_iff.mpr hσ
+  have h_sum :=
+    (hasSum_one_sub_rpow_neg (2 * Δ_phi + 1) h_abs).mul_left (Real.exp (Δ_phi * σ))
+  refine h_sum.congr_fun fun m => ?_
+  rw [← mul_left_comm, ← Real.exp_nat_mul, ← Real.exp_add]
+  congr 2
+  ring
 
 /-- The 3-term polynomial factor in $(1 - e^w)$ converting `crossFactorTransmuted` into the exact
 transmuted $t$-channel identity reference $S_0(w)$:
@@ -344,7 +443,143 @@ lemma hasSum_crossFactorExactTransmuted (Δ_phi : ℝ) {w : ℂ} (hw : w ∈ UcD
   push_cast
   ring
 
-/-! ## Section 3: Exact Finite-Spin Transmuted Reference Laplace Transform & Pairing -/
+/-!
+## Section 3: Exact Finite-Spin Transmuted Reference Laplace Transform & Pairing
+
+At spin $K = 2k$, projecting `crossIdentityExactTransmuted` onto its $K$-th right-moving Fourier
+mode replaces $(2\Delta_\phi + 1)_{n+K} / (n+K)!$ in the 1-term reference by
+`exactTransmutedPochhammer Δ_phi (n + K)`. This section defines the universal, 1-term, and exact
+finite-spin transmuted Laplace transforms (`transmutedUniversalLaplaceReal`,
+`transmutedIdentityLaplaceReal`, `exactTransmutedIdentityLaplaceReal`), their spectral
+test-function pairings (`transmutedUniversalPairing`, `transmutedIdentityPairing`,
+`exactTransmutedIdentityPairing`), and the discrete atomic measure
+(`exactTransmutedIdentityShiftedMeasure`), and shows that their rescaled discrepancy from the
+1-term and universal double-twist references is uniformly $O(K^{-1})$.
+-/
+
+/-- The positive Gamma ratio $\frac{\Gamma(2\Delta_\phi)}{\Gamma(\Delta_\phi)^2} > 0$ relating the
+transmuted primary normalization to the monomial normalization. -/
+noncomputable def transmutedRatio (Δ_phi : ℝ) : ℝ :=
+  Real.Gamma (2 * Δ_phi) / (Real.Gamma Δ_phi) ^ 2
+
+lemma transmutedRatio_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) :
+    0 < transmutedRatio Δ_phi := by
+  unfold transmutedRatio
+  have h1 : 0 < Real.Gamma (2 * Δ_phi) := Real.Gamma_pos_of_pos (by positivity)
+  have h2 : 0 < Real.Gamma Δ_phi := Real.Gamma_pos_of_pos hΔ
+  positivity
+
+/-- Leading-twist ($n = 0$, $h = \Delta_\phi$) universal GFF lightcone-block primary coefficient:
+$$
+C^{\text{GFF, LC}}_0(\Delta_\phi) := \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2}
+  = \operatorname{transmutedRatio}(\Delta_\phi) \cdot
+    \operatorname{universalCoeff}(\Delta_\phi, 0).
+$$ -/
+noncomputable def universalPrimaryLeadingCoeff (Δ_phi : ℝ) : ℝ :=
+  2 * (4 : ℝ) ^ (2 * Δ_phi) / (Real.Gamma Δ_phi) ^ 2
+
+lemma universalPrimaryLeadingCoeff_pos {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) :
+    0 < universalPrimaryLeadingCoeff Δ_phi := by
+  unfold universalPrimaryLeadingCoeff
+  have h : 0 < Real.Gamma Δ_phi := Real.Gamma_pos_of_pos hΔ
+  positivity
+
+/-- The transmuted universal large-spin Laplace transform on the negative real axis $\sigma < 0$:
+$$
+\operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma) :=
+  \frac{2 \cdot 4^{2\Delta_\phi}}{\Gamma(\Delta_\phi)^2} e^{\Delta_\phi \sigma}
+    (1 - e^\sigma)^{-2\Delta_\phi}
+  = \operatorname{transmutedRatio}(\Delta_\phi) \cdot
+    \operatorname{universalLaplaceReal}(\Delta_\phi, \sigma).
+$$ -/
+noncomputable def transmutedUniversalLaplaceReal (Δ_phi σ : ℝ) : ℝ :=
+  transmutedRatio Δ_phi * universalLaplaceReal Δ_phi σ
+
+lemma transmutedUniversalLaplaceReal_eq (Δ_phi : ℝ) {σ : ℝ} (hΔ : 0 < Δ_phi) :
+    transmutedUniversalLaplaceReal Δ_phi σ =
+      universalPrimaryLeadingCoeff Δ_phi *
+        Real.exp (Δ_phi * σ) * (1 - Real.exp σ) ^ (- (2 * Δ_phi)) := by
+  dsimp [transmutedUniversalLaplaceReal, transmutedRatio, universalLaplaceReal,
+    universalPrimaryLeadingCoeff]
+  have hG : Real.Gamma (2 * Δ_phi) ≠ 0 := (Real.Gamma_pos_of_pos (by positivity)).ne'
+  field_simp
+
+lemma transmutedUniversalLaplaceReal_nonneg {Δ_phi σ : ℝ} (hΔ : 0 < Δ_phi) (hσ : σ < 0) :
+    0 ≤ transmutedUniversalLaplaceReal Δ_phi σ :=
+  mul_nonneg (transmutedRatio_pos hΔ).le (universalLaplaceReal_nonneg hΔ hσ)
+
+/-- The 1-term finite-spin transmuted $t$-channel identity Laplace transform at spin $K = 2k$:
+$$
+\operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma) :=
+  \frac{2 \cdot 4^{2\Delta_\phi} \Gamma(2\Delta_\phi + 1)}{\Gamma(\Delta_\phi)^2}
+  e^{\Delta_\phi \sigma} \sum_{n=0}^{\infty} \frac{(2\Delta_\phi)_n}{n!}
+    \frac{(2\Delta_\phi + 1)_{n + K}}{(n + K)!} e^{n \sigma}.
+$$ -/
+noncomputable def transmutedIdentityLaplaceReal (Δ_phi : ℝ) (K : ℕ) (σ : ℝ) : ℝ :=
+  universalPrimaryLeadingCoeff Δ_phi * Real.Gamma (2 * Δ_phi + 1) * Real.exp (Δ_phi * σ) *
+    ∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n * pochhammerCoeff (2 * Δ_phi + 1) (n + K) *
+      (Real.exp σ) ^ n
+
+lemma transmutedIdentityLaplaceReal_nonneg {Δ_phi : ℝ} (hΔ : 0 < Δ_phi) (K : ℕ) (σ : ℝ) :
+    0 ≤ transmutedIdentityLaplaceReal Δ_phi K σ := by
+  unfold transmutedIdentityLaplaceReal
+  have h1 : 0 < universalPrimaryLeadingCoeff Δ_phi := universalPrimaryLeadingCoeff_pos hΔ
+  have h2 : 0 < Real.Gamma (2 * Δ_phi + 1) := Real.Gamma_pos_of_pos (by positivity)
+  refine mul_nonneg (by positivity) (tsum_nonneg fun n => ?_)
+  exact mul_nonneg
+    (mul_nonneg (pochhammerCoeff_nonneg (by positivity) n)
+      (pochhammerCoeff_nonneg (by positivity) (n + K)))
+    (by positivity)
+
+/-- **Uniform $O(K^{-1})$ Convergence of `transmutedIdentityLaplaceReal` to
+`transmutedUniversalLaplaceReal` for All $\Delta_\phi > 0$**:
+For every $\Delta_\phi > 0$ and $\sigma_+ < 0$, there exists $C \ge 0$ such that for all $K \ge 1$
+and all $\sigma \le \sigma_+$,
+$$
+\left|K^{-2\Delta_\phi} \operatorname{transmutedIdentityLaplaceReal}(\Delta_\phi, K, \sigma)
+  - \operatorname{transmutedUniversalLaplaceReal}(\Delta_\phi, \sigma)\right| \le \frac{C}{K}.
+$$ -/
+theorem exists_uniform_bound_transmutedIdentityLaplaceReal_sub_universal
+    {Δ_phi σ_plus : ℝ} (hΔ : 0 < Δ_phi) (hσ_plus : σ_plus < 0) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ {K : ℕ}, 1 ≤ K → ∀ {σ : ℝ}, σ ≤ σ_plus →
+      |(K : ℝ) ^ (- (2 * Δ_phi)) * transmutedIdentityLaplaceReal Δ_phi K σ -
+        transmutedUniversalLaplaceReal Δ_phi σ| ≤ C / (K : ℝ) := by
+  have ha : 0 < 2 * Δ_phi := by positivity
+  have hb : 0 < 2 * Δ_phi + 1 := by positivity
+  obtain ⟨C₁, hC₁_nonneg, hC₁⟩ :=
+    exists_uniform_bound_tsum_pochhammerCoeff_mixed_sub ha hb hσ_plus
+  set pref : ℝ := universalPrimaryLeadingCoeff Δ_phi * Real.Gamma (2 * Δ_phi + 1)
+  have hpref_pos : 0 < pref :=
+    mul_pos (universalPrimaryLeadingCoeff_pos hΔ) (Real.Gamma_pos_of_pos hb)
+  refine ⟨pref * C₁, mul_nonneg hpref_pos.le hC₁_nonneg, fun {K} hK {σ} hσ => ?_⟩
+  have hσ_neg : σ < 0 := lt_of_le_of_lt hσ hσ_plus
+  have h_exp_le1 : Real.exp (Δ_phi * σ) ≤ 1 :=
+    Real.exp_le_one_iff.mpr (mul_nonpos_of_nonneg_of_nonpos hΔ.le hσ_neg.le)
+  have h_pow : 1 - (2 * Δ_phi + 1) = - (2 * Δ_phi) := by ring
+  have hG_ne : Real.Gamma (2 * Δ_phi + 1) ≠ 0 := (Real.Gamma_pos_of_pos hb).ne'
+  have h_factor :
+      (K : ℝ) ^ (- (2 * Δ_phi)) * transmutedIdentityLaplaceReal Δ_phi K σ -
+        transmutedUniversalLaplaceReal Δ_phi σ =
+      (pref * Real.exp (Δ_phi * σ)) *
+        ((K : ℝ) ^ (1 - (2 * Δ_phi + 1)) *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n *
+              pochhammerCoeff (2 * Δ_phi + 1) (n + K) * (Real.exp σ) ^ n) -
+          (Real.Gamma (2 * Δ_phi + 1))⁻¹ * (1 - Real.exp σ) ^ (- (2 * Δ_phi))) := by
+    rw [h_pow, transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
+    dsimp [transmutedIdentityLaplaceReal, pref]
+    field_simp
+  rw [h_factor, abs_mul, abs_of_pos (mul_pos hpref_pos (Real.exp_pos _))]
+  calc
+    pref * Real.exp (Δ_phi * σ) *
+        |(K : ℝ) ^ (1 - (2 * Δ_phi + 1)) *
+            (∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n *
+              pochhammerCoeff (2 * Δ_phi + 1) (n + K) * (Real.exp σ) ^ n) -
+          (Real.Gamma (2 * Δ_phi + 1))⁻¹ * (1 - Real.exp σ) ^ (- (2 * Δ_phi))|
+      ≤ (pref * 1) * (C₁ / (K : ℝ)) :=
+        mul_le_mul
+          (mul_le_mul_of_nonneg_left h_exp_le1 hpref_pos.le)
+          (hC₁ hK hσ) (abs_nonneg _) (mul_pos hpref_pos zero_lt_one).le
+    _ = (pref * C₁) / (K : ℝ) := by ring
 
 /-- Exact finite-spin 1-term transmuted $t$-channel identity pairing at spin $K = 2k$:
 $$
@@ -726,6 +961,45 @@ lemma pochhammerCoeff_le_div_mul_pochhammerCoeff_add_one {Δ_phi : ℝ} (hΔ : 0
     (div_le_div_of_nonneg_left (by positivity) hm_pos (by linarith))
     (pochhammerCoeff_nonneg (by positivity) m)
 
+/-- Monotonicity of `transmutedUniversalLaplaceReal Δ_phi` on `(-∞, 0)`. -/
+lemma transmutedUniversalLaplaceReal_mono {Δ_phi σ σ_plus : ℝ} (hΔ : 0 < Δ_phi)
+    (hσ : σ ≤ σ_plus) (hσ_plus : σ_plus < 0) :
+    transmutedUniversalLaplaceReal Δ_phi σ ≤ transmutedUniversalLaplaceReal Δ_phi σ_plus := by
+  have hσ_neg : σ < 0 := lt_of_le_of_lt hσ hσ_plus
+  rw [transmutedUniversalLaplaceReal_eq Δ_phi hΔ, transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
+  have h1 : Real.exp (Δ_phi * σ) ≤ Real.exp (Δ_phi * σ_plus) :=
+    Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left hσ hΔ.le)
+  have h2 : 1 - Real.exp σ_plus ≤ 1 - Real.exp σ :=
+    sub_le_sub_left (Real.exp_le_exp.mpr hσ) 1
+  have h1_σ : 0 < 1 - Real.exp σ := sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ_neg)
+  have h3 : (1 - Real.exp σ) ^ (- (2 * Δ_phi)) ≤ (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
+    Real.rpow_le_rpow_of_nonpos
+      (sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ_plus)) h2 (by linarith)
+  exact mul_le_mul
+    (mul_le_mul_of_nonneg_left h1 (universalPrimaryLeadingCoeff_pos hΔ).le)
+    h3 (by positivity)
+    (mul_nonneg (universalPrimaryLeadingCoeff_pos hΔ).le (Real.exp_pos _).le)
+
+/-- Explicit upper bound on `transmutedUniversalLaplaceReal Δ_phi σ` for `σ ≤ σ_plus < 0`. -/
+lemma transmutedUniversalLaplaceReal_le_of_le {Δ_phi σ σ_plus : ℝ} (hΔ : 0 < Δ_phi)
+    (hσ : σ ≤ σ_plus) (hσ_plus : σ_plus < 0) :
+    transmutedUniversalLaplaceReal Δ_phi σ ≤
+      universalPrimaryLeadingCoeff Δ_phi * (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) := by
+  refine (transmutedUniversalLaplaceReal_mono hΔ hσ hσ_plus).trans ?_
+  rw [transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
+  have hexp_le1 : Real.exp (Δ_phi * σ_plus) ≤ 1 :=
+    Real.exp_le_one_iff.mpr (mul_nonpos_of_nonneg_of_nonpos hΔ.le hσ_plus.le)
+  have h1_exp_pos : 0 < 1 - Real.exp σ_plus := sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ_plus)
+  calc
+    universalPrimaryLeadingCoeff Δ_phi * Real.exp (Δ_phi * σ_plus) *
+        (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi))
+      ≤ (universalPrimaryLeadingCoeff Δ_phi * 1) *
+          (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
+        mul_le_mul_of_nonneg_right
+          (mul_le_mul_of_nonneg_left hexp_le1 (universalPrimaryLeadingCoeff_pos hΔ).le)
+          (Real.rpow_pos_of_pos h1_exp_pos _).le
+    _ = universalPrimaryLeadingCoeff Δ_phi * (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) := by ring
+
 /-- **Uniform $O(K^{-1})$ Proximity of `exactTransmutedIdentityLaplaceReal` and
 `transmutedIdentityLaplaceReal` on $(-\infty, \sigma_+]$**:
 For every $\Delta_\phi > 0$ and $\sigma_+ < 0$, there exists $C \ge 0$ such that for all $K \ge 1$
@@ -842,21 +1116,7 @@ theorem exists_uniform_bound_exactTransmutedIdentityLaplaceReal_sub_transmutedId
       _ = (2 * Δ_phi * κ / (K : ℝ)) *
             (pref * ∑' n : ℕ, pochhammerCoeff (2 * Δ_phi) n *
               pochhammerCoeff (2 * Δ_phi + 1) (n + K) * (Real.exp σ) ^ n) := by ring
-  have h_univ_mono :
-      transmutedUniversalLaplaceReal Δ_phi σ ≤ transmutedUniversalLaplaceReal Δ_phi σ_plus := by
-    rw [transmutedUniversalLaplaceReal_eq Δ_phi hΔ, transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
-    have h1 : Real.exp (Δ_phi * σ) ≤ Real.exp (Δ_phi * σ_plus) :=
-      Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_left hσ hΔ.le)
-    have h2 : 1 - Real.exp σ_plus ≤ 1 - Real.exp σ :=
-      sub_le_sub_left (Real.exp_le_exp.mpr hσ) 1
-    have h1_σ : 0 < 1 - Real.exp σ := sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ_neg)
-    have h3 : (1 - Real.exp σ) ^ (- (2 * Δ_phi)) ≤ (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
-      Real.rpow_le_rpow_of_nonpos
-        (sub_pos.mpr (Real.exp_lt_one_iff.mpr hσ_plus)) h2 (by linarith)
-    exact mul_le_mul
-      (mul_le_mul_of_nonneg_left h1 (universalPrimaryLeadingCoeff_pos hΔ).le)
-      h3 (by positivity)
-      (mul_nonneg (universalPrimaryLeadingCoeff_pos hΔ).le (Real.exp_pos _).le)
+  have h_univ_mono := transmutedUniversalLaplaceReal_mono hΔ hσ hσ_plus
   have h_trans_le :
       (K : ℝ) ^ (- (2 * Δ_phi)) * transmutedIdentityLaplaceReal Δ_phi K σ ≤ L_max := by
     have h1 := (le_abs_self _).trans (hC₁ hK hσ)
@@ -1000,7 +1260,18 @@ lemma integral_shiftedTest_exactTransmutedIdentityShiftedMeasure {Δ_phi : ℝ} 
   simp_rw [mul_assoc]
   rw [tsum_mul_left, tsum_mul_left, tsum_mul_left]
 
-/-! ## Section 4: Fourier Projections & Outer-Contour Bounds for `crossIdentityExactTransmuted` -/
+/-!
+## Section 4: Fourier Projections & Outer-Contour Bounds for `crossIdentityExactTransmuted`
+
+To connect the real-axis Laplace series `exactTransmutedIdentityLaplaceReal` with the folded
+$[-\pi/2, \pi/2]$ inner-transmutation contour integral from `TransmutedEndpointBounds.lean`, we
+define both the folded projection `exactTransmutedIdentityProjSpin` on $[-\pi/2, \pi/2]$ and the
+full projection `exactTransmutedIdentityProjSpinFull` on $[-\pi, \pi]$. By termwise Fourier
+orthogonality on $[-\pi, \pi]$, `exactTransmutedIdentityProjSpinFull` equals
+`exactTransmutedIdentityLaplaceReal` on the negative real axis, while on the outer arcs
+$\theta \in [-\pi, -\pi/2] \cup [\pi/2, \pi]$ where $\cos\theta \le 0$ the integrand is uniformly
+bounded, so the rescaled difference between the full and folded projections is $O(K^{-2\Delta_\phi})$.
+-/
 
 /-- The folded $[-\pi/2, \pi/2]$ Fourier projection of `crossIdentityExactTransmuted Δ_phi`:
 $$
@@ -1575,214 +1846,17 @@ theorem exists_uniform_bound_exactTransmutedIdentityProjSpinFull_sub_exactTransm
         mul_le_mul_of_nonneg_left h_sum_int (by positivity)
     _ = M_id * (K : ℝ) ^ (- (2 * Δ_phi)) := by ring
 
-/-! ## Section 5: Differential Identities & Bootstrap Against `exactTransmutedIdentityPairing` -/
+/-!
+## Section 5: Tauberian Bootstrap Against `exactTransmutedIdentityPairing`
 
-/-- **Mode Identity Relating `pochhammerCoeff (2 * Δ_phi - 1) m` and `exactTransmutedPochhammer`**:
-For all $\Delta_\phi \ne 0$ and $m \in \mathbb{N}$,
-$$
-\left(\Delta_\phi + m - \frac{1}{2}\right)^2 \frac{(2\Delta_\phi - 1)_m}{m!} =
-  2\Delta_\phi (2\Delta_\phi - 1) \, \operatorname{exactTransmutedPochhammer}(\Delta_\phi, m).
-$$
-This reflects the action of $\bigl(\partial_w - \tfrac{1}{2}\bigr)^2$ on the modes
-$e^{(\Delta_\phi + m) w}$ of $e^{\Delta_\phi w} (1 - e^w)^{-(2\Delta_\phi - 1)}$. -/
-theorem sq_sub_half_mul_pochhammerCoeff_eq {Δ_phi : ℝ} (hΔ : Δ_phi ≠ 0) (m : ℕ) :
-    (Δ_phi + (m : ℝ) - 1 / 2) ^ 2 * pochhammerCoeff (2 * Δ_phi - 1) m =
-      2 * Δ_phi * (2 * Δ_phi - 1) * exactTransmutedPochhammer Δ_phi m := by
-  induction m with
-  | zero =>
-    simp only [Nat.cast_zero, add_zero, pochhammerCoeff_zero, mul_one,
-      exactTransmutedPochhammer_zero]
-    field_simp
-    ring
-  | succ k _ =>
-    have hk1_pos : (0 : ℝ) < ((k + 1 : ℕ) : ℝ) := by positivity
-    have hk1_ne : ((k + 1 : ℕ) : ℝ) ≠ 0 := hk1_pos.ne'
-    apply mul_left_cancel₀ hk1_ne
-    have h_p := pochhammerCoeff_succ_eq (2 * Δ_phi - 1) k
-    have h_add : 2 * Δ_phi - 1 + 1 = 2 * Δ_phi := by ring
-    rw [h_add] at h_p
-    rw [exactTransmutedPochhammer_succ hΔ k]
-    have h_div :
-        ((k + 1 : ℕ) : ℝ) *
-          (2 * Δ_phi * (2 * Δ_phi - 1) *
-            ((Δ_phi + (k : ℝ) + 1 / 2) ^ 2 / (2 * Δ_phi * ((k + 1 : ℕ) : ℝ)) *
-              pochhammerCoeff (2 * Δ_phi) k)) =
-        (Δ_phi + (k : ℝ) + 1 / 2) ^ 2 * (2 * Δ_phi - 1) * pochhammerCoeff (2 * Δ_phi) k := by
-      field_simp
-    rw [h_div]
-    push_cast at h_p ⊢
-    linear_combination (Δ_phi + (k : ℝ) + 1 / 2) ^ 2 * h_p
-
-/-- Action of `derivHalfSub` ($\partial_w - \tfrac{1}{2}$) on
-$z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-a}$ for $w \in \operatorname{UcDisk}$:
-$$
-\operatorname{derivHalfSub}\bigl(z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-a}\bigr)(w) =
-  \left(\Delta_\phi - a - \frac{1}{2}\right) e^{\Delta_\phi w} (1 - e^w)^{-a}
-  + a \, e^{\Delta_\phi w} (1 - e^w)^{-(a + 1)}.
-$$ -/
-lemma derivHalfSub_exp_mul_one_sub_exp_cpow_eq (Δ_phi a : ℝ) {w : ℂ} (hw : w ∈ UcDisk) :
-    derivHalfSub
-      (fun z : ℂ => Complex.exp ((Δ_phi : ℂ) * z) * (1 - Complex.exp z) ^ (- (a : ℂ))) w =
-    ((Δ_phi - a - 1 / 2 : ℝ) : ℂ) *
-      (Complex.exp ((Δ_phi : ℂ) * w) * (1 - Complex.exp w) ^ (- (a : ℂ))) +
-    (a : ℂ) *
-      (Complex.exp ((Δ_phi : ℂ) * w) * (1 - Complex.exp w) ^ (- ((a + 1 : ℝ) : ℂ))) := by
-  dsimp [derivHalfSub]
-  have h1 : HasDerivAt (fun z : ℂ => Complex.exp ((Δ_phi : ℂ) * z))
-      (Complex.exp ((Δ_phi : ℂ) * w) * (Δ_phi : ℂ)) w := by
-    have h_lin : HasDerivAt (fun z : ℂ => (Δ_phi : ℂ) * z) (Δ_phi : ℂ) w := by
-      simpa using (hasDerivAt_id w).const_mul (Δ_phi : ℂ)
-    exact h_lin.cexp
-  have h2 : HasDerivAt (fun z : ℂ => 1 - Complex.exp z) (- Complex.exp w) w := by
-    have h := (hasDerivAt_const w (1 : ℂ)).sub (Complex.hasDerivAt_exp w)
-    rw [zero_sub] at h
-    exact h
-  have h3 : HasDerivAt (fun z : ℂ => (1 - Complex.exp z) ^ (- (a : ℂ)))
-      ((- (a : ℂ)) * (1 - Complex.exp w) ^ (- (a : ℂ) - 1) * (- Complex.exp w)) w :=
-    h2.cpow_const (one_sub_exp_mem_slitPlane hw)
-  have h_prod : HasDerivAt
-      (fun z : ℂ => Complex.exp ((Δ_phi : ℂ) * z) * (1 - Complex.exp z) ^ (- (a : ℂ)))
-      ((Complex.exp ((Δ_phi : ℂ) * w) * (Δ_phi : ℂ)) * (1 - Complex.exp w) ^ (- (a : ℂ)) +
-        Complex.exp ((Δ_phi : ℂ) * w) *
-          ((- (a : ℂ)) * (1 - Complex.exp w) ^ (- (a : ℂ) - 1) * (- Complex.exp w))) w :=
-    h1.mul h3
-  rw [h_prod.deriv]
-  have hz_ne : 1 - Complex.exp w ≠ 0 :=
-    slitPlane_ne_zero (one_sub_exp_mem_slitPlane hw)
-  have h_exp_sub : - (a : ℂ) - 1 = - ((a + 1 : ℝ) : ℂ) := by push_cast; ring
-  have h_cpow :
-      (1 - Complex.exp w) ^ (- ((a + 1 : ℝ) : ℂ)) * (1 - Complex.exp w) =
-        (1 - Complex.exp w) ^ (- (a : ℂ)) := by
-    calc
-      (1 - Complex.exp w) ^ (- ((a + 1 : ℝ) : ℂ)) * (1 - Complex.exp w)
-        = (1 - Complex.exp w) ^ (- ((a + 1 : ℝ) : ℂ)) * (1 - Complex.exp w) ^ (1 : ℂ) := by
-          rw [Complex.cpow_one]
-      _ = (1 - Complex.exp w) ^ (- ((a + 1 : ℝ) : ℂ) + (1 : ℂ)) :=
-          (Complex.cpow_add _ _ hz_ne).symm
-      _ = (1 - Complex.exp w) ^ (- (a : ℂ)) := by
-          congr 1; push_cast; ring
-  rw [h_exp_sub, ← h_cpow]
-  push_cast
-  ring
-
-/-- First application of `derivHalfSub` to $z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-(2\Delta_\phi - 1)}$
-on $\operatorname{UcDisk}$:
-$$
-\operatorname{derivHalfSub}\bigl(z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-(2\Delta_\phi - 1)}\bigr)(w)
-  = \left(\Delta_\phi - \frac{1}{2}\right) e^{\Delta_\phi w} (1 + e^w) (1 - e^w)^{-2\Delta_\phi}.
-$$ -/
-theorem derivHalfSub_exp_mul_one_sub_exp_cpow (Δ_phi : ℝ) {w : ℂ} (hw : w ∈ UcDisk) :
-    derivHalfSub
-      (fun z : ℂ =>
-        Complex.exp ((Δ_phi : ℂ) * z) *
-          (1 - Complex.exp z) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ))) w =
-      ((Δ_phi - 1 / 2 : ℝ) : ℂ) * Complex.exp ((Δ_phi : ℂ) * w) *
-        (1 + Complex.exp w) * (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) := by
-  rw [derivHalfSub_exp_mul_one_sub_exp_cpow_eq Δ_phi (2 * Δ_phi - 1) hw]
-  have h_add : 2 * Δ_phi - 1 + 1 = 2 * Δ_phi := by ring
-  rw [h_add]
-  have hz_ne : 1 - Complex.exp w ≠ 0 :=
-    slitPlane_ne_zero (one_sub_exp_mem_slitPlane hw)
-  have h_cpow :
-      (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) * (1 - Complex.exp w) =
-        (1 - Complex.exp w) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ)) := by
-    calc
-      (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) * (1 - Complex.exp w)
-        = (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) * (1 - Complex.exp w) ^ (1 : ℂ) := by
-          rw [Complex.cpow_one]
-      _ = (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ) + (1 : ℂ)) :=
-          (Complex.cpow_add _ _ hz_ne).symm
-      _ = (1 - Complex.exp w) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ)) := by
-          congr 1; push_cast; ring
-  rw [← h_cpow]
-  push_cast
-  ring
-
-/-- Second application of `derivHalfSub` ($\bigl(\partial_w - \tfrac{1}{2}\bigr)^2$) to
-$z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-(2\Delta_\phi - 1)}$ on $\operatorname{UcDisk}$:
-$$
-\operatorname{derivHalfSub}^2\bigl(z \mapsto e^{\Delta_\phi z} (1 - e^z)^{-(2\Delta_\phi - 1)}\bigr)(w)
-  = 2\Delta_\phi (2\Delta_\phi - 1) \, e^{\Delta_\phi w} (1 - e^w)^{-(2\Delta_\phi + 1)} \,
-    \operatorname{exactTransmutedPolyFactor}(\Delta_\phi, w).
-$$ -/
-theorem derivHalfSub_derivHalfSub_exp_mul_one_sub_exp_cpow {Δ_phi : ℝ} (hΔ : Δ_phi ≠ 0)
-    {w : ℂ} (hw : w ∈ UcDisk) :
-    derivHalfSub
-      (derivHalfSub
-        (fun z : ℂ =>
-          Complex.exp ((Δ_phi : ℂ) * z) *
-            (1 - Complex.exp z) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ)))) w =
-      ((2 * Δ_phi * (2 * Δ_phi - 1) : ℝ) : ℂ) *
-        Complex.exp ((Δ_phi : ℂ) * w) *
-        (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ)) *
-        exactTransmutedPolyFactor Δ_phi w := by
-  let f1 : ℂ → ℂ := fun z =>
-    Complex.exp ((Δ_phi : ℂ) * z) * (1 - Complex.exp z) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ))
-  let f2 : ℂ → ℂ := fun z =>
-    Complex.exp ((Δ_phi : ℂ) * z) * (1 - Complex.exp z) ^ (- ((2 * Δ_phi : ℝ) : ℂ))
-  let c1 : ℂ := ((Δ_phi - (2 * Δ_phi - 1) - 1 / 2 : ℝ) : ℂ)
-  let c2 : ℂ := ((2 * Δ_phi - 1 : ℝ) : ℂ)
-  have h_step1 : ∀ z ∈ UcDisk,
-      derivHalfSub f1 z = c1 * f1 z + c2 * f2 z := by
-    intro z hz
-    have h := derivHalfSub_exp_mul_one_sub_exp_cpow_eq Δ_phi (2 * Δ_phi - 1) hz
-    have h_add : 2 * Δ_phi - 1 + 1 = 2 * Δ_phi := by ring
-    rw [h_add] at h
-    exact h
-  rw [derivHalfSub_congr_ucDisk h_step1 w hw]
-  have hf1_diff : DifferentiableAt ℂ f1 w := by
-    dsimp [f1]
-    refine ((differentiableAt_id.const_mul (Δ_phi : ℂ)).cexp).mul ?_
-    exact ((differentiableAt_const 1).sub differentiableAt_id.cexp).cpow_const
-      (one_sub_exp_mem_slitPlane hw)
-  have hf2_diff : DifferentiableAt ℂ f2 w := by
-    dsimp [f2]
-    refine ((differentiableAt_id.const_mul (Δ_phi : ℂ)).cexp).mul ?_
-    exact ((differentiableAt_const 1).sub differentiableAt_id.cexp).cpow_const
-      (one_sub_exp_mem_slitPlane hw)
-  have h_sum_deriv : HasDerivAt (fun z => c1 * f1 z + c2 * f2 z)
-      (c1 * deriv f1 w + c2 * deriv f2 w) w :=
-    (hf1_diff.hasDerivAt.const_mul c1).add (hf2_diff.hasDerivAt.const_mul c2)
-  have h_lin :
-      derivHalfSub (fun z => c1 * f1 z + c2 * f2 z) w =
-        c1 * derivHalfSub f1 w + c2 * derivHalfSub f2 w := by
-    dsimp [derivHalfSub]
-    rw [h_sum_deriv.deriv]
-    ring
-  rw [h_lin]
-  have hd1 := derivHalfSub_exp_mul_one_sub_exp_cpow_eq Δ_phi (2 * Δ_phi - 1) hw
-  have h_add1 : 2 * Δ_phi - 1 + 1 = 2 * Δ_phi := by ring
-  rw [h_add1] at hd1
-  have hd2 := derivHalfSub_exp_mul_one_sub_exp_cpow_eq Δ_phi (2 * Δ_phi) hw
-  change c1 * derivHalfSub f1 w + c2 * derivHalfSub f2 w = _
-  rw [hd1, hd2]
-  have hz_ne : 1 - Complex.exp w ≠ 0 :=
-    slitPlane_ne_zero (one_sub_exp_mem_slitPlane hw)
-  have h_cpow1 :
-      (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ)) * (1 - Complex.exp w) =
-        (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) := by
-    calc
-      (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ)) * (1 - Complex.exp w)
-        = (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ)) * (1 - Complex.exp w) ^ (1 : ℂ) := by
-          rw [Complex.cpow_one]
-      _ = (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ) + (1 : ℂ)) :=
-          (Complex.cpow_add _ _ hz_ne).symm
-      _ = (1 - Complex.exp w) ^ (- ((2 * Δ_phi : ℝ) : ℂ)) := by
-          congr 1; push_cast; ring
-  have h_cpow2 :
-      (1 - Complex.exp w) ^ (- ((2 * Δ_phi + 1 : ℝ) : ℂ)) * (1 - Complex.exp w) ^ 2 =
-        (1 - Complex.exp w) ^ (- ((2 * Δ_phi - 1 : ℝ) : ℂ)) := by
-    have h_sq : (1 - Complex.exp w) ^ 2 = (1 - Complex.exp w) ^ (2 : ℂ) := by norm_cast
-    rw [h_sq, ← Complex.cpow_add _ _ hz_ne]
-    congr 1
-    push_cast
-    ring
-  dsimp [exactTransmutedPolyFactor, c1, c2]
-  rw [← h_cpow1, ← h_cpow2]
-  have hΔ_c : (Δ_phi : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hΔ
-  push_cast
-  field_simp [hΔ_c]
-  ring
+When a `LightconeBlockFourPointData` package $L$ satisfies `HasExactTransmutedCrossingGap Δ_phi`,
+its rescaled spin-$2k$ Laplace transform $L^{\text{trans}}_{2k}(\sigma)$ agrees with
+`exactTransmutedIdentityLaplaceReal Δ_phi (2 * k) σ` on every compact interval
+$[\sigma_-, \sigma_+] \subset (-\infty, 0)$ up to $O\bigl((2k)^{-2 h_{\text{gap}}} + (2k)^{-2\Delta_\phi}\bigr)$.
+Combining this real-axis estimate with the two-constants and Laplace-Tauberian machinery yields the
+spectral pairing bound `exists_const_abs_muLC_sub_exactIdentity_le` against
+`exactTransmutedIdentityPairing`.
+-/
 
 namespace LightconeBlockFourPointData
 
@@ -1863,28 +1937,8 @@ theorem exists_uniform_transmuted_laplaceSpinReal_sub_exactIdentity_bounds
     dsimp [U_plus]
     exact mul_pos (universalPrimaryLeadingCoeff_pos hΔ) (Real.rpow_pos_of_pos h1_exp_pos _)
   have h_univ_le : ∀ {σ : ℝ}, σ ∈ Icc σ_minus σ_plus →
-      transmutedUniversalLaplaceReal Δ_phi σ ≤ U_plus := by
-    intro σ hσ
-    have hσ_neg : σ < 0 := lt_of_le_of_lt hσ.2 hσ_plus
-    rw [transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
-    have hexp_le1 : Real.exp (Δ_phi * σ) ≤ 1 :=
-      Real.exp_le_one_iff.mpr (mul_nonpos_of_nonneg_of_nonpos hΔ.le hσ_neg.le)
-    have h1_sub_ge : 1 - Real.exp σ_plus ≤ 1 - Real.exp σ := by
-      linarith [Real.exp_le_exp.mpr hσ.2]
-    have hrpow_le : (1 - Real.exp σ) ^ (- (2 * Δ_phi)) ≤
-        (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
-      Real.rpow_le_rpow_of_nonpos h1_exp_pos h1_sub_ge (by linarith)
-    have h1_exp_σ_pos : 0 < 1 - Real.exp σ := by linarith
-    calc
-      universalPrimaryLeadingCoeff Δ_phi * Real.exp (Δ_phi * σ) *
-          (1 - Real.exp σ) ^ (- (2 * Δ_phi))
-        ≤ (universalPrimaryLeadingCoeff Δ_phi * 1) *
-            (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
-          mul_le_mul
-            (mul_le_mul_of_nonneg_left hexp_le1 (universalPrimaryLeadingCoeff_pos hΔ).le)
-            hrpow_le (Real.rpow_pos_of_pos h1_exp_σ_pos _).le
-            (mul_pos (universalPrimaryLeadingCoeff_pos hΔ) zero_lt_one).le
-      _ = U_plus := by dsimp [U_plus]; ring
+      transmutedUniversalLaplaceReal Δ_phi σ ≤ U_plus :=
+    fun hσ => transmutedUniversalLaplaceReal_le_of_le hΔ hσ.2 hσ_plus
   set C_bd : ℝ := 2 * C_rem + 1
   have hC_bd_pos : 0 < C_bd := by dsimp [C_bd]; positivity
   set M_bd : ℝ := 2 * (U_plus + C_id) + C_bd
@@ -1952,7 +2006,7 @@ there exists $C > 0$ such that for all $k \ge 1$ and all twice-differentiable te
 $\varphi : \mathbb{R} \to \mathbb{R}$ supported in $[-N, N]$ with
 $|\varphi|, |\varphi'|, |\varphi''| \le M_\varphi$:
 $$
-\Bigl|(2k)^{-2\Delta_\phi} L.\text{toTransmutedMonomialFourPointData.pairSpin } (2k)\ \varphi -
+\Bigl|(2k)^{-2\Delta_\phi} \operatorname{pairSpin}^{\text{trans}}_{2k}(\varphi) -
   (2k)^{-2\Delta_\phi} \operatorname{exactTransmutedIdentityPairing}(\Delta_\phi, 2k, \varphi)\Bigr|
   \le C \, (2k)^{-\gamma} \, M_\varphi.
 $$ -/
@@ -2010,8 +2064,11 @@ theorem exists_const_abs_transmuted_pairSpin_sub_exactIdentity_le {Δ_phi γ : �
   rwa [max_eq_left hk1] at h_est
 
 /-- **Quantitative Multi-Trajectory 1D Lightcone-Block Bootstrap Against
-`exactTransmutedIdentityPairing` (Valid for All $\Delta_\phi > 0$, All $h_{\text{gap}} > 0$, and
-All $0 < \gamma < \min(2 h_{\text{gap}},\, 2\Delta_\phi)$)**: -/
+`exactTransmutedIdentityPairing`**:
+Unfolds `pairSpin_toTransmutedMonomialFourPointData` in
+`exists_const_abs_transmuted_pairSpin_sub_exactIdentity_le` to express the spin-$2k$ pairing
+directly as an integral against the 1D lightcone-block primary measure `L.muLC (2k)` weighted by
+`transmuteWeight (h + 2k)`. -/
 theorem exists_const_abs_muLC_sub_exactIdentity_le {Δ_phi γ : ℝ}
     (hcross : L.HasExactTransmutedCrossingGap Δ_phi)
     (hγ_pos : 0 < γ) (hγ_lt : γ < min (2 * L.h_gap) (2 * Δ_phi))
@@ -2036,7 +2093,19 @@ theorem exists_const_abs_muLC_sub_exactIdentity_le {Δ_phi γ : ℝ}
   have h_bound := hC hk1 hφ hφ' hsupp hM_φ hφ0 hφ1 hφ2
   rwa [h_pair] at h_bound
 
-/-! ## Section 6: Effective-Gap Monotonicity and Inner-Transmutation Crossing Assembly -/
+/-!
+## Section 6: Effective-Gap Monotonicity and Inner-Transmutation Crossing Assembly
+
+In `TransmutedEndpointBounds.lean`, the folded contour integral of `transmuteOpInner` acquires
+logarithmic factors at the resonant exponents $2(h' - \Delta_\phi) \in \lbrace 0, 1\rbrace$.
+Given any target decay exponent $0 < \gamma < \min(2 h_{\text{gap}},\, 2\Delta_\phi)$, we can
+replace `L.h_gap` via `L.withGap h'` by a slightly smaller effective gap
+$$h' := \frac{\gamma/2 + \min(h_{\text{gap}}, \Delta_\phi)}{2} < \Delta_\phi,$$
+which still satisfies $\gamma < \min(2h', 2\Delta_\phi)$ while strictly enforcing
+$2(h' - \Delta_\phi) < 0$ so that neither resonance can occur. Combining the folded inner-transmutation
+bound `norm_folded_integral_transmuteOpInner_le` with the Section 4 outer-contour estimate yields
+`exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing`.
+-/
 
 /-- Replace the twist gap `L.h_gap` by any smaller effective gap `h' ≤ L.h_gap`, preserving
 `muLC`. This is the key tool for eliminating resonant
@@ -2084,40 +2153,32 @@ structure HasInnerTransmutedCrossing (Δ_phi : ℝ) : Prop where
         ∀ {k : ℕ}, 1 ≤ k →
           σ_plus + 1 / (2 * (k : ℝ)) ≤ σ_plus / 2 →
           ∀ {σ : ℝ}, σ ∈ Icc σ_minus σ_plus →
+          let wl0 : ℂ := ((σ + 1 / (2 * (k : ℝ)) : ℝ) : ℂ)
+          let wr0 : ℂ := ((-1 / (2 * (k : ℝ)) : ℝ) : ℂ)
+          let wr (θ : ℝ) : ℂ := wr0 + (θ : ℂ) * I
           ∃ R : ℝ → ℂ → ℂ,
             (∀ θ ∈ Icc (-π / 2) (π / 2),
               IntegrableOn
                 (fun x : ℝ =>
-                  transmuteInnerKernel (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I) x *
-                    transmuteInnerDiff (R θ) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I) x)
+                  transmuteInnerKernel (wr θ) x * transmuteInnerDiff (R θ) (wr θ) x)
                 (Ioo (0 : ℝ) 1) volume) ∧
             (∀ θ ∈ Icc (-π / 2) (π / 2), ∀ x ∈ Ioc (0 : ℝ) (1 / 2),
-              ‖deriv (R θ) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I + (Real.log x : ℂ))‖ ≤
-                M₁) ∧
+              ‖deriv (R θ) (wr θ + (Real.log x : ℂ))‖ ≤ M₁) ∧
             (∀ θ ∈ Icc (-π / 2) (π / 2), ∀ x ∈ Ioc (0 : ℝ) (1 / 2),
-              ‖deriv (deriv (R θ))
-                (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I + (Real.log x : ℂ))‖ ≤ M₂) ∧
+              ‖deriv (deriv (R θ)) (wr θ + (Real.log x : ℂ))‖ ≤ M₂) ∧
             (∀ θ ∈ Icc (-π / 2) (π / 2), ∀ x ∈ Ioo (1 / 2 : ℝ) 1,
-              ‖deriv (R θ) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I + (Real.log x : ℂ))‖ ≤
-                C₁ *
-                  (‖1 - Complex.exp (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I)‖ + (1 - x)) ^
-                    (2 * (h' - Δ_phi) - 1)) ∧
+              ‖deriv (R θ) (wr θ + (Real.log x : ℂ))‖ ≤
+                C₁ * (‖1 - Complex.exp (wr θ)‖ + (1 - x)) ^ (2 * (h' - Δ_phi) - 1)) ∧
             (∀ θ ∈ Icc (-π / 2) (π / 2), ∀ x ∈ Ioo (1 / 2 : ℝ) 1,
-              ‖deriv (deriv (R θ))
-                (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I + (Real.log x : ℂ))‖ ≤
-                C₂ *
-                  (‖1 - Complex.exp (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I)‖ + (1 - x)) ^
-                    (2 * (h' - Δ_phi) - 2)) ∧
+              ‖deriv (deriv (R θ)) (wr θ + (Real.log x : ℂ))‖ ≤
+                C₂ * (‖1 - Complex.exp (wr θ)‖ + (1 - x)) ^ (2 * (h' - Δ_phi) - 2)) ∧
             ‖(((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) : ℝ) : ℂ) *
-                (L.toTransmutedMonomialFourPointData.fourierProjSpin (2 * (k : ℤ))
-                    (((σ + 1 / (2 * (k : ℝ)) : ℝ) : ℂ)) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ)) -
-                  exactTransmutedIdentityProjSpin Δ_phi (2 * (k : ℤ))
-                    (((σ + 1 / (2 * (k : ℝ)) : ℝ) : ℂ)) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ)))‖ ≤
+                (L.toTransmutedMonomialFourPointData.fourierProjSpin (2 * (k : ℤ)) wl0 wr0 -
+                  exactTransmutedIdentityProjSpin Δ_phi (2 * (k : ℤ)) wl0 wr0)‖ ≤
               ‖(((2 * (k : ℝ)) ^ (- (2 * Δ_phi)) : ℝ) : ℂ) *
                   ((π : ℂ)⁻¹ * ∫ θ in (-π / 2)..(π / 2),
-                    Complex.exp (- ((2 * (k : ℤ) : ℤ) : ℂ) *
-                      (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I)) *
-                      transmuteOpInner (R θ) (((-1 / (2 * (k : ℝ)) : ℝ) : ℂ) + (θ : ℂ) * I))‖ +
+                    Complex.exp (- ((2 * (k : ℤ) : ℤ) : ℂ) * wr θ) *
+                      transmuteOpInner (R θ) (wr θ))‖ +
                 C_tail * ((2 * (k : ℝ)) ^ (- (2 * h')) + (2 * (k : ℝ)) ^ (- (2 * Δ_phi)))
 
 /-- Combining `HasInnerTransmutedCrossing`, the folded inner-transmutation theorem
@@ -2254,28 +2315,8 @@ theorem HasInnerTransmutedCrossing.toHasExactTransmutedCrossingGap_withGap
     set U_plus : ℝ :=
       universalPrimaryLeadingCoeff Δ_phi * (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi))
     have h_univ_le : ∀ {σ : ℝ}, σ ∈ Icc σ_minus σ_plus →
-        transmutedUniversalLaplaceReal Δ_phi σ ≤ U_plus := by
-      intro σ hσ
-      have hσ_neg : σ < 0 := lt_of_le_of_lt hσ.2 hσ_plus
-      rw [transmutedUniversalLaplaceReal_eq Δ_phi hΔ]
-      have hexp_le1 : Real.exp (Δ_phi * σ) ≤ 1 :=
-        Real.exp_le_one_iff.mpr (mul_nonpos_of_nonneg_of_nonpos hΔ.le hσ_neg.le)
-      have h1_sub_ge : 1 - Real.exp σ_plus ≤ 1 - Real.exp σ := by
-        linarith [Real.exp_le_exp.mpr hσ.2]
-      have hrpow_le : (1 - Real.exp σ) ^ (- (2 * Δ_phi)) ≤
-          (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
-        Real.rpow_le_rpow_of_nonpos h1_exp_pos h1_sub_ge (by linarith)
-      have h1_exp_σ_pos : 0 < 1 - Real.exp σ := by linarith
-      calc
-        universalPrimaryLeadingCoeff Δ_phi * Real.exp (Δ_phi * σ) *
-            (1 - Real.exp σ) ^ (- (2 * Δ_phi))
-          ≤ (universalPrimaryLeadingCoeff Δ_phi * 1) *
-              (1 - Real.exp σ_plus) ^ (- (2 * Δ_phi)) :=
-            mul_le_mul
-              (mul_le_mul_of_nonneg_left hexp_le1 (universalPrimaryLeadingCoeff_pos hΔ).le)
-              hrpow_le (Real.rpow_pos_of_pos h1_exp_σ_pos _).le
-              (mul_pos (universalPrimaryLeadingCoeff_pos hΔ) zero_lt_one).le
-        _ = U_plus := by dsimp [U_plus]; ring
+        transmutedUniversalLaplaceReal Δ_phi σ ≤ U_plus :=
+      fun hσ => transmutedUniversalLaplaceReal_le_of_le hΔ hσ.2 hσ_plus
     set B_fin : ℝ := ∑ j ∈ Finset.range (k₀ + 1),
       (2 * (j : ℝ)) ^ (- (2 * Δ_phi)) *
         L.toTransmutedMonomialFourPointData.laplaceSpinReal (2 * (j : ℤ)) σ_plus
@@ -2421,5 +2462,3 @@ theorem exists_const_abs_muLC_sub_exactIdentity_le_of_innerCrossing {Δ_phi γ :
     hγ_pos hγ_lt_h' N
 
 end LightconeBlockFourPointData
-
-end CFT.LightconeBootstrap

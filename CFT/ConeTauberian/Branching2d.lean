@@ -3,8 +3,8 @@ Copyright (c) 2026 Balt van Rees. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Balt van Rees
 -/
-import CFT.LightconeBootstrap.Transmute1d
-import CFT.LightconeBootstrap.RealLaplaceBound
+import CFT.LightconeBootstrap.LightconeBlock.Transmute1d
+import CFT.LightconeBootstrap.Monomial.LaplaceBound
 import CFT.Gegenbauers
 
 /-!
@@ -41,9 +41,6 @@ $d \to 2$ branching coefficients:
 
 open Real Complex Topology Set Metric MeasureTheory Filter
 open scoped BigOperators ENNReal
-open CFT.LightconeBootstrap
-
-namespace CFT.ConeTauberian
 
 /-!
 ## 1. 2D Conformal Blocks & Bilateral Transmutation ($\mathcal{L}_0 \otimes \mathcal{L}_0$)
@@ -391,5 +388,3 @@ theorem exists_abs_rpow_mul_transmuteWeight_nat_sub_one_le :
   calc
     |(1 - x) * g * (U - g⁻¹) - x| ≤ 1 * g * (C0 / (n : ℝ)) + x := by linarith
     _ = (g * C0 + 1 / 2) / (n : ℝ) := by rw [hx_eq]; ring
-
-end CFT.ConeTauberian

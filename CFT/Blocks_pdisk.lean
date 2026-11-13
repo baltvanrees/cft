@@ -36,7 +36,7 @@ In the first part of this file we implement this analytic continuation and prove
   $r = e^\sigma \in (0, 1)$ (`ConformalBlockLevel.norm_evalTermPdisk_le_evalTerm_of_re_le`).
 - From this bound and radial summability (`ConformalBlock.summable_evalTerm_exp`), we deduce
   summability (`ConformalBlock.summable_evalTermPdisk`) and apply the locally dominated series
-  holomorphy criterion `CFT.differentiableOn_tsum_of_differentiableOn_of_norm_le` from
+  holomorphy criterion `differentiableOn_tsum_of_differentiableOn_of_norm_le` from
   `CFT/Analysis/DominatedHolomorphy.lean` to establish joint holomorphy
   (`ConformalBlock.differentiableOn_evalPdisk`).
 
@@ -404,7 +404,7 @@ $\operatorname{UcPdisk}$. -/
 theorem differentiableOn_evalPdisk (hν : 0 ≤ ν) (hΔ : (l : ℝ) ≤ Δ) :
     DifferentiableOn ℂ (fun w : ℂ × ℂ => B.evalPdisk w.1 w.2) UcPdisk := by
   dsimp [evalPdisk]
-  refine CFT.differentiableOn_tsum_of_differentiableOn_of_norm_le isOpen_UcPdisk
+  refine differentiableOn_tsum_of_differentiableOn_of_norm_le isOpen_UcPdisk
     (fun n => ((B.level n).differentiable_evalTermPdisk ν Δ).differentiableOn) ?_
   intro w₀ hw₀
   obtain ⟨δ, hδ, σ, hσ, h_sub, h_re⟩ := exists_closedBall_subset_UcPdisk hw₀

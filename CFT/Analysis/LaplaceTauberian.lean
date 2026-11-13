@@ -7,26 +7,42 @@ import CFT.Analysis.TwoConstants
 import CFT.Analysis.HermiteMeasure
 
 /-!
-# Quantitative Laplace-to-`C_c^2` Tauberian Theorem on `ℤ`
+# Quantitative Laplace-to-$C_c^2$ Tauberian Theorem on $\mathbb{Z}$
 
 This file combines Nevanlinna's Two-Constants Theorem on a vertical strip (`TwoConstants.lean`)
-with the Fejér–Hermite measure estimate on `ℤ` (`HermiteMeasure.lean`) via exponential tilting
-(`Measure.withDensity`) to prove the non-asymptotic and asymptotic Laplace-to-`C_c^2` Tauberian
-theorems on `ℤ`.
+with the Fejér–Hermite measure estimate on $\mathbb{Z}$ (`HermiteMeasure.lean`) via exponential
+tilting (`Measure.withDensity`) to prove the non-asymptotic and power-law Laplace-to-$C_c^2$
+Tauberian theorems on $\mathbb{Z}$.
+
+**Where this is used**:
+- `exists_const_abs_integral_sub_le_rpow` is the 1D Tauberian engine of the lightcone bootstrap: it
+  is applied in `CFT.LightconeBootstrap.Monomial.ReferencePairing` (and through it in the three main
+  theorems `CFT.LightconeBootstrap.MonomialBootstrap`,
+  `CFT.LightconeBootstrap.LightconeBlockBootstrap`, and `CFT.LightconeBootstrap.PrimaryBootstrap`)
+  to convert real-axis Laplace bounds at even spin $2k$ into quantitative $O((2k)^{-\gamma})$
+  spectral pairing bounds.
 -/
 
 open MeasureTheory Set Filter Metric Real Complex Topology
 open scoped ENNReal
 
-namespace CFT.LightconeBootstrap
+/-!
+## 1. Complex Laplace Transform on a Vertical Strip
 
-/-! ## 1. Complex Laplace Transform on a Vertical Strip -/
+When $u \mapsto e^{\sigma_- u}$ and $u \mapsto e^{\sigma_+ u}$ are $\rho$-integrable, the convexity
+bound $e^{\sigma u} \le e^{\sigma_- u} + e^{\sigma_+ u}$ dominates the integrand on the strip
+$\operatorname{Re} z \in [\sigma_-, \sigma_+]$, ensuring that the complex Laplace transform
+$L_\rho(z) = \int_{\mathbb{R}} e^{z u} \thinspace d\rho(u)$ is continuous on the closed strip and
+holomorphic on the open strip.
+-/
 
-/-- The two-sided complex Laplace transform `∫ u, exp(z u) dρ(u)` of a measure `ρ` on `ℝ`. -/
+/-- The two-sided complex Laplace transform $\int_{\mathbb{R}} e^{z u} \thinspace d\rho(u)$ of a measure
+$\rho$ on $\mathbb{R}$. -/
 noncomputable def laplaceTransform (ρ : Measure ℝ) (z : ℂ) : ℂ :=
   ∫ u : ℝ, Complex.exp (z * (u : ℂ)) ∂ρ
 
-/-- The real Laplace transform `∫ u, exp(σ u) dρ(u)` of a measure `ρ` on `ℝ`. -/
+/-- The real Laplace transform $\int_{\mathbb{R}} e^{\sigma u} \thinspace d\rho(u)$ of a measure $\rho$ on
+$\mathbb{R}$. -/
 noncomputable def laplaceTransformReal (ρ : Measure ℝ) (σ : ℝ) : ℝ :=
   ∫ u : ℝ, Real.exp (σ * u) ∂ρ
 
@@ -45,41 +61,6 @@ lemma norm_exp_mul_ofReal (z : ℂ) (u : ℝ) :
     ‖Complex.exp (z * (u : ℂ))‖ = Real.exp (z.re * u) := by
   rw [Complex.norm_exp, mul_re, ofReal_re, ofReal_im, mul_zero, sub_zero]
 
-lemma norm_exp_mul_ofReal_le_of_re_mem_Icc {σ_minus σ_plus : ℝ} {z : ℂ}
-    (hz : z.re ∈ Icc σ_minus σ_plus) (u : ℝ) :
-    ‖Complex.exp (z * (u : ℂ))‖ ≤ Real.exp (σ_minus * u) + Real.exp (σ_plus * u) := by
-  rw [norm_exp_mul_ofReal]
-  exact exp_mul_le_add_of_mem_Icc hz u
-
-lemma norm_mul_exp_le_of_re_sub_le {σ_minus σ_plus δ : ℝ} (hδ : 0 < δ) {z : ℂ}
-    (h_minus : σ_minus ≤ z.re - δ) (h_plus : z.re + δ ≤ σ_plus) (u : ℝ) :
-    ‖(u : ℂ) * Complex.exp (z * (u : ℂ))‖ ≤
-      δ⁻¹ * (Real.exp (σ_minus * u) + Real.exp (σ_plus * u)) := by
-  rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, norm_exp_mul_ofReal]
-  have h_abs_u : |u| ≤ δ⁻¹ * Real.exp (|u| * δ) := by
-    rw [le_inv_mul_iff₀ hδ]
-    linarith [Real.add_one_le_exp (|u| * δ)]
-  have h_prod : |u| * Real.exp (z.re * u) ≤ δ⁻¹ * Real.exp (z.re * u + |u| * δ) := by
-    calc |u| * Real.exp (z.re * u)
-        ≤ (δ⁻¹ * Real.exp (|u| * δ)) * Real.exp (z.re * u) :=
-          mul_le_mul_of_nonneg_right h_abs_u (Real.exp_pos _).le
-      _ = δ⁻¹ * (Real.exp (z.re * u) * Real.exp (|u| * δ)) := by ring
-      _ = δ⁻¹ * Real.exp (z.re * u + |u| * δ) := by rw [← Real.exp_add]
-  refine h_prod.trans (mul_le_mul_of_nonneg_left ?_ (inv_nonneg.mpr hδ.le))
-  rcases le_total 0 u with hu | hu
-  · have h_eq : z.re * u + |u| * δ = (z.re + δ) * u := by
-      rw [abs_of_nonneg hu]; ring
-    rw [h_eq]
-    have h_le : Real.exp ((z.re + δ) * u) ≤ Real.exp (σ_plus * u) :=
-      Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right h_plus hu)
-    linarith [Real.exp_pos (σ_minus * u)]
-  · have h_eq : z.re * u + |u| * δ = (z.re - δ) * u := by
-      rw [abs_of_nonpos hu]; ring
-    rw [h_eq]
-    have h_le : Real.exp ((z.re - δ) * u) ≤ Real.exp (σ_minus * u) :=
-      Real.exp_le_exp.mpr (mul_le_mul_of_nonpos_right h_minus hu)
-    linarith [Real.exp_pos (σ_plus * u)]
-
 lemma integrable_exp_mul_of_mem_Icc {ρ : Measure ℝ} {σ_minus σ_plus σ : ℝ}
     (h_minus : Integrable (fun u => Real.exp (σ_minus * u)) ρ)
     (h_plus : Integrable (fun u => Real.exp (σ_plus * u)) ρ)
@@ -91,16 +72,6 @@ lemma integrable_exp_mul_of_mem_Icc {ρ : Measure ℝ} {σ_minus σ_plus σ : �
   rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
   exact exp_mul_le_add_of_mem_Icc hσ u
 
-lemma integrable_cexp_mul_of_re_mem_Icc {ρ : Measure ℝ} {σ_minus σ_plus : ℝ}
-    (h_minus : Integrable (fun u => Real.exp (σ_minus * u)) ρ)
-    (h_plus : Integrable (fun u => Real.exp (σ_plus * u)) ρ)
-    {z : ℂ} (hz : z.re ∈ Icc σ_minus σ_plus) :
-    Integrable (fun u : ℝ => Complex.exp (z * (u : ℂ))) ρ := by
-  have h_cont : Continuous (fun u : ℝ => Complex.exp (z * (u : ℂ))) :=
-    Complex.continuous_exp.comp (continuous_const.mul Complex.continuous_ofReal)
-  refine (h_minus.add h_plus).mono' h_cont.aestronglyMeasurable
-    (ae_of_all _ (norm_exp_mul_ofReal_le_of_re_mem_Icc hz))
-
 theorem continuousOn_laplaceTransform {ρ : Measure ℝ} {σ_minus σ_plus : ℝ}
     (h_minus : Integrable (fun u => Real.exp (σ_minus * u)) ρ)
     (h_plus : Integrable (fun u => Real.exp (σ_plus * u)) ρ) :
@@ -109,7 +80,9 @@ theorem continuousOn_laplaceTransform {ρ : Measure ℝ} {σ_minus σ_plus : ℝ
     (bound := fun u => Real.exp (σ_minus * u) + Real.exp (σ_plus * u))
     (fun z _ => (Complex.continuous_exp.comp
       (continuous_const.mul Complex.continuous_ofReal)).aestronglyMeasurable)
-    (fun z hz => ae_of_all _ (norm_exp_mul_ofReal_le_of_re_mem_Icc hz))
+    (fun z hz => ae_of_all _ fun u => by
+      rw [norm_exp_mul_ofReal]
+      exact exp_mul_le_add_of_mem_Icc hz u)
     (h_minus.add h_plus)
     (ae_of_all _ fun u => ?_)
   exact (Complex.continuous_exp.comp (continuous_id.mul continuous_const)).continuousOn
@@ -131,6 +104,11 @@ theorem differentiableOn_laplaceTransform {ρ : Measure ℝ} {σ_minus σ_plus :
   have hF_meas : ∀ z : ℂ, AEStronglyMeasurable (F z) ρ := fun z =>
     (Complex.continuous_exp.comp
       (continuous_const.mul Complex.continuous_ofReal)).aestronglyMeasurable
+  have hF_int : Integrable (F z₀) ρ :=
+    (h_minus.add h_plus).mono' (hF_meas z₀) (ae_of_all _ fun u => by
+      dsimp [F]
+      rw [norm_exp_mul_ofReal]
+      exact exp_mul_le_add_of_mem_Icc ⟨hz₀.1.le, hz₀.2.le⟩ u)
   have hF'_meas : AEStronglyMeasurable (F' z₀) ρ :=
     (Complex.continuous_ofReal.mul
       (Complex.continuous_exp.comp
@@ -140,7 +118,7 @@ theorem differentiableOn_laplaceTransform {ρ : Measure ℝ} {σ_minus σ_plus :
     (bound := fun u => δ⁻¹ * (Real.exp (σ_minus * u) + Real.exp (σ_plus * u)))
     (ball_mem_nhds z₀ hδ)
     (Eventually.of_forall hF_meas)
-    (integrable_cexp_mul_of_re_mem_Icc h_minus h_plus ⟨hz₀.1.le, hz₀.2.le⟩)
+    hF_int
     hF'_meas
     ?_
     ((h_minus.add h_plus).const_mul δ⁻¹)
@@ -161,7 +139,29 @@ theorem differentiableOn_laplaceTransform {ρ : Measure ℝ} {σ_minus σ_plus :
       have : δ ≤ (σ_plus - z₀.re) / 2 :=
         div_le_div_of_nonneg_right (min_le_right _ _) (by positivity)
       linarith [h_abs.2]
-    exact norm_mul_exp_le_of_re_sub_le hδ h_m h_p u
+    dsimp [F']
+    rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, norm_exp_mul_ofReal]
+    have h_abs_u : |u| ≤ δ⁻¹ * Real.exp (|u| * δ) := by
+      rw [le_inv_mul_iff₀ hδ]
+      linarith [Real.add_one_le_exp (|u| * δ)]
+    have h_prod : |u| * Real.exp (z.re * u) ≤ δ⁻¹ * Real.exp (z.re * u + |u| * δ) := by
+      calc |u| * Real.exp (z.re * u)
+          ≤ (δ⁻¹ * Real.exp (|u| * δ)) * Real.exp (z.re * u) :=
+            mul_le_mul_of_nonneg_right h_abs_u (Real.exp_pos _).le
+        _ = δ⁻¹ * (Real.exp (z.re * u) * Real.exp (|u| * δ)) := by ring
+        _ = δ⁻¹ * Real.exp (z.re * u + |u| * δ) := by rw [← Real.exp_add]
+    refine h_prod.trans (mul_le_mul_of_nonneg_left ?_ (inv_nonneg.mpr hδ.le))
+    rcases le_total 0 u with hu | hu
+    · have h_eq : z.re * u + |u| * δ = (z.re + δ) * u := by rw [abs_of_nonneg hu]; ring
+      rw [h_eq]
+      have h_le : Real.exp ((z.re + δ) * u) ≤ Real.exp (σ_plus * u) :=
+        Real.exp_le_exp.mpr (mul_le_mul_of_nonneg_right h_p hu)
+      linarith [Real.exp_pos (σ_minus * u)]
+    · have h_eq : z.re * u + |u| * δ = (z.re - δ) * u := by rw [abs_of_nonpos hu]; ring
+      rw [h_eq]
+      have h_le : Real.exp ((z.re - δ) * u) ≤ Real.exp (σ_minus * u) :=
+        Real.exp_le_exp.mpr (mul_le_mul_of_nonpos_right h_m hu)
+      linarith [Real.exp_pos (σ_plus * u)]
   · refine ae_of_all _ (fun u z _ => ?_)
     have h1 : HasDerivAt (fun w : ℂ => w * (u : ℂ)) (1 * (u : ℂ)) z :=
       (hasDerivAt_id z).mul_const (u : ℂ)
@@ -179,10 +179,6 @@ lemma laplaceTransform_ofReal (ρ : Measure ℝ) (σ : ℝ) :
     rw [← Complex.ofReal_mul, Complex.ofReal_exp]
   rw [h_eq, integral_complex_ofReal]
 
-lemma laplaceTransformReal_nonneg (ρ : Measure ℝ) (σ : ℝ) :
-    0 ≤ laplaceTransformReal ρ σ :=
-  integral_nonneg (fun u => (Real.exp_pos (σ * u)).le)
-
 lemma norm_laplaceTransform_le_laplaceTransformReal (ρ : Measure ℝ) (σ t : ℝ) :
     ‖laplaceTransform ρ ((σ : ℂ) + (t : ℂ) * I)‖ ≤ laplaceTransformReal ρ σ := by
   unfold laplaceTransform laplaceTransformReal
@@ -192,37 +188,20 @@ lemma norm_laplaceTransform_le_laplaceTransformReal (ρ : Measure ℝ) (σ t : �
   rw [norm_exp_mul_ofReal]
   simp
 
-lemma laplaceTransformReal_le_add_of_mem_Icc {ρ : Measure ℝ} {σ_minus σ_plus σ : ℝ}
-    (h_minus : Integrable (fun u => Real.exp (σ_minus * u)) ρ)
-    (h_plus : Integrable (fun u => Real.exp (σ_plus * u)) ρ)
-    (hσ : σ ∈ Icc σ_minus σ_plus) :
-    laplaceTransformReal ρ σ ≤
-      laplaceTransformReal ρ σ_minus + laplaceTransformReal ρ σ_plus := by
-  unfold laplaceTransformReal
-  rw [← integral_add h_minus h_plus]
-  exact integral_mono (integrable_exp_mul_of_mem_Icc h_minus h_plus hσ)
-    (h_minus.add h_plus) (exp_mul_le_add_of_mem_Icc hσ)
+/-!
+## 2. Exponentially Tilted Measure and Tilted Test Functions
 
-/-! ## 2. Exponentially Tilted Measure and Tilted Test Functions -/
+Tilting a measure $\rho$ by $e^{-A u}$ (`tiltedMeasure A ρ`) identifies its Fourier transform at
+frequency $t \in \mathbb{R}$ with the complex Laplace transform $L_\rho(-A + i t)$ on the vertical
+line $\operatorname{Re} z = -A$. Compensating a compactly supported $C^2$ test function $\varphi$ on
+$[-N, N]$ by $e^{A u}$ (`tiltedTest A φ`) preserves the pairing
+$\int \varphi \thinspace d\rho = \int (e^{A u}\varphi) \thinspace d\rho_A$ while scaling its $C^2$ norm by at most
+$(A + 1)^2 e^{AN}$.
+-/
 
-/-- The exponentially tilted measure `dρ_A(u) = exp(-A u) dρ(u)`. -/
+/-- The exponentially tilted measure $d\rho_A(u) = e^{-A u} \thinspace d\rho(u)$. -/
 noncomputable def tiltedMeasure (A : ℝ) (ρ : Measure ℝ) : Measure ℝ :=
   ρ.withDensity (fun u : ℝ => ENNReal.ofReal (Real.exp (-A * u)))
-
-lemma measurable_ennreal_ofReal_exp_neg_mul (A : ℝ) :
-    Measurable (fun u : ℝ => ENNReal.ofReal (Real.exp (-A * u))) :=
-  ENNReal.measurable_ofReal.comp
-    (Real.continuous_exp.comp (continuous_const.mul continuous_id)).measurable
-
-lemma isFiniteMeasure_tiltedMeasure {A : ℝ} {ρ : Measure ℝ}
-    (h_int : Integrable (fun u : ℝ => Real.exp (-A * u)) ρ) :
-    IsFiniteMeasure (tiltedMeasure A ρ) :=
-  isFiniteMeasure_withDensity_ofReal h_int.2
-
-lemma tiltedMeasure_compl_intCast_eq_zero (A : ℝ) {ν : Measure ℝ}
-    (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0) :
-    tiltedMeasure A ν (univ \ range (Int.cast : ℤ → ℝ)) = 0 :=
-  withDensity_absolutelyContinuous ν _ hν
 
 lemma integral_tiltedMeasure_eq_integral_mul (A : ℝ) (ρ : Measure ℝ)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] (g : ℝ → E) :
@@ -250,7 +229,7 @@ lemma fourier_tiltedMeasure_eq_laplaceTransform (A : ℝ) (ρ : Measure ℝ) (t 
   push_cast
   ring
 
-/-- The exponentially tilted test function `ψ(u) = exp(A u) φ(u)`. -/
+/-- The exponentially tilted test function $\psi(u) = e^{A u} \varphi(u)$. -/
 noncomputable def tiltedTest (A : ℝ) (φ : ℝ → ℝ) (u : ℝ) : ℝ :=
   Real.exp (A * u) * φ u
 
@@ -306,27 +285,6 @@ lemma differentiable_deriv_tiltedTest (A : ℝ) {φ : ℝ → ℝ}
   rw [deriv_tiltedTest A hφ]
   exact ((differentiable_tiltedTest A hφ).const_mul A).add (differentiable_tiltedTest A hφ')
 
-lemma deriv2_tiltedTest (A : ℝ) {φ : ℝ → ℝ}
-    (hφ : Differentiable ℝ φ) (hφ' : Differentiable ℝ (deriv φ)) (u : ℝ) :
-    deriv (deriv (tiltedTest A φ)) u =
-      A ^ 2 * tiltedTest A φ u + 2 * A * tiltedTest A (deriv φ) u +
-        tiltedTest A (deriv (deriv φ)) u := by
-  rw [deriv_tiltedTest A hφ]
-  have h1 := (hasDerivAt_tiltedTest A hφ u).const_mul A
-  have h2 := hasDerivAt_tiltedTest A hφ' u
-  have h3 := (h1.add h2).deriv
-  convert h3 using 1
-  ring
-
-lemma abs_tiltedTest_le_sq {A : ℝ} (hA : 0 ≤ A) {N : ℕ} {φ : ℝ → ℝ} {M_φ : ℝ}
-    (hM : 0 ≤ M_φ) (hsupp : ∀ u : ℝ, (N : ℝ) < |u| → φ u = 0)
-    (hφ0 : ∀ u : ℝ, |φ u| ≤ M_φ) (u : ℝ) :
-    |tiltedTest A φ u| ≤ (A + 1) ^ 2 * Real.exp (A * (N : ℝ)) * M_φ := by
-  have h0 := abs_tiltedTest_le hA hM hsupp hφ0 u
-  have hA1 : 1 ≤ (A + 1) ^ 2 := by nlinarith
-  have h_nonneg : 0 ≤ Real.exp (A * (N : ℝ)) * M_φ := by positivity
-  nlinarith
-
 lemma abs_deriv_tiltedTest_le_sq {A : ℝ} (hA : 0 ≤ A) {N : ℕ} {φ : ℝ → ℝ} {M_φ : ℝ}
     (hφ : Differentiable ℝ φ) (hM : 0 ≤ M_φ)
     (hsupp : ∀ u : ℝ, (N : ℝ) < |u| → φ u = 0)
@@ -354,7 +312,15 @@ lemma abs_deriv2_tiltedTest_le_sq {A : ℝ} (hA : 0 ≤ A) {N : ℕ} {φ : ℝ �
     (hφ0 : ∀ u : ℝ, |φ u| ≤ M_φ) (hφ1 : ∀ u : ℝ, |deriv φ u| ≤ M_φ)
     (hφ2 : ∀ u : ℝ, |deriv (deriv φ) u| ≤ M_φ) (u : ℝ) :
     |deriv (deriv (tiltedTest A φ)) u| ≤ (A + 1) ^ 2 * Real.exp (A * (N : ℝ)) * M_φ := by
-  rw [deriv2_tiltedTest A hφ hφ' u]
+  have h_d2 : deriv (deriv (tiltedTest A φ)) u =
+      A ^ 2 * tiltedTest A φ u + 2 * A * tiltedTest A (deriv φ) u +
+        tiltedTest A (deriv (deriv φ)) u := by
+    rw [deriv_tiltedTest A hφ]
+    have h1 := (hasDerivAt_tiltedTest A hφ u).const_mul A
+    have h2 := hasDerivAt_tiltedTest A hφ' u
+    convert (h1.add h2).deriv using 1
+    ring
+  rw [h_d2]
   have hsupp' : ∀ x : ℝ, (N : ℝ) < |x| → deriv φ x = 0 :=
     fun x hx => deriv_eq_zero_of_support hsupp hx
   have hsupp'' : ∀ x : ℝ, (N : ℝ) < |x| → deriv (deriv φ) x = 0 :=
@@ -372,18 +338,28 @@ lemma abs_deriv2_tiltedTest_le_sq {A : ℝ} (hA : 0 ≤ A) {N : ℕ} {φ : ℝ �
     rw [abs_mul, abs_of_nonneg h2A]
   nlinarith
 
-/-! ## 3. Non-Asymptotic and Asymptotic Laplace-to-`C_c^2` Tauberian Theorems -/
+/-!
+## 3. Non-Asymptotic and Power-Law Laplace-to-$C_c^2$ Tauberian Theorems
 
-/-- **Non-Asymptotic Laplace-to-`C_c^2` Tauberian Theorem on `ℤ`**:
-Suppose `1 < A`, `μ, ν` are measures on `ℝ` with `ν` supported on `ℤ`, both `exp((1 - 2A) u)`
-and `exp(-u)` are integrable with respect to `μ` and `ν`, and on the real interval
-`σ ∈ [1 - 2A, -1]`:
+Combining the midpoint Two-Constants bound `norm_le_midpoint_two_constants` on the vertical strip
+$[1 - 2A, -1]$ at height $T = 2\pi$ with the Fejér–Hermite measure bound
+`abs_integral_sub_le_of_fourier_bound` applied to the tilted measures $\mu_A, \nu_A$ yields both the
+non-asymptotic bound and—by choosing $A > 1$ large enough that $\alpha \thinspace \theta(A, 2\pi) \ge \gamma$—
+the quantitative $O(J^{-\gamma})$ power-law Tauberian theorem for every $0 < \gamma < \alpha$.
+-/
+
+/-- **Non-Asymptotic Laplace-to-$C_c^2$ Tauberian Theorem on $\mathbb{Z}$**:
+Suppose $1 < A$, $\mu, \nu$ are measures on $\mathbb{R}$ with $\nu$ supported on $\mathbb{Z}$, both
+$e^{(1 - 2A) u}$ and $e^{-u}$ are integrable with respect to $\mu$ and $\nu$, and on the real
+interval $\sigma \in [1 - 2A, -1]$:
 - `laplaceTransformReal μ σ + laplaceTransformReal ν σ ≤ M`,
-- `|laplaceTransformReal μ σ - laplaceTransformReal ν σ| ≤ δ` (`0 < δ ≤ M`).
-Then for any twice-differentiable test function `φ : ℝ → ℝ` supported in `[-N, N]` with
-`|φ|, |φ'|, |φ''| ≤ M_φ`, the integrals of `φ` against `μ` and `ν` satisfy
-`|(∫ φ dμ) - (∫ φ dν)| ≤ C_N * (A + 1)^2 * exp(A N) * M^(1 - θ) * δ^θ * M_φ`,
-where `θ = midpointHarmonicExp A (2 * π)`. -/
+- `|laplaceTransformReal μ σ - laplaceTransformReal ν σ| ≤ δ` ($0 < \delta \le M$).
+Then for any twice-differentiable test function $\varphi : \mathbb{R} \to \mathbb{R}$ supported in
+$[-N, N]$ with $|\varphi|, |\varphi'|, |\varphi''| \le M_\varphi$, the integrals of $\varphi$
+against $\mu$ and $\nu$ satisfy
+$$\left|\int_{\mathbb{R}} \varphi \thinspace d\mu - \int_{\mathbb{R}} \varphi \thinspace d\nu\right|
+  \le C_N (A + 1)^2 e^{AN} M^{1 - \theta} \delta^\theta M_\varphi,$$
+where $\theta = \operatorname{midpointHarmonicExp}(A, 2\pi)$. -/
 theorem abs_integral_sub_le_of_laplaceReal_bound {A M δ : ℝ}
     (hA : 1 < A) (hδ : 0 < δ) (hδM : δ ≤ M)
     {μ ν : Measure ℝ} (hν : ν (univ \ range (Int.cast : ℤ → ℝ)) = 0)
@@ -432,11 +408,13 @@ theorem abs_integral_sub_le_of_laplaceReal_bound {A M δ : ℝ}
     exact hδ_bound σ hσ
   have h_mid_mem : -A ∈ Icc (1 - 2 * A) (-1) := ⟨by linarith, by linarith⟩
   have : IsFiniteMeasure (tiltedMeasure A μ) :=
-    isFiniteMeasure_tiltedMeasure (integrable_exp_mul_of_mem_Icc hμ_minus hμ_plus h_mid_mem)
+    isFiniteMeasure_withDensity_ofReal
+      (integrable_exp_mul_of_mem_Icc hμ_minus hμ_plus h_mid_mem).2
   have : IsFiniteMeasure (tiltedMeasure A ν) :=
-    isFiniteMeasure_tiltedMeasure (integrable_exp_mul_of_mem_Icc hν_minus hν_plus h_mid_mem)
+    isFiniteMeasure_withDensity_ofReal
+      (integrable_exp_mul_of_mem_Icc hν_minus hν_plus h_mid_mem).2
   have hν_A : tiltedMeasure A ν (univ \ range (Int.cast : ℤ → ℝ)) = 0 :=
-    tiltedMeasure_compl_intCast_eq_zero A hν
+    withDensity_absolutelyContinuous ν _ hν
   let ε : ℝ := M ^ (1 - midpointHarmonicExp A (2 * π)) * δ ^ (midpointHarmonicExp A (2 * π))
   have hε_nonneg : 0 ≤ ε := by
     dsimp [ε]
@@ -458,7 +436,12 @@ theorem abs_integral_sub_le_of_laplaceReal_bound {A M δ : ℝ}
     (differentiable_deriv_tiltedTest A hφ_diff hφ'_diff)
     (fun u hu => tiltedTest_eq_zero_of_support A hsupp hu)
     hM_ψ_nonneg hε_nonneg
-    (abs_tiltedTest_le_sq hA_nonneg hM_φ hsupp hφ0)
+    (fun u => by
+      have h0 := abs_tiltedTest_le hA_nonneg hM_φ hsupp hφ0 u
+      have hA1 : 1 ≤ (A + 1) ^ 2 := by nlinarith
+      have h_nonneg : 0 ≤ Real.exp (A * (N : ℝ)) * M_φ := by positivity
+      dsimp [M_ψ]
+      nlinarith)
     (abs_deriv_tiltedTest_le_sq hA_nonneg hφ_diff hM_φ hsupp hφ0 hφ1)
     (abs_deriv2_tiltedTest_le_sq hA_nonneg hφ_diff hφ'_diff hM_φ hsupp hφ0 hφ1 hφ2)
     h_four
@@ -471,8 +454,8 @@ theorem abs_integral_sub_le_of_laplaceReal_bound {A M δ : ℝ}
         dsimp [ε, M_ψ]
         ring
 
-/-- For any `0 < γ < α`, there exists `A > 1` large enough that
-`γ ≤ α * midpointHarmonicExp A (2 * π)`. -/
+/-- For any $0 < \gamma < \alpha$, there exists $A > 1$ large enough that
+$\gamma \le \alpha \thinspace \operatorname{midpointHarmonicExp}(A, 2\pi)$. -/
 lemma exists_gt_one_le_mul_midpointHarmonicExp {α γ : ℝ} (hα : 0 < α) (hγα : γ < α) :
     ∃ A : ℝ, 1 < A ∧ γ ≤ α * midpointHarmonicExp A (2 * π) := by
   have h_lim := tendsto_midpointHarmonicExp_atTop (by positivity : 0 < 2 * π)
@@ -485,12 +468,14 @@ lemma exists_gt_one_le_mul_midpointHarmonicExp {α γ : ℝ} (hα : 0 < α) (hγ
   refine ⟨A, hA1, ?_⟩
   linarith [(div_lt_iff₀ hα).mp hA2]
 
-/-- **Asymptotic Power-Law Laplace-to-`C_c^2` Tauberian Theorem on `ℤ` for a Fixed Strip `A > 1`**:
-Given `1 < A`, `0 < α`, `γ ≤ α * midpointHarmonicExp A (2 * π)`, `0 < C_0`, `0 < M`, and
-`N : ℕ`, there exists a constant `C > 0` such that for any `J ≥ 1`, any measures `μ, ν` on `ℝ`
-with `ν` supported on `ℤ` satisfying the Laplace bounds on `[1 - 2A, -1]` with
-`δ = C_0 * J ^ (-α)`, and any twice-differentiable test function `φ` supported in `[-N, N]` with
-`|φ|, |φ'|, |φ''| ≤ M_φ`, `|(∫ φ dμ) - (∫ φ dν)| ≤ C * J ^ (-γ) * M_φ`. -/
+/-- **Asymptotic Power-Law Laplace-to-$C_c^2$ Tauberian Theorem on $\mathbb{Z}$ for a Fixed Strip $A > 1$**:
+Given $1 < A$, $0 < \alpha$, $\gamma \le \alpha \thinspace \operatorname{midpointHarmonicExp}(A, 2\pi)$,
+$0 < C_0$, $0 < M$, and $N \in \mathbb{N}$, there exists a constant $C > 0$ such that for any
+$J \ge 1$, any measures $\mu, \nu$ on $\mathbb{R}$ with $\nu$ supported on $\mathbb{Z}$ satisfying
+the Laplace bounds on $[1 - 2A, -1]$ with $\delta = C_0 J^{-\alpha}$, and any twice-differentiable
+test function $\varphi$ supported in $[-N, N]$ with $|\varphi|, |\varphi'|, |\varphi''| \le M_\varphi$,
+$$\left|\int_{\mathbb{R}} \varphi \thinspace d\mu - \int_{\mathbb{R}} \varphi \thinspace d\nu\right|
+  \le C \thinspace J^{-\gamma} M_\varphi.$$ -/
 theorem exists_const_abs_integral_sub_le_rpow {A α γ C_0 M : ℝ}
     (hA : 1 < A) (hα : 0 < α) (hθ_ge : γ ≤ α * midpointHarmonicExp A (2 * π))
     (hC_0 : 0 < C_0) (hM : 0 < M) (N : ℕ) :
@@ -562,4 +547,3 @@ theorem exists_const_abs_integral_sub_le_rpow {A α γ C_0 M : ℝ}
         dsimp [C]
         ring
 
-end CFT.LightconeBootstrap
