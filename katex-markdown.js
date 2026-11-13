@@ -399,7 +399,60 @@
     }
   }
 
+  // Re-interlace indented structure/inductive field docstrings (style="--indent: 2")
+  // back inside the following .code-box right above the field they document
+  function reinterlaceFieldDocstrings() {
+    var codeBoxes = document.querySelectorAll(".code-box");
+    for (var i = 0; i < codeBoxes.length; i++) {
+      var box = codeBoxes[i];
+      if (box.dataset.fieldsInterlaced === "true") continue;
+      box.dataset.fieldsInterlaced = "true";
+
+      var fieldDocs = [];
+      var prev = box.previousElementSibling;
+      while (prev) {
+        var isDoc =
+          prev.classList &&
+          (prev.classList.contains("md-text") ||
+            prev.classList.contains("verso-text"));
+        if (!isDoc) break;
+        var indentVal = parseInt(
+          (prev.style && prev.style.getPropertyValue("--indent")) || "0",
+          10
+        );
+        if (isNaN(indentVal) || indentVal <= 0) break;
+        fieldDocs.unshift(prev);
+        prev = prev.previousElementSibling;
+      }
+
+      if (fieldDocs.length === 0) continue;
+
+      var codeBlocks = [];
+      for (var c = 0; c < box.children.length; c++) {
+        var child = box.children[c];
+        if (
+          child.tagName === "CODE" &&
+          child.classList.contains("hl") &&
+          child.classList.contains("lean") &&
+          child.classList.contains("block")
+        ) {
+          codeBlocks.push(child);
+        }
+      }
+
+      if (codeBlocks.length >= fieldDocs.length + 1) {
+        for (var j = 0; j < fieldDocs.length; j++) {
+          var doc = fieldDocs[j];
+          doc.classList.remove("mod-doc");
+          doc.classList.add("field-doc");
+          box.insertBefore(doc, codeBlocks[j + 1]);
+        }
+      }
+    }
+  }
+
   function init() {
+    reinterlaceFieldDocstrings();
     fixListItemsInRoot(document);
     processAllMath();
     setupCollapsibleProofs();

@@ -13,6 +13,31 @@
   border-top: 1px dashed var(--verso-border-color, #e1e4e8);
 }
 
+/* Indented structure/inductive field docstrings interlaced inside a code-box */
+.code-box > .field-doc {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  margin-bottom: 0.2rem;
+  border-top: 1px dashed var(--verso-border-color, #e1e4e8);
+  font-family: var(--verso-text-font-family, sans-serif);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--verso-muted-color, #8b949e);
+  max-width: 60rem;
+  width: auto;
+}
+
+.code-box > .field-doc::before,
+.code-box > .field-doc::after {
+  content: none !important;
+  display: none !important;
+}
+
+.code-box > .field-doc > * {
+  width: auto;
+  margin-bottom: 0.25rem;
+}
+
 /* Inline toggle pill next to := in theorems/lemmas */
 .proof-toggle-btn {
   display: inline-flex;
