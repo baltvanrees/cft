@@ -451,11 +451,92 @@
     }
   }
 
+  // --- Collapsible Left & Right Sidebars ---
+  function setupCollapsibleSidebars() {
+    var titleBar = document.querySelector("header.title-bar");
+    if (!titleBar || titleBar.dataset.sidebarsSetup === "true") return;
+    titleBar.dataset.sidebarsSetup = "true";
+
+    var leftSidebar = document.querySelector("aside.sidebar");
+    var rightToc = document.querySelector("nav.page-toc");
+
+    // 1. Left sidebar toggle button (inserted at the start of header.title-bar)
+    if (leftSidebar) {
+      var leftBtn = document.createElement("button");
+      leftBtn.type = "button";
+      leftBtn.className = "sidebar-toggle-btn sidebar-toggle-left";
+      leftBtn.title = "Toggle left navigation sidebar";
+
+      var leftCollapsed = false;
+      try {
+        leftCollapsed =
+          window.localStorage.getItem("verso_left_sidebar_collapsed") === "1";
+      } catch (_e) {}
+
+      function applyLeftState() {
+        leftSidebar.classList.toggle("collapsed", leftCollapsed);
+        leftBtn.textContent = leftCollapsed ? "▶ Files" : "◀ Files";
+        leftBtn.setAttribute("aria-expanded", String(!leftCollapsed));
+      }
+
+      applyLeftState();
+
+      leftBtn.addEventListener("click", function () {
+        leftCollapsed = !leftCollapsed;
+        try {
+          window.localStorage.setItem(
+            "verso_left_sidebar_collapsed",
+            leftCollapsed ? "1" : "0"
+          );
+        } catch (_e) {}
+        applyLeftState();
+      });
+
+      titleBar.insertBefore(leftBtn, titleBar.firstChild);
+    }
+
+    // 2. Right page-ToC sidebar toggle button (appended to the right of header.title-bar)
+    if (rightToc) {
+      var rightBtn = document.createElement("button");
+      rightBtn.type = "button";
+      rightBtn.className = "sidebar-toggle-btn sidebar-toggle-right";
+      rightBtn.title = "Toggle right table of contents";
+
+      var rightCollapsed = false;
+      try {
+        rightCollapsed =
+          window.localStorage.getItem("verso_right_toc_collapsed") === "1";
+      } catch (_e) {}
+
+      function applyRightState() {
+        rightToc.classList.toggle("collapsed", rightCollapsed);
+        rightBtn.textContent = rightCollapsed ? "◀ Outline" : "Outline ▶";
+        rightBtn.setAttribute("aria-expanded", String(!rightCollapsed));
+      }
+
+      applyRightState();
+
+      rightBtn.addEventListener("click", function () {
+        rightCollapsed = !rightCollapsed;
+        try {
+          window.localStorage.setItem(
+            "verso_right_toc_collapsed",
+            rightCollapsed ? "1" : "0"
+          );
+        } catch (_e) {}
+        applyRightState();
+      });
+
+      titleBar.appendChild(rightBtn);
+    }
+  }
+
   function init() {
     reinterlaceFieldDocstrings();
     fixListItemsInRoot(document);
     processAllMath();
     setupCollapsibleProofs();
+    setupCollapsibleSidebars();
     initCrossRefs();
   }
 

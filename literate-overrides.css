@@ -68,18 +68,54 @@
   display: none;
 }
 
-/* Top-of-page Show/Hide All Proofs button in the title bar */
+/* Top-of-page Show/Hide All Proofs and Sidebar Toggle buttons in the title bar */
 header.title-bar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.sidebar.collapsed {
+  display: none !important;
+}
+
+.page-toc.collapsed {
+  display: none !important;
+}
+
+.sidebar-toggle-btn {
+  padding: 0.25rem 0.6rem;
+  font-family: var(--verso-structure-font-family, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--verso-muted-color, #586069);
+  background: var(--verso-surface-color, #f8f9fa);
+  border: 1px solid var(--verso-border-color, #e1e4e8);
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--verso-copy-button-hover-bg, #d1d5db);
+  color: var(--verso-text-color, #333);
+}
+
+.sidebar-toggle-right {
+  margin-left: auto;
+}
+
+header.title-bar .proof-global-controls + .sidebar-toggle-right {
+  margin-left: 0;
 }
 
 .proof-global-controls {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  margin-left: 0.75rem;
+  margin-left: auto;
 }
 
 .proof-global-btn {
